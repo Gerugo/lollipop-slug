@@ -147,21 +147,21 @@ export class InputManager {
 
   setTouchInput(action, active) {
     if (action in this.touchState) {
-      this.touchState[action] = active;
+      this.touchState[action] = Boolean(active);
     }
   }
 
   update() {
     const currentCombined = {
-      left: this.keys.left || this.touchState.left,
-      right: this.keys.right || this.touchState.right,
-      up: this.keys.up || this.touchState.up,
-      down: this.keys.down || this.touchState.down,
-      jump: this.keys.jump || this.touchState.jump,
-      shoot: this.keys.shoot || this.touchState.shoot,
-      grenade: this.keys.grenade || this.touchState.grenade,
-      vehicle: this.keys.vehicle || this.touchState.vehicle,
-      pause: this.keys.pause || this.touchState.pause
+      left: Boolean(this.keys.left || this.touchState.left),
+      right: Boolean(this.keys.right || this.touchState.right),
+      up: Boolean(this.keys.up || this.touchState.up),
+      down: Boolean(this.keys.down || this.touchState.down),
+      jump: Boolean(this.keys.jump || this.touchState.jump),
+      shoot: Boolean(this.keys.shoot || this.touchState.shoot),
+      grenade: Boolean(this.keys.grenade || this.touchState.grenade),
+      vehicle: Boolean(this.keys.vehicle || this.touchState.vehicle),
+      pause: Boolean(this.keys.pause || this.touchState.pause)
     };
 
     for (const key in currentCombined) {
@@ -171,11 +171,12 @@ export class InputManager {
   }
 
   isDown(action) {
-    return this.prevKeys[action] || false;
+    return Boolean(this.keys[action] || this.touchState[action] || this.prevKeys[action]);
   }
 
   isJustPressed(action) {
-    return this.justPressedKeys[action] || false;
+    if (this.justPressedKeys[action]) return true;
+    return Boolean((this.keys[action] || this.touchState[action]) && !this.prevKeys[action]);
   }
 
   reset() {
@@ -187,3 +188,5 @@ export class InputManager {
     }
   }
 }
+
+export default InputManager;

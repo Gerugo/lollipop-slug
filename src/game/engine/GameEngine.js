@@ -79,38 +79,61 @@ export class GameEngine {
   }
 
   startNewGame() {
-    this.level = new Level1();
-    this.camera.setBounds(this.level.width, this.level.height);
-    this.camera.x = 0;
-    this.camera.unlock();
-    this.camera.setZoom(1.0);
+    try {
+      this.level = new Level1();
+      this.camera.setBounds(this.level.width, this.level.height);
+      this.camera.x = 0;
+      this.camera.unlock();
+      this.camera.setZoom(1.0);
 
-    this.player = new Player(100, 350);
-    this.player.reset(100, 350);
+      this.player = new Player(100, 350);
+      this.player.reset(100, 350);
 
-    this.vehicle = this.level.createVehicle();
-    this.enemies = this.level.createEnemies();
-    this.hostages = this.level.createHostages();
-    this.destructibles = this.level.createDestructibles();
-    this.projectiles = [];
-    this.enemyProjectiles = [];
-    this.grenades = [];
-    this.drops = [];
-    this.boss = null;
-    this.bossIntroTimer = 0;
-    this.isBossIntroActive = false;
-    this.candyRainTimer = 22;
-    this.candyRainDuration = 0;
+      // Adjust HP based on difficulty
+      if (this.difficulty === 'EASY') {
+        this.player.maxHp = 4;
+        this.player.hp = 4;
+      } else if (this.difficulty === 'HARD') {
+        this.player.maxHp = 2;
+        this.player.hp = 2;
+      } else {
+        this.player.maxHp = 3;
+        this.player.hp = 3;
+      }
 
-    this.score = 0;
-    this.rescuedHostages = 0;
-    this.gameTime = 0;
-    this.respawnTimer = 0;
-    this.particles.clear();
+      this.vehicle = this.level.createVehicle();
+      this.enemies = this.level.createEnemies();
+      this.hostages = this.level.createHostages();
+      this.destructibles = this.level.createDestructibles();
+      this.projectiles = [];
+      this.enemyProjectiles = [];
+      this.grenades = [];
+      this.drops = [];
+      this.boss = null;
+      this.bossIntroTimer = 0;
+      this.isBossIntroActive = false;
+      this.candyRainTimer = 22;
+      this.candyRainDuration = 0;
 
-    this.setState('PLAYING');
-    this.sound.startBGM('level');
-    this.sound.playMissionStart();
+      this.score = 0;
+      this.rescuedHostages = 0;
+      this.gameTime = 0;
+      this.respawnTimer = 0;
+      this.particles.clear();
+
+      this.setState('PLAYING');
+
+      try {
+        if (this.sound) {
+          if (typeof this.sound.startBGM === 'function') this.sound.startBGM('level');
+          if (typeof this.sound.playMissionStart === 'function') this.sound.playMissionStart();
+        }
+      } catch (audioErr) {
+        console.warn('[GameEngine] Audio init on start warning:', audioErr);
+      }
+    } catch (err) {
+      console.error('[GameEngine] Error in startNewGame:', err);
+    }
   }
 
   setDifficulty(diff) {
@@ -145,7 +168,9 @@ export class GameEngine {
 
       this.render();
 
-      if (this.callbacks.onHUDUpdate && this.player) {
+      this.hudTimer = (this.hudTimer || 0) + dt;
+      if (this.hudTimer >= 0.06 && this.callbacks.onHUDUpdate && this.player) {
+        this.hudTimer = 0;
         this.callbacks.onHUDUpdate({
           hp: this.player.hp,
           maxHp: this.player.maxHp,
@@ -168,16 +193,22 @@ export class GameEngine {
       }
     } catch (loopErr) {
       console.error('[GameEngine] Protected loop error:', loopErr);
+    } finally {
+      this.animFrameId = requestAnimationFrame(this.loop);
     }
-
-    this.animFrameId = requestAnimationFrame(this.loop);
   }
 
   update(dt) {
-    this.gameTime += dt;
-    this.level.update(dt);
+    if (this.input && typeof this.input.update === 'function') {
+      this.input.update();
+    }
 
-    const currentBiome = this.level.getCurrentBiome(this.player ? this.player.x : 0);
+    this.gameTime += dt;
+    if (this.level) {
+      this.level.update(dt);
+    }
+
+    const currentBiome = this.level ? this.level.getCurrentBiome(this.player ? this.player.x : 0) : { id: 'BIOME_A' };
 
     // 1. DYNAMIC PLATFORMS UPDATE (Moving, Sinking, Trampolines)
     Physics.updatePlatforms(this.level.platforms, dt, this.particles, this.sound);

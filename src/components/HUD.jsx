@@ -1,7 +1,7 @@
 import React from 'react';
 import { Volume2, VolumeX, Pause, Maximize2 } from 'lucide-react';
 
-export const HUD = ({ hudData, onTogglePause, onToggleMute, isMuted, onToggleFullscreen }) => {
+export const HUD = ({ hudData, onTogglePause, onToggleMute, isMuted = false, onToggleFullscreen }) => {
   if (!hudData) return null;
 
   const {
@@ -19,9 +19,22 @@ export const HUD = ({ hudData, onTogglePause, onToggleMute, isMuted, onToggleFul
     boss = null
   } = hudData;
 
-  const minutes = Math.floor(gameTime / 60);
-  const seconds = gameTime % 60;
+  const safeHp = Number(hp ?? 3);
+  const safeMaxHp = Math.max(1, Number(maxHp ?? 3));
+  const safeLives = Math.max(0, Number(lives ?? 3));
+  const safeScore = Number(score ?? 0).toString().padStart(6, '0');
+  const safeHighScore = Number(highScore ?? 0).toString().padStart(6, '0');
+  const safeTime = Number(gameTime ?? 0);
+  const minutes = Math.floor(safeTime / 60);
+  const seconds = Math.floor(safeTime % 60);
   const timeStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+  const safeAmmoStr = (ammo === Infinity || ammo === null || ammo === undefined)
+    ? '∞'
+    : Number(ammo).toString().padStart(3, '0');
+
+  const safeWeaponName = weapon?.shortName || 'PISTOL';
+  const weaponId = weapon?.id || '';
 
   return (
     <div className="absolute inset-0 pointer-events-none p-3 sm:p-5 flex flex-col justify-between select-none z-10">
@@ -37,18 +50,18 @@ export const HUD = ({ hudData, onTogglePause, onToggleMute, isMuted, onToggleFul
               </div>
             </div>
             <span className="font-arcade text-candy-yellow text-xs sm:text-sm tracking-wider drop-shadow">
-              1P x{Math.max(0, lives)}
+              1P x{safeLives}
             </span>
           </div>
 
           {/* Health Pips */}
           <div className="flex items-center gap-1 bg-slate-900/40 backdrop-blur-[6px] px-2.5 py-1 rounded-2xl border border-white/30 shadow-sm">
             <span className="font-arcade text-[9px] text-candy-mint mr-0.5">HP</span>
-            {Array.from({ length: maxHp }).map((_, i) => (
+            {Array.from({ length: safeMaxHp }).map((_, i) => (
               <div
                 key={i}
                 className={`w-3.5 h-3 rounded-md transition-all duration-300 ${
-                  i < hp
+                  i < safeHp
                     ? 'bg-gradient-to-t from-red-500 to-pink-400 border border-white shadow-[0_0_8px_rgba(244,63,94,0.6)] scale-100'
                     : 'bg-slate-700/50 border border-slate-600/60 scale-90'
                 }`}
@@ -63,11 +76,11 @@ export const HUD = ({ hudData, onTogglePause, onToggleMute, isMuted, onToggleFul
                 🛡️ SLUG
               </span>
               <div className="flex gap-0.5">
-                {Array.from({ length: maxVehicleArmor }).map((_, i) => (
+                {Array.from({ length: Number(maxVehicleArmor || 5) }).map((_, i) => (
                   <div
                     key={i}
                     className={`w-3 h-3 rounded-sm transition-all duration-200 ${
-                      i < vehicleArmor
+                      i < Number(vehicleArmor || 0)
                         ? 'bg-gradient-to-t from-sky-400 to-cyan-200 border border-white shadow-[0_0_6px_rgba(56,189,248,0.7)] scale-100'
                         : 'bg-slate-800/60 border border-slate-600 scale-90'
                     }`}
@@ -86,16 +99,16 @@ export const HUD = ({ hudData, onTogglePause, onToggleMute, isMuted, onToggleFul
               <div className="flex justify-between items-center mb-1 px-1">
                 <span className="font-arcade text-[11px] text-red-300 tracking-wider flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
-                  {boss.name}
+                  {boss.name || 'GUMBALL TITAN'}
                 </span>
                 <span className="font-arcade text-[9px] text-amber-300">
-                  FASE {boss.phase}/3
+                  FASE {boss.phase || 1}/3
                 </span>
               </div>
               <div className="w-full h-3.5 bg-slate-900/80 rounded-full overflow-hidden border border-white/50 p-0.5">
                 <div
                   className="h-full rounded-full transition-all duration-200 bg-gradient-to-r from-amber-400 via-pink-500 to-red-600 shadow-inner"
-                  style={{ width: `${Math.max(0, Math.min(100, (boss.hp / boss.maxHp) * 100))}%` }}
+                  style={{ width: `${Math.max(0, Math.min(100, ((boss.hp || 0) / (boss.maxHp || 1)) * 100))}%` }}
                 />
               </div>
             </div>
@@ -105,11 +118,11 @@ export const HUD = ({ hudData, onTogglePause, onToggleMute, isMuted, onToggleFul
               <div className="flex items-center gap-3 text-xs font-arcade">
                 <div className="flex flex-col items-center">
                   <span className="text-[8px] text-slate-300">PUNTOS</span>
-                  <span className="text-candy-yellow text-xs tracking-wider drop-shadow">{score.toString().padStart(6, '0')}</span>
+                  <span className="text-candy-yellow text-xs tracking-wider drop-shadow">{safeScore}</span>
                 </div>
                 <div className="flex flex-col items-center">
                   <span className="text-[8px] text-pink-300">RÉCORD</span>
-                  <span className="text-white text-xs tracking-wider drop-shadow">{highScore.toString().padStart(6, '0')}</span>
+                  <span className="text-white text-xs tracking-wider drop-shadow">{safeHighScore}</span>
                 </div>
                 <div className="flex flex-col items-center">
                   <span className="text-[8px] text-cyan-300">TIEMPO</span>
@@ -126,20 +139,20 @@ export const HUD = ({ hudData, onTogglePause, onToggleMute, isMuted, onToggleFul
           <div className="flex flex-col items-end gap-1">
             <div className="bg-blue-500/25 backdrop-blur-[6px] px-2.5 py-1 rounded-3xl border-2 border-white/50 shadow-[0_4px_16px_rgba(56,189,248,0.3),inset_0_1px_2px_rgba(255,255,255,0.6)] flex items-center gap-1.5">
               <div className="text-right">
-                <div className="font-arcade text-[9px] text-sky-200">{weapon.shortName || 'PISTOL'}</div>
+                <div className="font-arcade text-[9px] text-sky-200">{safeWeaponName}</div>
                 <div className="font-arcade text-xs text-white drop-shadow">
-                  {ammo === Infinity ? '∞' : ammo.toString().padStart(3, '0')}
+                  {safeAmmoStr}
                 </div>
               </div>
               <div className="w-7 h-7 rounded-2xl bg-white/20 border border-white/40 flex items-center justify-center text-xs shadow-inner">
-                {weapon.id === 'HMG' ? '☁️' : weapon.id === 'SHOTGUN' ? '🍌' : weapon.id === 'ROCKET' ? '🚀' : '🍬'}
+                {weaponId === 'HMG' ? '☁️' : weaponId === 'SHOTGUN' ? '🍌' : weaponId === 'ROCKET' ? '🚀' : '🍬'}
               </div>
             </div>
 
             {/* Grenade Counter */}
             <div className="bg-slate-900/40 backdrop-blur-[6px] px-2 py-0.5 rounded-2xl border border-white/30 flex items-center gap-1 font-arcade text-[10px] text-cyan-200 shadow-sm">
               <span>💣</span>
-              <span>x{grenades}</span>
+              <span>x{Number(grenades ?? 10)}</span>
             </div>
           </div>
 
