@@ -1,0 +1,182 @@
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { GameEngine } from './game/engine/GameEngine.js';
+import { GameCanvas } from './components/GameCanvas.jsx';
+import { HUD } from './components/HUD.jsx';
+import { TouchGamepad } from './components/TouchGamepad.jsx';
+import { OrientationOverlay } from './components/OrientationOverlay.jsx';
+import { MainMenu } from './components/MainMenu.jsx';
+import { PauseModal } from './components/PauseModal.jsx';
+import { GameOverModal } from './components/GameOverModal.jsx';
+import { VictoryModal } from './components/VictoryModal.jsx';
+import { HowToPlayModal } from './components/HowToPlayModal.jsx';
+
+export function App() {
+  const engineRef = useRef(null);
+  const [gameState, setGameState] = useState('MENU');
+  const [difficulty, setDifficulty] = useState('NORMAL');
+  const [isMuted, setIsMuted] = useState(false);
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [hudData, setHudData] = useState(null);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+
+  // Detect touch device
+  useEffect(() => {
+    const checkTouch = () => {
+      const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      setIsTouchDevice(hasTouch || window.innerWidth <= 1024);
+    };
+
+    checkTouch();
+    window.addEventListener('resize', checkTouch);
+    window.addEventListener('touchstart', () => setIsTouchDevice(true), { once: true });
+
+    return () => {
+      window.removeEventListener('resize', checkTouch);
+    };
+  }, []);
+
+  const handleEngineReady = useCallback((canvas) => {
+    if (engineRef.current) return;
+
+    const engine = new GameEngine(canvas, {
+      onHUDUpdate: (data) => {
+        setHudData(data);
+      },
+      onStateChange: (state) => {
+        setGameState(state);
+      }
+    });
+
+    engineRef.current = engine;
+    engine.start();
+  }, []);
+
+  const handleStartGame = () => {
+    if (engineRef.current) {
+      engineRef.current.setDifficulty(difficulty);
+      engineRef.current.startNewGame();
+    }
+  };
+
+  const handleTogglePause = () => {
+    if (engineRef.current) {
+      engineRef.current.togglePause();
+    }
+  };
+
+  const handleToggleMute = () => {
+    if (engineRef.current) {
+      const muted = engineRef.current.sound.toggleMute();
+      setIsMuted(muted);
+    }
+  };
+
+  const handleRestart = () => {
+    if (engineRef.current) {
+      engineRef.current.startNewGame();
+    }
+  };
+
+  const handleExitToMenu = () => {
+    if (engineRef.current) {
+      engineRef.current.setState('MENU');
+      engineRef.current.sound.stopBGM();
+    }
+  };
+
+  const handleTouchInput = (action, active) => {
+    if (engineRef.current) {
+      engineRef.current.input.setTouchInput(action, active);
+    }
+  };
+
+  const handleToggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+  };
+
+  return (
+    <div className="relative w-full h-full bg-slate-950 flex items-center justify-center overflow-hidden">
+      {/* 1. Main 16:9 Canvas Viewport */}
+      <GameCanvas onEngineReady={handleEngineReady} />
+
+      {/* 2. Orientation warning overlay for portrait mode */}
+      <OrientationOverlay />
+
+      {/* 3. In-Game HUD overlay (Visible when playing or paused) */}
+      {(gameState === 'PLAYING' || gameState === 'PAUSED') && (
+        <HUD
+          hudData={hudData}
+          onTogglePause={handleTogglePause}
+          onToggleMute={handleToggleMute}
+          isMuted={isMuted}
+          onToggleFullscreen={handleToggleFullscreen}
+        />
+      )}
+
+      {/* 4. Touch Virtual Gamepad (Visible during gameplay on touch screens) */}
+      {gameState === 'PLAYING' && isTouchDevice && (
+        <TouchGamepad onTouchInput={handleTouchInput} />
+      )}
+
+      {/* 5. Main Menu */}
+      {gameState === 'MENU' && (
+        <MainMenu
+          onStartGame={handleStartGame}
+          onOpenHowToPlay={() => setShowHowToPlay(true)}
+          difficulty={difficulty}
+          onSelectDifficulty={setDifficulty}
+          highScore={hudData ? hudData.highScore : parseInt(localStorage.getItem('lollipop_slug_highscore') || '0', 10)}
+          isMuted={isMuted}
+          onToggleMute={handleToggleMute}
+        />
+      )}
+
+      {/* 6. Pause Modal */}
+      {gameState === 'PAUSED' && (
+        <PauseModal
+          onResume={handleTogglePause}
+          onRestart={handleRestart}
+          onExitToMenu={handleExitToMenu}
+          isMuted={isMuted}
+          onToggleMute={handleToggleMute}
+        />
+      )}
+
+      {/* 7. Game Over Modal */}
+      {gameState === 'GAME_OVER' && (
+        <GameOverModal
+          score={hudData ? hudData.score : 0}
+          highScore={hudData ? hudData.highScore : 0}
+          onContinue={handleRestart}
+          onExitToMenu={handleExitToMenu}
+        />
+      )}
+
+      {/* 8. Victory Modal */}
+      {gameState === 'VICTORY' && (
+        <VictoryModal
+          score={hudData ? hudData.score : 0}
+          highScore={hudData ? hudData.highScore : 0}
+          rescuedHostages={engineRef.current ? engineRef.current.rescuedHostages : 5}
+          totalHostages={5}
+          gameTime={hudData ? hudData.gameTime : 0}
+          onPlayAgain={handleRestart}
+          onExitToMenu={handleExitToMenu}
+        />
+      )}
+
+      {/* 9. How To Play Modal */}
+      {showHowToPlay && (
+        <HowToPlayModal onClose={() => setShowHowToPlay(false)} />
+      )}
+    </div>
+  );
+}
+
+export default App;

@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+  }
+  
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #0f172a;
+    color: #f8fafc;
+  }
+}
+
+/* Candy Glassmorphism & Arcade Styles */
+.candy-card {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(255, 119, 176, 0.25),
+              inset 0 2px 4px rgba(255, 255, 255, 0.4);
+}
+
+.candy-button-pink {
+  background: linear-gradient(180deg, #FF94C2 0%, #FF5A9E 50%, #E63980 100%);
+  border: 3px solid #FFF;
+  box-shadow: 0 6px 0 #B31D5B, 0 10px 20px rgba(255, 90, 158, 0.4);
+  transition: all 0.1s ease;
+}
+
+.candy-button-pink:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 #B31D5B, 0 4px 10px rgba(255, 90, 158, 0.4);
+}
+
+.candy-button-blue {
+  background: linear-gradient(180deg, #99E2FF 0%, #52C4FF 50%, #1DA1F2 100%);
+  border: 3px solid #FFF;
+  box-shadow: 0 6px 0 #0D6EAB, 0 10px 20px rgba(82, 196, 255, 0.4);
+  transition: all 0.1s ease;
+}
+
+.candy-button-blue:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 #0D6EAB, 0 4px 10px rgba(82, 196, 255, 0.4);
+}
+
+.candy-button-yellow {
+  background: linear-gradient(180deg, #FFF085 0%, #FFD633 50%, #E6B800 100%);
+  border: 3px solid #FFF;
+  box-shadow: 0 6px 0 #9E7D00, 0 10px 20px rgba(255, 214, 51, 0.4);
+  transition: all 0.1s ease;
+}
+
+.candy-button-yellow:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 #9E7D00, 0 4px 10px rgba(255, 214, 51, 0.4);
+}
+
+.candy-button-green {
+  background: linear-gradient(180deg, #99F6A5 0%, #5CD86E 50%, #34A847 100%);
+  border: 3px solid #FFF;
+  box-shadow: 0 6px 0 #217330, 0 10px 20px rgba(92, 216, 110, 0.4);
+  transition: all 0.1s ease;
+}
+
+.candy-button-green:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 #217330, 0 4px 10px rgba(92, 216, 110, 0.4);
+}
+
+.text-stroke-candy {
+  -webkit-text-stroke: 2px #4A154B;
+  paint-order: stroke fill;
+}
+
+.text-stroke-thin {
+  -webkit-text-stroke: 1px #331037;
+  paint-order: stroke fill;
+}
+
+/* Subtle arcade scanline overlay */
+.scanlines {
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.12) 50%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+}
