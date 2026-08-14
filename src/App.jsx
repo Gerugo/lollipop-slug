@@ -51,7 +51,48 @@ export function App() {
     engine.start();
   }, []);
 
+  const handleToggleFullscreen = () => {
+    const doc = document;
+    const docEl = document.documentElement;
+
+    const isFullscreen =
+      doc.fullscreenElement ||
+      doc.mozFullScreenElement ||
+      doc.webkitFullscreenElement ||
+      doc.msFullscreenElement;
+
+    if (!isFullscreen) {
+      if (docEl.requestFullscreen) {
+        docEl.requestFullscreen().catch(() => {});
+      } else if (docEl.mozRequestFullScreen) {
+        docEl.mozRequestFullScreen();
+      } else if (docEl.webkitRequestFullscreen) {
+        docEl.webkitRequestFullscreen();
+      } else if (docEl.msRequestFullscreen) {
+        docEl.msRequestFullscreen();
+      }
+
+      // Try orientation lock on mobile devices supporting Screen Orientation API
+      try {
+        if (screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock('landscape').catch(() => {});
+        }
+      } catch (_) {}
+    } else {
+      if (doc.exitFullscreen) {
+        doc.exitFullscreen().catch(() => {});
+      } else if (doc.mozCancelFullScreen) {
+        doc.mozCancelFullScreen();
+      } else if (doc.webkitExitFullscreen) {
+        doc.webkitExitFullscreen();
+      } else if (doc.msExitFullscreen) {
+        doc.msExitFullscreen();
+      }
+    }
+  };
+
   const handleStartGame = () => {
+    handleToggleFullscreen();
     if (engineRef.current) {
       engineRef.current.setDifficulty(difficulty);
       engineRef.current.startNewGame();
@@ -90,23 +131,13 @@ export function App() {
     }
   };
 
-  const handleToggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen().catch(() => {});
-      }
-    }
-  };
-
   return (
-    <div className="relative w-full h-full bg-slate-950 flex items-center justify-center overflow-hidden">
+    <div className="fixed inset-0 w-full h-full bg-slate-950 flex items-center justify-center overflow-hidden">
       {/* 1. Main 16:9 Canvas Viewport */}
       <GameCanvas onEngineReady={handleEngineReady} />
 
       {/* 2. Orientation warning overlay for portrait mode */}
-      <OrientationOverlay />
+      <OrientationOverlay onForceFullscreen={handleToggleFullscreen} />
 
       {/* 3. In-Game HUD overlay (Visible when playing or paused) */}
       {(gameState === 'PLAYING' || gameState === 'PAUSED') && (
@@ -134,6 +165,7 @@ export function App() {
           highScore={hudData ? hudData.highScore : parseInt(localStorage.getItem('lollipop_slug_highscore') || '0', 10)}
           isMuted={isMuted}
           onToggleMute={handleToggleMute}
+          onToggleFullscreen={handleToggleFullscreen}
         />
       )}
 

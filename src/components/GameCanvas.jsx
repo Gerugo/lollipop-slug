@@ -21,10 +21,10 @@ export const GameCanvas = ({ onEngineReady }) => {
       {/* Game Canvas */}
       <canvas
         ref={canvasRef}
-        className="w-full h-full object-contain max-w-[100vw] max-h-[100vh] shadow-2xl"
+        className="w-full h-full object-contain max-w-[100dvw] max-h-[100dvh] shadow-2xl"
       />
       {/* Subtle Retro Arcade Scanlines */}
-      <div className="absolute inset-0 scanlines pointer-events-none opacity-40" />
+      <div className="absolute inset-0 scanlines pointer-events-none opacity-30" />
     </div>
   );
 };

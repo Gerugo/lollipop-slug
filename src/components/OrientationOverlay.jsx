@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Smartphone, RotateCw } from 'lucide-react';
+import { Smartphone, RotateCw, Maximize2 } from 'lucide-react';
 
-export const OrientationOverlay = () => {
+export const OrientationOverlay = ({ onForceFullscreen }) => {
   const [isPortrait, setIsPortrait] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
     const checkOrientation = () => {
-      // Check if viewport height is greater than width (portrait orientation on mobile/tablet)
-      const portrait = window.innerHeight > window.innerWidth && window.innerWidth < 1024;
+      const portrait = window.innerHeight > window.innerWidth && window.innerWidth < 950;
       setIsPortrait(portrait);
     };
 
@@ -21,7 +21,12 @@ export const OrientationOverlay = () => {
     };
   }, []);
 
-  if (!isPortrait) return null;
+  if (!isPortrait || dismissed) return null;
+
+  const handleAction = () => {
+    if (onForceFullscreen) onForceFullscreen();
+    setDismissed(true);
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center text-white select-none">
@@ -42,12 +47,16 @@ export const OrientationOverlay = () => {
       </h2>
 
       <p className="text-sm font-candy text-slate-300 max-w-xs leading-relaxed mb-6">
-        Para disfrutar de la mejor experiencia arcade de <strong className="text-candy-pink font-bold">Lollipop Slug</strong>, gira tu pantalla a modo horizontal (Landscape).
+        Para disfrutar de la mejor experiencia arcade en pantalla completa de <strong className="text-candy-pink font-bold">Lollipop Slug</strong>, gira tu móvil en horizontal (Landscape).
       </p>
 
-      <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 border border-white/20 text-xs font-arcade text-candy-mint">
-        <span>🍭 MODO ARCADE 16:9</span>
-      </div>
+      <button
+        onClick={handleAction}
+        className="flex items-center gap-2 px-6 py-3 rounded-2xl candy-button-pink font-bungee text-white text-xs tracking-wider shadow-xl active:scale-95 transition-transform"
+      >
+        <Maximize2 size={16} />
+        JUGAR / ACTIVAR PANTALLA COMPLETA
+      </button>
     </div>
   );
 };
