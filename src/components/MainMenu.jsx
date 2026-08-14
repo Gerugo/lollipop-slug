@@ -12,11 +12,6 @@ export const MainMenu = ({
   onToggleFullscreen
 }) => {
   const handlePlayClick = () => {
-    if (onToggleFullscreen) {
-      try {
-        onToggleFullscreen();
-      } catch (_) {}
-    }
     if (onStartGame) {
       onStartGame();
     }

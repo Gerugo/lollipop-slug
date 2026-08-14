@@ -441,117 +441,11 @@ class SoundManager {
     } catch (e) {}
   }
 
-  // --- DYNAMIC BACKGROUND MUSIC (BGM) SYNTHESIZER ---
-
+  // --- DYNAMIC BACKGROUND MUSIC (BGM) HANDLERS ---
+  // Official background music is handled by React hook useBackgroundMusic (Candy_Coated_Carnage.mp3)
   startBGM(track = 'stage') {
-    this.init();
-    if (this.bgmPlaying && this.currentTrack === track) return;
-    this.stopBGM();
     this.currentTrack = track;
     this.bgmPlaying = true;
-    this.step = 0;
-
-    const tempo = track === 'boss' ? 145 : 126;
-    const stepInterval = (60 / tempo / 4) * 1000;
-
-    const stageBass = [
-      130.81, 130.81, 130.81, 164.81,
-      174.61, 174.61, 174.61, 220.00,
-      196.00, 196.00, 196.00, 246.94,
-      220.00, 196.00, 174.61, 146.83
-    ];
-
-    const stageMelody = [
-      523.25, 0, 659.25, 783.99,  1046.50, 0, 783.99, 0,
-      880.00, 0, 1046.50, 880.00, 783.99, 659.25, 523.25, 0,
-      659.25, 783.99, 880.00, 1046.50, 1174.66, 0, 1046.50, 880.00,
-      987.77, 0, 783.99, 0, 1046.50, 0, 0, 0
-    ];
-
-    const bossBass = [
-      146.83, 146.83, 220.00, 146.83,
-      174.61, 174.61, 261.63, 174.61,
-      130.81, 130.81, 196.00, 130.81,
-      116.54, 116.54, 174.61, 233.08
-    ];
-
-    const bossMelody = [
-      587.33, 587.33, 698.46, 880.00,  0, 880.00, 1046.50, 880.00,
-      698.46, 0, 880.00, 698.46,       587.33, 523.25, 587.33, 0,
-      698.46, 698.46, 880.00, 1046.50, 1174.66, 0, 1046.50, 1174.66,
-      1396.91, 1174.66, 1046.50, 880.00, 698.46, 587.33, 698.46, 0
-    ];
-
-    this.bgmInterval = setInterval(() => {
-      if (this.isMuted || !this.ctx || !this.bgmPlaying) return;
-      try {
-        const t = this.ctx.currentTime;
-        const curStep = this.step;
-        const isBoss = this.currentTrack === 'boss';
-
-        const bassPattern = isBoss ? bossBass : stageBass;
-        const melodyPattern = isBoss ? bossMelody : stageMelody;
-
-        const bassFreq = bassPattern[curStep % bassPattern.length];
-        if (bassFreq > 0) {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          osc.type = isBoss ? 'sawtooth' : 'triangle';
-          osc.frequency.setValueAtTime(bassFreq, t);
-
-          const vol = 0.22 * this.musicVolume * this.masterVolume;
-          gain.gain.setValueAtTime(vol, t);
-          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
-
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start(t);
-          osc.stop(t + 0.12);
-        }
-
-        const melodyFreq = melodyPattern[curStep % melodyPattern.length];
-        if (melodyFreq > 0) {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          osc.type = 'square';
-          osc.frequency.setValueAtTime(melodyFreq, t);
-
-          const vol = 0.16 * this.musicVolume * this.masterVolume;
-          gain.gain.setValueAtTime(vol, t);
-          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
-
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start(t);
-          osc.stop(t + 0.14);
-        }
-
-        const subStep = curStep % 16;
-        if (subStep % 4 === 0) {
-          const kick = this.ctx.createOscillator();
-          const kickGain = this.ctx.createGain();
-          kick.type = 'sine';
-          kick.frequency.setValueAtTime(140, t);
-          kick.frequency.exponentialRampToValueAtTime(30, t + 0.08);
-
-          kickGain.gain.setValueAtTime(0.35 * this.musicVolume * this.masterVolume, t);
-          kickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-
-          kick.connect(kickGain);
-          kickGain.connect(this.ctx.destination);
-          kick.start(t);
-          kick.stop(t + 0.08);
-        }
-
-        if (subStep === 4 || subStep === 12) {
-          this.playNoise(0.06, 0.18 * this.musicVolume);
-        } else if (subStep % 2 === 1) {
-          this.playNoise(0.02, 0.08 * this.musicVolume);
-        }
-
-        this.step++;
-      } catch (e) {}
-    }, stepInterval);
   }
 
   stopBGM() {

@@ -96,7 +96,6 @@ export function App() {
   };
 
   const handleStartGame = () => {
-    handleToggleFullscreen();
     if (engineRef.current) {
       engineRef.current.setDifficulty(difficulty);
       engineRef.current.startNewGame();
