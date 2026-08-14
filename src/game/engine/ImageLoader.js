@@ -26,7 +26,6 @@ class ImageLoader {
       barquillo: new URL('../../assets/barquillo.png', import.meta.url).href,
       baston: new URL('../../assets/baston.png', import.meta.url).href,
       caja: new URL('../../assets/caja.png', import.meta.url).href,
-      obstaculo: new URL('../../assets/obstaculo.png', import.meta.url).href,
       barricada: new URL('../../assets/barricada.png', import.meta.url).href,
       tanque: new URL('../../assets/tanque.png', import.meta.url).href,
       explosion: new URL('../../assets/explosion.png', import.meta.url).href

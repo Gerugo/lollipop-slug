@@ -79,6 +79,7 @@ export class GameEngine {
   }
 
   startNewGame() {
+    this.transitioning = true;
     try {
       this.level = new Level1();
       this.camera.setBounds(this.level.width, this.level.height);
@@ -121,6 +122,7 @@ export class GameEngine {
       this.respawnTimer = 0;
       this.particles.clear();
 
+      this.transitioning = false;
       this.setState('PLAYING');
 
       try {
@@ -132,6 +134,7 @@ export class GameEngine {
         console.warn('[GameEngine] Audio init on start warning:', audioErr);
       }
     } catch (err) {
+      this.transitioning = false;
       console.error('[GameEngine] Error in startNewGame:', err);
     }
   }
@@ -159,6 +162,12 @@ export class GameEngine {
 
   loop(currentTime) {
     try {
+      // Skip this frame if game is mid-transition (prevents rendering half-initialized state)
+      if (this.transitioning) {
+        this.lastTime = currentTime;
+        return;
+      }
+
       const dt = Math.min((currentTime - this.lastTime) / 1000, 0.05);
       this.lastTime = currentTime;
 

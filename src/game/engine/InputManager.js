@@ -171,7 +171,7 @@ export class InputManager {
   }
 
   isDown(action) {
-    return Boolean(this.keys[action] || this.touchState[action] || this.prevKeys[action]);
+    return Boolean(this.keys[action] || this.touchState[action]);
   }
 
   isJustPressed(action) {

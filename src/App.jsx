@@ -41,7 +41,11 @@ export function App() {
   }, []);
 
   const handleEngineReady = useCallback((canvas) => {
-    if (engineRef.current) return;
+    // Strict guard: never create more than one engine instance
+    if (engineRef.current) {
+      console.warn('[App] handleEngineReady called but engine already exists — skipping.');
+      return;
+    }
 
     const engine = new GameEngine(canvas, {
       onHUDUpdate: (data) => {
