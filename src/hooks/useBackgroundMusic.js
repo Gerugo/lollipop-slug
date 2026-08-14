@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import bgmUrl from '../assets/sugar_strike_fury.mp3';
+import bgmUrl from '../assets/Candy_Coated_Carnage.mp3';
 
 /**
  * Custom hook for background music (BGM) management in React.
@@ -23,8 +23,11 @@ export function useBackgroundMusic(gameState, volume = 0.5, isMuted = false) {
         audio.volume = Math.max(0, Math.min(1, volume));
         audio.muted = isMuted;
 
-        audio.addEventListener('error', (e) => {
-          console.warn('[useBackgroundMusic] Audio resource error (non-fatal):', e);
+        audio.addEventListener('error', () => {
+          // Fallback to relative public assets path if bundled URL is unreachable
+          try {
+            audio.src = './assets/Candy_Coated_Carnage.mp3';
+          } catch (_) {}
         });
 
         audioRef.current = audio;

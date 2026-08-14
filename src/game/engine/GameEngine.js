@@ -60,8 +60,13 @@ export class GameEngine {
   }
 
   start() {
-    this.input.init();
-    this.sound.init();
+    if (this.input) {
+      if (typeof this.input.init === 'function') this.input.init();
+      else if (typeof this.input.attach === 'function') this.input.attach();
+    }
+    if (this.sound && typeof this.sound.init === 'function') {
+      this.sound.init();
+    }
     this.lastTime = performance.now();
     this.animFrameId = requestAnimationFrame(this.loop);
   }

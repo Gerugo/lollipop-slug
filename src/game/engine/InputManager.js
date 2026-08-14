@@ -33,6 +33,14 @@ export class InputManager {
     this._onBlur = this._onBlur.bind(this);
   }
 
+  init() {
+    this.attach();
+  }
+
+  start() {
+    this.attach();
+  }
+
   attach() {
     window.addEventListener('keydown', this._onKeyDown);
     window.addEventListener('keyup', this._onKeyUp);
