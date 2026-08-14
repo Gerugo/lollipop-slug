@@ -5,6 +5,7 @@ import { InputManager } from './InputManager.js';
 import { Camera } from './Camera.js';
 import { Physics } from './Physics.js';
 import { Level1 } from '../level/Level1.js';
+import { Level2 } from '../level/Level2.js';
 import { WEAPON_TYPES } from '../entities/Weapons.js';
 import { imageLoader } from './ImageLoader.js';
 
@@ -29,6 +30,7 @@ export class GameEngine {
     this.difficulty = 'NORMAL';
     this.score = 0;
     this.highScore = parseInt(localStorage.getItem('lollipop_slug_highscore') || '0', 10);
+    this.currentLevelIndex = 1;
     this.rescuedHostages = 0;
     this.gameTime = 0;
     this.lastTime = 0;
@@ -86,14 +88,12 @@ export class GameEngine {
         try { this.sound.init(); } catch (_) {}
       }
 
-      this.level = new Level1();
-      this.camera.setBounds(this.level.width, this.level.height);
-      this.camera.x = 0;
-      this.camera.unlock();
-      this.camera.setZoom(1.0);
-
-      this.player = new Player(100, 350);
-      this.player.reset(100, 350);
+      this.score = 0;
+      this.currentLevelIndex = 1;
+      this.rescuedHostages = 0;
+      this.gameTime = 0;
+      
+      this.loadLevel(this.currentLevelIndex);
 
       // Adjust HP based on difficulty
       if (this.difficulty === 'EASY') {
@@ -106,26 +106,6 @@ export class GameEngine {
         this.player.maxHp = 3;
         this.player.hp = 3;
       }
-
-      this.vehicle = this.level.createVehicle();
-      this.enemies = this.level.createEnemies();
-      this.hostages = this.level.createHostages();
-      this.destructibles = this.level.createDestructibles();
-      this.projectiles = [];
-      this.enemyProjectiles = [];
-      this.grenades = [];
-      this.drops = [];
-      this.boss = null;
-      this.bossIntroTimer = 0;
-      this.isBossIntroActive = false;
-      this.candyRainTimer = 90;
-      this.candyRainDuration = 0;
-
-      this.score = 0;
-      this.rescuedHostages = 0;
-      this.gameTime = 0;
-      this.respawnTimer = 0;
-      this.particles.clear();
 
       this.transitioning = false;
       this.setState('PLAYING');
@@ -142,6 +122,70 @@ export class GameEngine {
       this.transitioning = false;
       console.error('[GameEngine] Error in startNewGame:', err);
     }
+  }
+
+  advanceToNextLevel() {
+    this.transitioning = true;
+    try {
+      this.currentLevelIndex++;
+      this.loadLevel(this.currentLevelIndex);
+      
+      // HP carries over, but cap it at maxHp
+      this.player.hp = Math.min(this.player.hp, this.player.maxHp);
+
+      this.transitioning = false;
+      this.setState('PLAYING');
+
+      try {
+        if (this.sound) {
+          if (typeof this.sound.startBGM === 'function') this.sound.startBGM('level');
+          if (typeof this.sound.playMissionStart === 'function') this.sound.playMissionStart();
+        }
+      } catch (audioErr) {
+        console.warn('[GameEngine] Audio init on advance warning:', audioErr);
+      }
+    } catch (err) {
+      this.transitioning = false;
+      console.error('[GameEngine] Error advancing to next level:', err);
+    }
+  }
+
+  loadLevel(index) {
+    if (index === 1) {
+      this.level = new Level1();
+    } else if (index === 2) {
+      this.level = new Level2();
+    } else {
+      // Default fallback
+      this.level = new Level1();
+    }
+
+    this.camera.setBounds(this.level.width, this.level.height);
+    this.camera.x = 0;
+    this.camera.unlock();
+    this.camera.setZoom(1.0);
+
+    // Keep the same player instance if advancing, or create new if startNewGame
+    if (!this.player) {
+      this.player = new Player(100, 350);
+    }
+    this.player.reset(100, 350);
+
+    this.vehicle = this.level.createVehicle();
+    this.enemies = this.level.createEnemies();
+    this.hostages = this.level.createHostages();
+    this.destructibles = this.level.createDestructibles();
+    this.projectiles = [];
+    this.enemyProjectiles = [];
+    this.grenades = [];
+    this.drops = [];
+    this.boss = null;
+    this.bossIntroTimer = 0;
+    this.isBossIntroActive = false;
+    this.candyRainTimer = 90;
+    this.candyRainDuration = 0;
+    this.respawnTimer = 0;
+    this.particles.clear();
   }
 
   setDifficulty(diff) {
@@ -454,10 +498,14 @@ export class GameEngine {
         if (!this.isBossIntroActive) {
           this.boss.update(dt, this.player, this.level.platforms, this.enemyProjectiles, this.enemies, this.particles, this.sound, this.camera);
         }
-        if (this.boss.dead && this.state !== 'VICTORY') {
+        if (this.boss.dead && this.state !== 'VICTORY' && this.state !== 'LEVEL_COMPLETE') {
           this.addScore(10000);
           this.saveHighScore();
-          this.setState('VICTORY');
+          if (this.currentLevelIndex < 2) {
+            this.setState('LEVEL_COMPLETE');
+          } else {
+            this.setState('VICTORY');
+          }
           this.sound.stopBGM();
           this.sound.playMissionComplete();
         }

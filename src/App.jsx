@@ -8,6 +8,7 @@ import { MainMenu } from './components/MainMenu.jsx';
 import { PauseModal } from './components/PauseModal.jsx';
 import { GameOverModal } from './components/GameOverModal.jsx';
 import { VictoryModal } from './components/VictoryModal.jsx';
+import { LevelCompleteModal } from './components/LevelCompleteModal.jsx';
 import { HowToPlayModal } from './components/HowToPlayModal.jsx';
 import { useBackgroundMusic } from './hooks/useBackgroundMusic.js';
 
@@ -132,6 +133,12 @@ export function App() {
     }
   };
 
+  const handleNextLevel = () => {
+    if (engineRef.current) {
+      engineRef.current.advanceToNextLevel();
+    }
+  };
+
   const handleExitToMenu = () => {
     if (engineRef.current) {
       engineRef.current.setState('MENU');
@@ -197,21 +204,32 @@ export function App() {
       {/* 7. Game Over Modal */}
       {gameState === 'GAME_OVER' && (
         <GameOverModal
-          score={hudData ? hudData.score : 0}
-          highScore={hudData ? hudData.highScore : 0}
+          score={hudData?.score}
+          highScore={hudData?.highScore}
           onContinue={handleRestart}
           onExitToMenu={handleExitToMenu}
+        />
+      )}
+
+      {/* 7. Level Complete Modal */}
+      {gameState === 'LEVEL_COMPLETE' && (
+        <LevelCompleteModal
+          score={hudData?.score}
+          rescuedHostages={hudData?.rescuedHostages}
+          totalHostages={5}
+          gameTime={hudData?.gameTime}
+          onNextLevel={handleNextLevel}
         />
       )}
 
       {/* 8. Victory Modal */}
       {gameState === 'VICTORY' && (
         <VictoryModal
-          score={hudData ? hudData.score : 0}
-          highScore={hudData ? hudData.highScore : 0}
-          rescuedHostages={engineRef.current ? engineRef.current.rescuedHostages : 5}
+          score={hudData?.score}
+          highScore={hudData?.highScore}
+          rescuedHostages={hudData?.rescuedHostages}
           totalHostages={5}
-          gameTime={hudData ? hudData.gameTime : 0}
+          gameTime={hudData?.gameTime}
           onPlayAgain={handleRestart}
           onExitToMenu={handleExitToMenu}
         />
