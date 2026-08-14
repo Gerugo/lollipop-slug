@@ -213,7 +213,7 @@ export class Level1 {
       ctx.lineTo(endX, bottomY);
       ctx.closePath();
 
-      // 2. Biome-Specific Pastel Clay Gradient
+      // 2. Biome-Specific Pastel Clay Gradient & Texture
       const groundGrad = ctx.createLinearGradient(0, topY, 0, bottomY);
       const cols = biome.groundGradient;
       groundGrad.addColorStop(0, cols[0]);
@@ -222,6 +222,20 @@ export class Level1 {
       groundGrad.addColorStop(1, cols[3]);
       ctx.fillStyle = groundGrad;
       ctx.fill();
+
+      // Real Clay Texture Layer clipped inside the organic curve
+      const sueloImg = imageLoader.getImage('suelo');
+      if (sueloImg && sueloImg.complete && sueloImg.naturalWidth > 0) {
+        ctx.save();
+        ctx.clip();
+        ctx.globalAlpha = 0.55;
+        const tileW = 140;
+        const tileH = 80;
+        for (let tx = startX; tx < endX; tx += tileW) {
+          ctx.drawImage(sueloImg, tx, topY, tileW, tileH);
+        }
+        ctx.restore();
+      }
 
       // 3. Marshmallow Frosting Glaze Highlight on Top
       ctx.beginPath();
