@@ -53,7 +53,7 @@ export class GameEngine {
     this.isBossIntroActive = false;
 
     // Candy Rain Mini-Event
-    this.candyRainTimer = 25; // First event after 25s
+    this.candyRainTimer = 90; // First event after 90s (not 22s)
     this.candyRainDuration = 0;
 
     this.loop = this.loop.bind(this);
@@ -81,6 +81,11 @@ export class GameEngine {
   startNewGame() {
     this.transitioning = true;
     try {
+      // Ensure AudioContext is initialized before any SFX are triggered
+      if (this.sound && typeof this.sound.init === 'function') {
+        try { this.sound.init(); } catch (_) {}
+      }
+
       this.level = new Level1();
       this.camera.setBounds(this.level.width, this.level.height);
       this.camera.x = 0;
@@ -113,7 +118,7 @@ export class GameEngine {
       this.boss = null;
       this.bossIntroTimer = 0;
       this.isBossIntroActive = false;
-      this.candyRainTimer = 22;
+      this.candyRainTimer = 90;
       this.candyRainDuration = 0;
 
       this.score = 0;
@@ -220,90 +225,84 @@ export class GameEngine {
     const currentBiome = this.level ? this.level.getCurrentBiome(this.player ? this.player.x : 0) : { id: 'BIOME_A' };
 
     // 1. DYNAMIC PLATFORMS UPDATE (Moving, Sinking, Trampolines)
-    Physics.updatePlatforms(this.level.platforms, dt, this.particles, this.sound);
+    try { Physics.updatePlatforms(this.level.platforms, dt, this.particles, this.sound); } catch(e) { console.error('[update] step 1 platforms:', e); }
 
     // 2. CANDY RAIN MINI-EVENT
-    this.candyRainTimer -= dt;
-    if (this.candyRainTimer <= 0) {
-      this.candyRainTimer = 35 + Math.random() * 20;
-      this.candyRainDuration = 6.0;
-      this.sound.playCandyPickup();
-    }
-    if (this.candyRainDuration > 0) {
-      this.candyRainDuration -= dt;
-      if (Math.random() < 0.3) {
-        const dropX = this.camera.x + Math.random() * this.camera.viewportWidth;
-        this.spawnDrop(dropX, -20, Math.random() < 0.4 ? 'ESTRELLA' : 'CANDY_BONUS');
+    try {
+      this.candyRainTimer -= dt;
+      if (this.candyRainTimer <= 0) {
+        this.candyRainTimer = 60;
+        this.candyRainDuration = 3.0;
+        this.sound.playCandyPickup();
       }
-    }
-
-    // 3. CINEMATIC BOSS INTRO & ARENA TRIGGER
-    if (!this.boss && this.player.x >= this.level.bossTriggerX) {
-      console.log('[GameEngine] Boss arena activated. Initiating cinematic entrance...');
-      this.boss = this.level.createBoss();
-      this.boss.y = -180; // Start falling from the sky!
-      this.boss.vy = 400;
-      this.camera.lockToArena(this.level.bossArenaLockX);
-      this.camera.setZoom(1.15); // Cinematic focus zoom
-      this.isBossIntroActive = true;
-      this.bossIntroTimer = 3.0;
-      this.sound.playBossAlarm();
-    }
-
-    if (this.isBossIntroActive) {
-      this.bossIntroTimer -= dt;
-      // Boss falling impact
-      if (this.boss && this.boss.y < 230) {
-        this.boss.y += this.boss.vy * dt;
-        this.boss.vy += 800 * dt;
-        if (this.boss.y >= 230) {
-          this.boss.y = 230;
-          this.boss.vy = 0;
-          // Grand entrance ground slam!
-          this.camera.shake(28, 1.2);
-          this.sound.playExplosion();
-          this.particles.emitExplosionSprite(this.boss.x + this.boss.width / 2, this.boss.y + this.boss.height, 1.6);
-          this.particles.emitShockwave(this.boss.x + this.boss.width / 2, this.boss.y + this.boss.height, 220, '#FF3388');
-          this.particles.emitConfetti(this.boss.x + this.boss.width / 2, this.boss.y + this.boss.height, 50);
+      if (this.candyRainDuration > 0) {
+        this.candyRainDuration -= dt;
+        if (Math.random() < 0.05) {
+          const dropX = this.camera.x + Math.random() * this.camera.viewportWidth;
+          this.spawnDrop(dropX, -20, Math.random() < 0.4 ? 'ESTRELLA' : 'CANDY_BONUS');
         }
       }
+    } catch(e) { console.error('[update] step 2 candy rain:', e); }
 
-      if (this.bossIntroTimer <= 0) {
-        this.isBossIntroActive = false;
-        this.camera.setZoom(1.0);
-        this.sound.startBGM('boss');
+    // 3. CINEMATIC BOSS INTRO & ARENA TRIGGER
+    try {
+      if (!this.boss && this.player.x >= this.level.bossTriggerX) {
+        this.boss = this.level.createBoss();
+        this.boss.y = -180;
+        this.boss.vy = 400;
+        this.camera.lockToArena(this.level.bossArenaLockX);
+        this.camera.setZoom(1.15);
+        this.isBossIntroActive = true;
+        this.bossIntroTimer = 3.0;
+        this.sound.playBossAlarm();
       }
-    }
+
+      if (this.isBossIntroActive) {
+        this.bossIntroTimer -= dt;
+        if (this.boss && this.boss.y < 230) {
+          this.boss.y += this.boss.vy * dt;
+          this.boss.vy += 800 * dt;
+          if (this.boss.y >= 230) {
+            this.boss.y = 230;
+            this.boss.vy = 0;
+            this.camera.shake(28, 1.2);
+            this.sound.playExplosion();
+            this.particles.emitExplosionSprite(this.boss.x + this.boss.width / 2, this.boss.y + this.boss.height, 1.6);
+            this.particles.emitShockwave(this.boss.x + this.boss.width / 2, this.boss.y + this.boss.height, 220, '#FF3388');
+            this.particles.emitConfetti(this.boss.x + this.boss.width / 2, this.boss.y + this.boss.height, 50);
+          }
+        }
+        if (this.bossIntroTimer <= 0) {
+          this.isBossIntroActive = false;
+          this.camera.setZoom(1.0);
+          this.sound.startBGM('boss');
+        }
+      }
+    } catch(e) { console.error('[update] step 3 boss:', e); }
 
     // 4. UPDATE VEHICLE
-    if (this.vehicle) {
-      this.vehicle.update(
-        dt,
-        this.player,
-        this.input,
-        this.level.platforms,
-        this.projectiles,
-        this.enemies,
-        this.particles,
-        this.sound,
-        this.camera
-      );
-    }
+    try {
+      if (this.vehicle) {
+        this.vehicle.update(dt, this.player, this.input, this.level.platforms, this.projectiles, this.enemies, this.particles, this.sound, this.camera);
+      }
+    } catch(e) { console.error('[update] step 4 vehicle:', e); }
 
-    // 5. UPDATE PLAYER (if not in vehicle and not locked in intro)
-    if (!this.vehicle || !this.vehicle.isOccupied) {
-      this.player.update(
-        dt,
-        this.isBossIntroActive ? { isDown: () => false, isJustPressed: () => false } : this.input,
-        this.level.platforms,
-        this.projectiles,
-        this.grenades,
-        this.particles,
-        this.sound
-      );
-    }
+    // 5. UPDATE PLAYER
+    try {
+      if (!this.vehicle || !this.vehicle.isOccupied) {
+        this.player.update(
+          dt,
+          this.isBossIntroActive ? { isDown: () => false, isJustPressed: () => false } : this.input,
+          this.level.platforms,
+          this.projectiles,
+          this.grenades,
+          this.particles,
+          this.sound
+        );
+      }
+    } catch(e) { console.error('[update] step 5 player:', e); }
 
-    // Arena boundary clamp when camera is locked
+    // Arena boundary clamp
     if (this.camera.locked) {
       this.player.x = Math.max(this.camera.x + 10, Math.min(this.level.width - this.player.width - 20, this.player.x));
     }
@@ -325,246 +324,136 @@ export class GameEngine {
     }
 
     // 6. UPDATE CAMERA & AMBIENT PARTICLES
-    this.camera.update(dt, this.player);
-    this.particles.updateAmbient(dt, this.camera, currentBiome.id);
+    try {
+      this.camera.update(dt, this.player);
+      this.particles.updateAmbient(dt, this.camera, currentBiome.id);
+    } catch(e) { console.error('[update] step 6 camera:', e); }
 
     // 7. UPDATE DESTRUCTIBLES
-    for (const d of this.destructibles) {
-      d.update(dt);
-    }
+    try {
+      for (const d of this.destructibles) { d.update(dt); }
+    } catch(e) { console.error('[update] step 7 destructibles:', e); }
 
-    // 8. UPDATE PROJECTILES & PLATFORM CRUMBLE
-    for (let i = this.projectiles.length - 1; i >= 0; i--) {
-      const proj = this.projectiles[i];
-      proj.update(dt);
-
-      if (proj.isOffscreen(this.camera.x - 100, this.camera.x + this.camera.viewportWidth + 100, 540)) {
-        this.projectiles.splice(i, 1);
-        continue;
+    // 8. UPDATE PROJECTILES
+    try {
+      for (let i = this.projectiles.length - 1; i >= 0; i--) {
+        const proj = this.projectiles[i];
+        proj.update(dt);
+        if (proj.isOffscreen(this.camera.x - 100, this.camera.x + this.camera.viewportWidth + 100, 540)) { this.projectiles.splice(i, 1); continue; }
+        let hit = false;
+        for (const d of this.destructibles) { if (!d.dead && Physics.checkAABB(proj, d)) { d.takeDamage(proj.damage, this.particles, this.sound, this.drops); hit = true; break; } }
+        if (hit) { this.projectiles.splice(i, 1); continue; }
+        for (const plat of this.level.platforms) { if (Physics.checkAABB(proj, plat)) { this.particles.emitCrumble(proj.x, proj.y, 6, '#FDE68A'); hit = true; break; } }
+        if (hit && !proj.penetrate) { this.projectiles.splice(i, 1); continue; }
+        for (const enemy of this.enemies) { if (!enemy.dead && Physics.checkAABB(proj, enemy)) { enemy.takeDamage(proj.damage, this.particles, this.sound, proj.x); if (enemy.dead) this.handleEnemyDeath(enemy); hit = true; if (!proj.penetrate) break; } }
+        if (hit && !proj.penetrate) { this.projectiles.splice(i, 1); continue; }
+        if (this.boss && !this.boss.dead && !this.boss.isDefeated && !this.isBossIntroActive && Physics.checkAABB(proj, this.boss)) { this.boss.takeDamage(proj.damage, this.particles, this.sound, this.camera); if (proj.type === 'ROCKET') { this.explodeRocket(proj.x, proj.y); } if (!proj.penetrate) { this.projectiles.splice(i, 1); continue; } }
+        for (const hostage of this.hostages) { if (!hostage.isRescued && Physics.checkAABB(proj, hostage)) { hostage.rescue(this.particles, this.sound, this.drops); this.rescuedHostages++; this.addScore(1000); } }
       }
+    } catch(e) { console.error('[update] step 8 projectiles:', e); }
 
-      // Check Destructibles hit
-      let hit = false;
-      for (const d of this.destructibles) {
-        if (!d.dead && Physics.checkAABB(proj, d)) {
-          d.takeDamage(proj.damage, this.particles, this.sound, this.drops);
-          hit = true;
-          break;
+    // 9. UPDATE ENEMY PROJECTILES
+    try {
+      for (let i = this.enemyProjectiles.length - 1; i >= 0; i--) {
+        const eProj = this.enemyProjectiles[i];
+        eProj.update(dt);
+        if (eProj.isOffscreen(this.camera.x - 100, this.camera.x + this.camera.viewportWidth + 100, 540)) { this.enemyProjectiles.splice(i, 1); continue; }
+        let blocked = false;
+        for (const d of this.destructibles) { if (!d.dead && Physics.checkAABB(eProj, d)) { d.takeDamage(eProj.damage, this.particles, this.sound, this.drops); blocked = true; break; } }
+        if (blocked) { this.enemyProjectiles.splice(i, 1); continue; }
+        if (this.vehicle && this.vehicle.isOccupied && !this.vehicle.isDestroyed && Physics.checkAABB(eProj, this.vehicle)) { this.vehicle.takeDamage(eProj.damage, eProj.x, this.particles, this.sound, this.camera); this.enemyProjectiles.splice(i, 1); continue; }
+        if (!this.player.isDead && Physics.checkAABB(eProj, this.player)) { this.player.takeDamage(eProj.damage, eProj.x, this.particles, this.sound, this.camera); this.enemyProjectiles.splice(i, 1); }
+      }
+    } catch(e) { console.error('[update] step 9 eprojectiles:', e); }
+
+    // 10. UPDATE GRENADES
+    try {
+      for (let i = this.grenades.length - 1; i >= 0; i--) {
+        const g = this.grenades[i];
+        g.update(dt, this.level.platforms, this.particles, this.sound);
+        if (g.exploded) {
+          this.particles.emitExplosionSprite(g.x, g.y, 1.3);
+          this.camera.shake(14, 0.4);
+          for (const d of this.destructibles) { if (!d.dead && Physics.checkCircleAABB(g, d)) { d.takeDamage(50, this.particles, this.sound, this.drops); } }
+          for (const enemy of this.enemies) { if (!enemy.dead && Physics.checkCircleAABB(g, enemy)) { enemy.takeDamage(g.damage, this.particles, this.sound, g.x); if (enemy.dead) this.handleEnemyDeath(enemy); } }
+          for (const hostage of this.hostages) { if (!hostage.isRescued && Physics.checkCircleAABB(g, hostage)) { hostage.rescue(this.particles, this.sound, this.drops); this.rescuedHostages++; this.addScore(1000); } }
+          if (this.boss && !this.boss.dead && !this.boss.isDefeated && !this.isBossIntroActive && Physics.checkCircleAABB(g, this.boss)) { this.boss.takeDamage(g.damage, this.particles, this.sound, this.camera); }
+          this.grenades.splice(i, 1);
         }
       }
-      if (hit) {
-        this.projectiles.splice(i, 1);
-        continue;
-      }
+    } catch(e) { console.error('[update] step 10 grenades:', e); }
 
-      // Check Platform impact crumble
-      for (const plat of this.level.platforms) {
-        if (Physics.checkAABB(proj, plat)) {
-          this.particles.emitCrumble(proj.x, proj.y, 6, '#FDE68A');
-          hit = true;
-          break;
+    // 11. UPDATE ENEMIES
+    try {
+      for (let i = this.enemies.length - 1; i >= 0; i--) {
+        const enemy = this.enemies[i];
+        enemy.update(dt, this.player, this.level.platforms, this.enemyProjectiles, this.particles, this.sound, this.camera);
+        if (!enemy.dead) {
+          if (this.vehicle && this.vehicle.isOccupied && !this.vehicle.isDestroyed && Physics.checkAABB(this.vehicle, enemy)) {
+            this.vehicle.takeDamage(1, enemy.x, this.particles, this.sound, this.camera);
+          } else if (!this.player.isDead && Physics.checkAABB(this.player, enemy)) {
+            this.player.takeDamage(1, enemy.x + enemy.width / 2, this.particles, this.sound, this.camera);
+          }
         }
       }
-      if (hit && !proj.penetrate) {
-        this.projectiles.splice(i, 1);
-        continue;
-      }
+    } catch(e) { console.error('[update] step 11 enemies:', e); }
 
-      // Check Enemy hit
-      for (const enemy of this.enemies) {
-        if (!enemy.dead && Physics.checkAABB(proj, enemy)) {
-          enemy.takeDamage(proj.damage, this.particles, this.sound, proj.x);
-          if (enemy.dead) this.handleEnemyDeath(enemy);
-          hit = true;
-          if (!proj.penetrate) break;
-        }
-      }
-      if (hit && !proj.penetrate) {
-        this.projectiles.splice(i, 1);
-        continue;
-      }
-
-      // Check Boss hit
-      if (this.boss && !this.boss.dead && !this.boss.isDefeated && !this.isBossIntroActive && Physics.checkAABB(proj, this.boss)) {
-        this.boss.takeDamage(proj.damage, this.particles, this.sound, this.camera);
-        if (proj.type === 'ROCKET') {
-          this.explodeRocket(proj.x, proj.y);
-        }
-        if (!proj.penetrate) {
-          this.projectiles.splice(i, 1);
-          continue;
-        }
-      }
-
-      // Check Hostages rescue via bullet
+    // 12. UPDATE HOSTAGES
+    try {
       for (const hostage of this.hostages) {
-        if (!hostage.isRescued && Physics.checkAABB(proj, hostage)) {
+        hostage.update(dt, this.level.platforms, this.particles, this.sound, this.drops);
+        if (!hostage.isRescued && !this.player.isDead && Physics.checkAABB(this.player, hostage)) {
           hostage.rescue(this.particles, this.sound, this.drops);
           this.rescuedHostages++;
           this.addScore(1000);
         }
       }
-    }
-
-    // 9. UPDATE ENEMY PROJECTILES
-    for (let i = this.enemyProjectiles.length - 1; i >= 0; i--) {
-      const eProj = this.enemyProjectiles[i];
-      eProj.update(dt);
-
-      if (eProj.isOffscreen(this.camera.x - 100, this.camera.x + this.camera.viewportWidth + 100, 540)) {
-        this.enemyProjectiles.splice(i, 1);
-        continue;
-      }
-
-      // Check Barricade absorption
-      let blocked = false;
-      for (const d of this.destructibles) {
-        if (!d.dead && Physics.checkAABB(eProj, d)) {
-          d.takeDamage(eProj.damage, this.particles, this.sound, this.drops);
-          blocked = true;
-          break;
-        }
-      }
-      if (blocked) {
-        this.enemyProjectiles.splice(i, 1);
-        continue;
-      }
-
-      // Check Vehicle Armor hit
-      if (this.vehicle && this.vehicle.isOccupied && !this.vehicle.isDestroyed && Physics.checkAABB(eProj, this.vehicle)) {
-        this.vehicle.takeDamage(eProj.damage, eProj.x, this.particles, this.sound, this.camera);
-        this.enemyProjectiles.splice(i, 1);
-        continue;
-      }
-
-      // Check Player hit
-      if (!this.player.isDead && Physics.checkAABB(eProj, this.player)) {
-        this.player.takeDamage(eProj.damage, eProj.x, this.particles, this.sound, this.camera);
-        this.enemyProjectiles.splice(i, 1);
-      }
-    }
-
-    // 10. UPDATE GRENADES
-    for (let i = this.grenades.length - 1; i >= 0; i--) {
-      const g = this.grenades[i];
-      g.update(dt, this.level.platforms, this.particles, this.sound);
-
-      if (g.exploded) {
-        this.particles.emitExplosionSprite(g.x, g.y, 1.3);
-        this.camera.shake(14, 0.4);
-        for (const d of this.destructibles) {
-          if (!d.dead && Physics.checkCircleAABB(g, d)) {
-            d.takeDamage(50, this.particles, this.sound, this.drops);
-          }
-        }
-        for (const enemy of this.enemies) {
-          if (!enemy.dead && Physics.checkCircleAABB(g, enemy)) {
-            enemy.takeDamage(g.damage, this.particles, this.sound, g.x);
-            if (enemy.dead) this.handleEnemyDeath(enemy);
-          }
-        }
-        for (const hostage of this.hostages) {
-          if (!hostage.isRescued && Physics.checkCircleAABB(g, hostage)) {
-            hostage.rescue(this.particles, this.sound, this.drops);
-            this.rescuedHostages++;
-            this.addScore(1000);
-          }
-        }
-        if (this.boss && !this.boss.dead && !this.boss.isDefeated && !this.isBossIntroActive && Physics.checkCircleAABB(g, this.boss)) {
-          this.boss.takeDamage(g.damage, this.particles, this.sound, this.camera);
-        }
-
-        this.grenades.splice(i, 1);
-      }
-    }
-
-    // 11. UPDATE ENEMIES
-    for (let i = this.enemies.length - 1; i >= 0; i--) {
-      const enemy = this.enemies[i];
-      enemy.update(
-        dt,
-        this.player,
-        this.level.platforms,
-        this.enemyProjectiles,
-        this.particles,
-        this.sound,
-        this.camera
-      );
-
-      if (!enemy.dead) {
-        if (this.vehicle && this.vehicle.isOccupied && !this.vehicle.isDestroyed && Physics.checkAABB(this.vehicle, enemy)) {
-          this.vehicle.takeDamage(1, enemy.x, this.particles, this.sound, this.camera);
-        } else if (!this.player.isDead && Physics.checkAABB(this.player, enemy)) {
-          this.player.takeDamage(1, enemy.x + enemy.width / 2, this.particles, this.sound, this.camera);
-        }
-      }
-    }
-
-    // 12. UPDATE HOSTAGES
-    for (const hostage of this.hostages) {
-      hostage.update(dt, this.level.platforms, this.particles, this.sound, this.drops);
-      if (!hostage.isRescued && !this.player.isDead && Physics.checkAABB(this.player, hostage)) {
-        hostage.rescue(this.particles, this.sound, this.drops);
-        this.rescuedHostages++;
-        this.addScore(1000);
-      }
-    }
+    } catch(e) { console.error('[update] step 12 hostages:', e); }
 
     // 13. UPDATE DROPS
-    for (let i = this.drops.length - 1; i >= 0; i--) {
-      const drop = this.drops[i];
-      drop.timer += dt;
-      drop.vy += 750 * dt;
-      drop.x += drop.vx * dt;
-      drop.y += drop.vy * dt;
+    try {
+      for (let i = this.drops.length - 1; i >= 0; i--) {
+        const drop = this.drops[i];
+        drop.timer += dt;
 
-      for (const plat of this.level.platforms) {
-        if (
-          drop.x + drop.width > plat.x &&
-          drop.x < plat.x + plat.width &&
-          drop.y + drop.height >= plat.y &&
-          drop.y + drop.height <= plat.y + 16 &&
-          drop.vy > 0
-        ) {
-          drop.y = plat.y - drop.height;
-          drop.vy = 0;
-          drop.vx = 0;
-          break;
+        // Expire drops after 12 seconds to prevent floor clutter
+        if (drop.timer >= 12.0) {
+          this.particles.emitSparkles(drop.x + drop.width / 2, drop.y + drop.height / 2, 6, '#FFDF6D');
+          this.drops.splice(i, 1);
+          continue;
         }
-      }
 
-      if (!this.player.isDead && Physics.checkAABB(this.player, drop)) {
-        this.collectDrop(drop);
-        this.drops.splice(i, 1);
+        drop.vy += 750 * dt;
+        drop.x += drop.vx * dt;
+        drop.y += drop.vy * dt;
+        for (const plat of this.level.platforms) {
+          if (drop.x + drop.width > plat.x && drop.x < plat.x + plat.width && drop.y + drop.height >= plat.y && drop.y + drop.height <= plat.y + 16 && drop.vy > 0) {
+            drop.y = plat.y - drop.height; drop.vy = 0; drop.vx = 0; break;
+          }
+        }
+        if (!this.player.isDead && Physics.checkAABB(this.player, drop)) { this.collectDrop(drop); this.drops.splice(i, 1); }
       }
-    }
+    } catch(e) { console.error('[update] step 13 drops:', e); }
+
 
     // 14. UPDATE BOSS
-    if (this.boss) {
-      if (!this.isBossIntroActive) {
-        this.boss.update(
-          dt,
-          this.player,
-          this.level.platforms,
-          this.enemyProjectiles,
-          this.enemies,
-          this.particles,
-          this.sound,
-          this.camera
-        );
+    try {
+      if (this.boss) {
+        if (!this.isBossIntroActive) {
+          this.boss.update(dt, this.player, this.level.platforms, this.enemyProjectiles, this.enemies, this.particles, this.sound, this.camera);
+        }
+        if (this.boss.dead && this.state !== 'VICTORY') {
+          this.addScore(10000);
+          this.saveHighScore();
+          this.setState('VICTORY');
+          this.sound.stopBGM();
+          this.sound.playMissionComplete();
+        }
       }
-
-      if (this.boss.dead && this.state !== 'VICTORY') {
-        this.addScore(10000);
-        this.saveHighScore();
-        this.setState('VICTORY');
-        this.sound.stopBGM();
-        this.sound.playMissionComplete();
-      }
-    }
+    } catch(e) { console.error('[update] step 14 boss:', e); }
 
     // 15. UPDATE PARTICLES
-    this.particles.update(dt, this.level.platforms);
+    try { this.particles.update(dt, this.level.platforms); } catch(e) { console.error('[update] step 15 particles:', e); }
   }
 
   handleEnemyDeath(enemy) {
