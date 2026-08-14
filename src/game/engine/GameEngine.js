@@ -422,10 +422,8 @@ export class GameEngine {
     this.addScore(enemy.scoreValue);
     const rand = Math.random();
     if (rand < 0.12) {
-      // 12% Star bonus drop
       this.spawnDrop(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, 'ESTRELLA');
     } else if (rand < 0.20) {
-      // 8% Apple grenade refill drop (total 20% drop chance)
       this.spawnDrop(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, 'GRENADE');
     }
   }
@@ -590,27 +588,30 @@ export class GameEngine {
         ctx.stroke();
       }
     } else {
-      // Weapon Upgrade Crate
-      ctx.beginPath();
-      ctx.roundRect(-13, -13, 26, 26, 6);
-      let crateColor = '#FF5A9E';
-      let label = 'H';
-      if (drop.type === 'SHOTGUN') {
-        crateColor = '#0284C7';
-        label = 'S';
-      } else if (drop.type === 'ROCKET') {
-        crateColor = '#D97706';
-        label = 'R';
-      } else if (drop.type === 'GRENADE') {
-        crateColor = '#059669';
-        label = '💣';
+      // Weapon Upgrade Crate ('caja.png' Sprite or styled box)
+      const cajaSprite = imageLoader.getImage('caja');
+      if (cajaSprite && cajaSprite.complete && cajaSprite.naturalWidth > 0) {
+        ctx.drawImage(cajaSprite, -14, -14, 28, 28);
+      } else {
+        ctx.beginPath();
+        ctx.roundRect(-13, -13, 26, 26, 6);
+        let crateColor = '#FF5A9E';
+        if (drop.type === 'SHOTGUN') crateColor = '#0284C7';
+        else if (drop.type === 'ROCKET') crateColor = '#D97706';
+        else if (drop.type === 'GRENADE') crateColor = '#059669';
+
+        ctx.fillStyle = crateColor;
+        ctx.fill();
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 2;
+        ctx.stroke();
       }
 
-      ctx.fillStyle = crateColor;
-      ctx.fill();
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 2;
-      ctx.stroke();
+      // Letter Badge on Crate
+      let label = 'H';
+      if (drop.type === 'SHOTGUN') label = 'S';
+      else if (drop.type === 'ROCKET') label = 'R';
+      else if (drop.type === 'GRENADE') label = '💣';
 
       ctx.fillStyle = '#FFFFFF';
       ctx.font = 'bold 12px Fredoka, sans-serif';

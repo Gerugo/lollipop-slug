@@ -18,7 +18,14 @@ class ImageLoader {
       platano: './platano.png',
       estrella: './estrella.png',
       cielo: './fondo-cielo.jpg',
-      colinas: './fondo-colinas.jpg'
+      colinas: './fondo-colinas.jpg',
+      barquillo: './barquillo.png',
+      baston: './baston.png',
+      caja: './caja.png',
+      obstaculo: './obstaculo.png',
+      suelo: './suelo-arcilla.png',
+      tanque: './tanque.png',
+      explosion: './explosion.png'
     };
   }
 
@@ -53,6 +60,7 @@ class ImageLoader {
           let fallbackSrc = `./assets/${key}.png`;
           if (key === 'cielo') fallbackSrc = './assets/fondo-cielo.jpg';
           if (key === 'colinas') fallbackSrc = './assets/fondo-colinas.jpg';
+          if (key === 'suelo') fallbackSrc = './assets/suelo-arcilla.png';
 
           fallbackImg.onload = () => {
             this.images[key] = fallbackImg;
@@ -75,7 +83,6 @@ class ImageLoader {
                 }
               };
               thirdImg.onerror = () => {
-                console.error(`[ImageLoader] Failed to load asset key: ${key}`);
                 this.count++;
                 if (this.count >= this.total) {
                   this.loaded = true;
@@ -86,7 +93,7 @@ class ImageLoader {
               return;
             }
 
-            console.error(`[ImageLoader] Failed to load asset key: ${key}`);
+            console.warn(`[ImageLoader] Non-critical asset load fallback ended: ${key}`);
             this.count++;
             if (this.count >= this.total) {
               this.loaded = true;

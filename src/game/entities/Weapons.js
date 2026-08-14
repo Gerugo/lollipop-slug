@@ -201,22 +201,27 @@ export class Projectile {
       ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
       ctx.fill();
     } else if (this.type === 'CANDY_CANE') {
-      // Spinning Boomerang Candy Cane
+      // Spinning Boomerang Candy Cane ('baston.png')
       ctx.rotate(this.rotation);
-      ctx.beginPath();
-      ctx.roundRect(-4, -14, 8, 28, 4);
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fill();
-      ctx.strokeStyle = '#EF4444';
-      ctx.lineWidth = 2.5;
-      ctx.stroke();
+      const bastonSprite = imageLoader.getImage('baston');
+      if (bastonSprite && bastonSprite.complete && bastonSprite.naturalWidth > 0) {
+        ctx.drawImage(bastonSprite, -12, -18, 24, 36);
+      } else {
+        ctx.beginPath();
+        ctx.roundRect(-4, -14, 8, 28, 4);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fill();
+        ctx.strokeStyle = '#EF4444';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
 
-      // Candy cane hook
-      ctx.beginPath();
-      ctx.arc(4, -10, 6, -Math.PI / 2, Math.PI / 2);
-      ctx.strokeStyle = '#EF4444';
-      ctx.lineWidth = 4;
-      ctx.stroke();
+        // Candy cane hook
+        ctx.beginPath();
+        ctx.arc(4, -10, 6, -Math.PI / 2, Math.PI / 2);
+        ctx.strokeStyle = '#EF4444';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+      }
     }
 
     ctx.restore();
