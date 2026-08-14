@@ -3,19 +3,111 @@ import { imageLoader } from '../engine/ImageLoader.js';
 export class ParticleSystem {
   constructor() {
     this.particles = [];
-    this.maxParticles = 500;
+    this.ambientParticles = [];
+    this.maxParticles = 600;
+    this.ambientTimer = 0;
   }
 
-  emitExplosionSprite(x, y, maxScale = 1.0) {
+  // --- AMBIENT PARTICLES (Sugar Dust & Sparks) ---
+  updateAmbient(dt, camera, currentBiome) {
+    this.ambientTimer += dt;
+    if (this.ambientTimer >= 0.08 && this.ambientParticles.length < 50) {
+      this.ambientTimer = 0;
+      const screenX = camera.x + Math.random() * (camera.viewportWidth + 100);
+      const screenY = Math.random() * camera.viewportHeight;
+
+      let color = 'rgba(255, 255, 255, 0.7)';
+      let size = 2 + Math.random() * 3;
+      let vy = 15 + Math.random() * 25;
+
+      if (currentBiome === 'BIOME_B') {
+        color = 'rgba(251, 113, 133, 0.65)'; // Syrup pink dew
+        size = 3 + Math.random() * 4;
+      } else if (currentBiome === 'BIOME_C') {
+        color = 'rgba(216, 180, 254, 0.7)'; // Factory neon glow
+        size = 2 + Math.random() * 3;
+      }
+
+      this.ambientParticles.push({
+        x: screenX,
+        y: screenY,
+        vx: 15 + Math.sin(screenY * 0.05) * 20,
+        vy: vy,
+        size,
+        color,
+        life: 4.0,
+        maxLife: 4.0
+      });
+    }
+
+    for (let i = this.ambientParticles.length - 1; i >= 0; i--) {
+      const p = this.ambientParticles[i];
+      p.life -= dt;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      if (p.life <= 0 || p.x > camera.x + camera.viewportWidth + 150) {
+        this.ambientParticles.splice(i, 1);
+      }
+    }
+  }
+
+  // --- CRUMBLE EFFECT ON PLATFORM IMPACT ---
+  emitCrumble(x, y, count = 10, color = '#FDE68A') {
+    for (let i = 0; i < count; i++) {
+      const angle = (Math.random() - 0.5) * Math.PI;
+      const speed = 40 + Math.random() * 120;
+      this.particles.push({
+        type: 'crumble',
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: -Math.abs(Math.sin(angle)) * speed - 40,
+        gravity: 420,
+        drag: 0.94,
+        size: 3 + Math.random() * 4,
+        color,
+        life: 0.5 + Math.random() * 0.3,
+        maxLife: 0.8
+      });
+    }
+  }
+
+  // --- BOUNCY EXPLOSION SHARDS WITH GROUND REBOUND ---
+  emitBouncyShards(x, y, count = 16) {
+    const colors = ['#FF5A9E', '#5CD86E', '#52C4FF', '#FFD633', '#C084FC'];
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 100 + Math.random() * 260;
+      this.particles.push({
+        type: 'bouncy_shard',
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 120,
+        gravity: 520,
+        rebound: 0.55,
+        drag: 0.96,
+        size: 5 + Math.random() * 6,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        rot: Math.random() * Math.PI,
+        rotSpeed: (Math.random() - 0.5) * 16,
+        life: 0.9 + Math.random() * 0.5,
+        maxLife: 1.4
+      });
+    }
+  }
+
+  emitExplosionSprite(x, y, maxScale = 1.25) {
     this.particles.push({
       type: 'explosion_sprite',
       x,
       y,
       scale: 0.3,
       maxScale,
-      life: 0.35,
-      maxLife: 0.35
+      life: 0.38,
+      maxLife: 0.38
     });
+    this.emitBouncyShards(x, y, 14);
   }
 
   emitConfetti(x, y, count = 30) {
@@ -160,7 +252,7 @@ export class ParticleSystem {
     });
   }
 
-  update(dt) {
+  update(dt, platforms = []) {
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const p = this.particles[i];
       p.life -= dt;
@@ -188,6 +280,13 @@ export class ParticleSystem {
       p.x += p.vx * dt;
       p.y += p.vy * dt;
 
+      // Ground rebound collision for bouncy shards
+      if (p.type === 'bouncy_shard' && p.y >= 455 && p.vy > 0) {
+        p.y = 455;
+        p.vy = -p.vy * p.rebound;
+        p.vx *= 0.7;
+      }
+
       if (p.rotSpeed) {
         p.rot += p.rotSpeed * dt;
       }
@@ -202,6 +301,19 @@ export class ParticleSystem {
   }
 
   draw(ctx) {
+    // 1. Draw Ambient Particles
+    for (const ap of this.ambientParticles) {
+      const alpha = Math.max(0, Math.min(1, ap.life / ap.maxLife));
+      ctx.save();
+      ctx.globalAlpha = alpha * 0.75;
+      ctx.beginPath();
+      ctx.arc(ap.x, ap.y, ap.size, 0, Math.PI * 2);
+      ctx.fillStyle = ap.color;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // 2. Draw Dynamic Particles
     for (const p of this.particles) {
       const alpha = Math.max(0, Math.min(1, p.life / p.maxLife));
       ctx.save();
@@ -213,15 +325,30 @@ export class ParticleSystem {
         ctx.scale(p.scale, p.scale);
 
         if (expImg && expImg.complete && expImg.naturalWidth > 0) {
-          const w = 90;
-          const h = 90;
+          const w = 100;
+          const h = 100;
           ctx.drawImage(expImg, -w / 2, -h / 2, w, h);
         } else {
           ctx.beginPath();
-          ctx.arc(0, 0, 35, 0, Math.PI * 2);
+          ctx.arc(0, 0, 40, 0, Math.PI * 2);
           ctx.fillStyle = '#EF4444';
           ctx.fill();
         }
+      } else if (p.type === 'crumble') {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+      } else if (p.type === 'bouncy_shard' || p.type === 'shard') {
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.moveTo(0, -p.size);
+        ctx.lineTo(p.size * 0.8, p.size * 0.8);
+        ctx.lineTo(-p.size * 0.8, p.size * 0.5);
+        ctx.closePath();
+        ctx.fill();
       } else if (p.type === 'confetti') {
         ctx.translate(p.x, p.y);
         ctx.rotate(p.rot);
@@ -240,24 +367,10 @@ export class ParticleSystem {
         ctx.strokeStyle = '#FFFFFF';
         ctx.lineWidth = 1;
         ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(p.x - p.radius * 0.3, p.y - p.radius * 0.3, p.radius * 0.3, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        ctx.fill();
       } else if (p.type === 'syrup') {
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
         ctx.fillStyle = p.color;
-        ctx.fill();
-      } else if (p.type === 'shard') {
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.rot);
-        ctx.fillStyle = p.color;
-        ctx.beginPath();
-        ctx.moveTo(0, -p.size);
-        ctx.lineTo(p.size * 0.8, p.size * 0.8);
-        ctx.lineTo(-p.size * 0.8, p.size * 0.5);
-        ctx.closePath();
         ctx.fill();
       } else if (p.type === 'sparkle') {
         ctx.translate(p.x, p.y);
@@ -284,5 +397,6 @@ export class ParticleSystem {
 
   clear() {
     this.particles = [];
+    this.ambientParticles = [];
   }
 }

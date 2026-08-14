@@ -1,12 +1,12 @@
-import { Camera } from './Camera.js';
-import { InputManager } from './InputManager.js';
+import { Player } from '../entities/Player.js';
 import { ParticleSystem } from '../entities/ParticleSystem.js';
 import { soundManager } from '../audio/SoundManager.js';
-import { imageLoader } from './ImageLoader.js';
-import { Player } from '../entities/Player.js';
+import { InputManager } from './InputManager.js';
+import { Camera } from './Camera.js';
+import { Physics } from './Physics.js';
 import { Level1 } from '../level/Level1.js';
 import { WEAPON_TYPES } from '../entities/Weapons.js';
-import { Physics } from './Physics.js';
+import { imageLoader } from './ImageLoader.js';
 
 export class GameEngine {
   constructor(canvas, callbacks = {}) {
@@ -14,65 +14,62 @@ export class GameEngine {
     this.ctx = canvas.getContext('2d');
     this.callbacks = callbacks;
 
+    // Viewport Virtual Dimensions (16:9 Standard)
     this.viewportWidth = 960;
     this.viewportHeight = 540;
 
-    this.camera = new Camera(this.viewportWidth, this.viewportHeight);
+    // Core Managers
     this.input = new InputManager();
-    this.particles = new ParticleSystem();
     this.sound = soundManager;
+    this.camera = new Camera(this.viewportWidth, this.viewportHeight);
+    this.particles = new ParticleSystem();
 
-    this.level = new Level1();
-    this.camera.setBounds(this.level.width, this.level.height);
+    // Game State
+    this.state = 'MENU';
+    this.difficulty = 'NORMAL';
+    this.score = 0;
+    this.highScore = parseInt(localStorage.getItem('lollipop_slug_highscore') || '0', 10);
+    this.rescuedHostages = 0;
+    this.gameTime = 0;
+    this.lastTime = 0;
+    this.animFrameId = null;
 
-    this.player = new Player(100, 380);
+    // Entities
+    this.player = null;
+    this.vehicle = null;
+    this.level = null;
     this.enemies = [];
     this.hostages = [];
     this.destructibles = [];
-    this.vehicle = null;
-    this.boss = null;
     this.projectiles = [];
     this.enemyProjectiles = [];
     this.grenades = [];
     this.drops = [];
-
-    this.state = 'MENU';
-    this.difficulty = 'NORMAL';
-
-    this.score = 0;
-    this.highScore = parseInt(localStorage.getItem('lollipop_slug_highscore') || '0', 10);
-    this.rescuedHostages = 0;
-    this.totalHostages = 5;
-    this.gameTime = 0;
-
-    this.lastTime = 0;
-    this.animFrameId = null;
-    this.running = false;
-
+    this.boss = null;
     this.respawnTimer = 0;
-    this.victoryTimer = 0;
 
-    this.input.attach();
+    // Cinematic Boss Intro State
+    this.bossIntroTimer = 0;
+    this.isBossIntroActive = false;
 
-    imageLoader.preloadAll().then(() => {
-      console.log('[GameEngine] All sprite and background assets loaded successfully.');
-    });
+    // Candy Rain Mini-Event
+    this.candyRainTimer = 25; // First event after 25s
+    this.candyRainDuration = 0;
+
+    this.loop = this.loop.bind(this);
   }
 
-  setDifficulty(diff) {
-    this.difficulty = diff;
-    if (diff === 'EASY') {
-      this.player.lives = 4;
-      this.player.maxHp = 4;
-      this.player.hp = 4;
-    } else if (diff === 'HARD') {
-      this.player.lives = 2;
-      this.player.maxHp = 3;
-      this.player.hp = 3;
-    } else {
-      this.player.lives = 3;
-      this.player.maxHp = 3;
-      this.player.hp = 3;
+  start() {
+    this.input.init();
+    this.sound.init();
+    this.lastTime = performance.now();
+    this.animFrameId = requestAnimationFrame(this.loop);
+  }
+
+  stop() {
+    if (this.animFrameId) {
+      cancelAnimationFrame(this.animFrameId);
+      this.animFrameId = null;
     }
   }
 
@@ -80,31 +77,39 @@ export class GameEngine {
     this.level = new Level1();
     this.camera.setBounds(this.level.width, this.level.height);
     this.camera.x = 0;
-    this.camera.locked = false;
+    this.camera.unlock();
+    this.camera.setZoom(1.0);
 
-    this.player.reset(100, 380);
-    this.setDifficulty(this.difficulty);
+    this.player = new Player(100, 350);
+    this.player.reset(100, 350);
 
+    this.vehicle = this.level.createVehicle();
     this.enemies = this.level.createEnemies();
     this.hostages = this.level.createHostages();
     this.destructibles = this.level.createDestructibles();
-    this.vehicle = this.level.createVehicle();
-    this.boss = null;
-
     this.projectiles = [];
     this.enemyProjectiles = [];
     this.grenades = [];
     this.drops = [];
-    this.particles.clear();
+    this.boss = null;
+    this.bossIntroTimer = 0;
+    this.isBossIntroActive = false;
+    this.candyRainTimer = 22;
+    this.candyRainDuration = 0;
 
     this.score = 0;
     this.rescuedHostages = 0;
     this.gameTime = 0;
     this.respawnTimer = 0;
-    this.victoryTimer = 0;
+    this.particles.clear();
 
     this.setState('PLAYING');
-    this.sound.startBGM('stage');
+    this.sound.startBGM('level');
+    this.sound.playMissionStart();
+  }
+
+  setDifficulty(diff) {
+    this.difficulty = diff;
   }
 
   setState(newState) {
@@ -120,40 +125,14 @@ export class GameEngine {
       this.sound.stopBGM();
     } else if (this.state === 'PAUSED') {
       this.setState('PLAYING');
-      this.sound.startBGM(this.boss ? 'boss' : 'stage');
+      this.sound.startBGM(this.boss ? 'boss' : 'level');
     }
-  }
-
-  start() {
-    if (this.running) return;
-    this.running = true;
-    this.lastTime = performance.now();
-    this.loop = this.loop.bind(this);
-    this.animFrameId = requestAnimationFrame(this.loop);
-  }
-
-  stop() {
-    this.running = false;
-    if (this.animFrameId) {
-      cancelAnimationFrame(this.animFrameId);
-      this.animFrameId = null;
-    }
-    this.input.detach();
-    this.sound.stopBGM();
   }
 
   loop(currentTime) {
-    if (!this.running) return;
-
     try {
-      const dt = Math.min(0.1, (currentTime - this.lastTime) / 1000);
+      const dt = Math.min((currentTime - this.lastTime) / 1000, 0.05);
       this.lastTime = currentTime;
-
-      this.input.update();
-
-      if (this.input.isJustPressed('pause')) {
-        this.togglePause();
-      }
 
       if (this.state === 'PLAYING') {
         this.update(dt);
@@ -161,7 +140,7 @@ export class GameEngine {
 
       this.render();
 
-      if (this.callbacks.onHUDUpdate) {
+      if (this.callbacks.onHUDUpdate && this.player) {
         this.callbacks.onHUDUpdate({
           hp: this.player.hp,
           maxHp: this.player.maxHp,
@@ -191,17 +170,67 @@ export class GameEngine {
 
   update(dt) {
     this.gameTime += dt;
+    this.level.update(dt);
 
-    // 1. Boss Arena Trigger & Camera Lock
-    if (!this.boss && this.player.x >= this.level.bossTriggerX) {
-      console.log('[GameEngine] Boss arena activated. Spawning Gumball Mech Titan...');
-      this.boss = this.level.createBoss();
-      this.camera.lockToArena(this.level.bossTriggerX - 20);
-      this.sound.playBossAlarm();
-      this.sound.startBGM('boss');
+    const currentBiome = this.level.getCurrentBiome(this.player ? this.player.x : 0);
+
+    // 1. DYNAMIC PLATFORMS UPDATE (Moving, Sinking, Trampolines)
+    Physics.updatePlatforms(this.level.platforms, dt, this.particles, this.sound);
+
+    // 2. CANDY RAIN MINI-EVENT
+    this.candyRainTimer -= dt;
+    if (this.candyRainTimer <= 0) {
+      this.candyRainTimer = 35 + Math.random() * 20;
+      this.candyRainDuration = 6.0;
+      this.sound.playCandyPickup();
+    }
+    if (this.candyRainDuration > 0) {
+      this.candyRainDuration -= dt;
+      if (Math.random() < 0.3) {
+        const dropX = this.camera.x + Math.random() * this.camera.viewportWidth;
+        this.spawnDrop(dropX, -20, Math.random() < 0.4 ? 'ESTRELLA' : 'CANDY_BONUS');
+      }
     }
 
-    // 2. Update Vehicle
+    // 3. CINEMATIC BOSS INTRO & ARENA TRIGGER
+    if (!this.boss && this.player.x >= this.level.bossTriggerX) {
+      console.log('[GameEngine] Boss arena activated. Initiating cinematic entrance...');
+      this.boss = this.level.createBoss();
+      this.boss.y = -180; // Start falling from the sky!
+      this.boss.vy = 400;
+      this.camera.lockToArena(this.level.bossArenaLockX);
+      this.camera.setZoom(1.15); // Cinematic focus zoom
+      this.isBossIntroActive = true;
+      this.bossIntroTimer = 3.0;
+      this.sound.playBossAlarm();
+    }
+
+    if (this.isBossIntroActive) {
+      this.bossIntroTimer -= dt;
+      // Boss falling impact
+      if (this.boss && this.boss.y < 230) {
+        this.boss.y += this.boss.vy * dt;
+        this.boss.vy += 800 * dt;
+        if (this.boss.y >= 230) {
+          this.boss.y = 230;
+          this.boss.vy = 0;
+          // Grand entrance ground slam!
+          this.camera.shake(28, 1.2);
+          this.sound.playExplosion();
+          this.particles.emitExplosionSprite(this.boss.x + this.boss.width / 2, this.boss.y + this.boss.height, 1.6);
+          this.particles.emitShockwave(this.boss.x + this.boss.width / 2, this.boss.y + this.boss.height, 220, '#FF3388');
+          this.particles.emitConfetti(this.boss.x + this.boss.width / 2, this.boss.y + this.boss.height, 50);
+        }
+      }
+
+      if (this.bossIntroTimer <= 0) {
+        this.isBossIntroActive = false;
+        this.camera.setZoom(1.0);
+        this.sound.startBGM('boss');
+      }
+    }
+
+    // 4. UPDATE VEHICLE
     if (this.vehicle) {
       this.vehicle.update(
         dt,
@@ -216,11 +245,11 @@ export class GameEngine {
       );
     }
 
-    // 3. Update Player (if not in vehicle)
+    // 5. UPDATE PLAYER (if not in vehicle and not locked in intro)
     if (!this.vehicle || !this.vehicle.isOccupied) {
       this.player.update(
         dt,
-        this.input,
+        this.isBossIntroActive ? { isDown: () => false, isJustPressed: () => false } : this.input,
         this.level.platforms,
         this.projectiles,
         this.grenades,
@@ -250,107 +279,113 @@ export class GameEngine {
       }
     }
 
-    // 4. Update Camera
+    // 6. UPDATE CAMERA & AMBIENT PARTICLES
     this.camera.update(dt, this.player);
+    this.particles.updateAmbient(dt, this.camera, currentBiome.id);
 
-    // 5. Update Destructibles
+    // 7. UPDATE DESTRUCTIBLES
     for (const d of this.destructibles) {
       d.update(dt);
     }
 
-    // 6. Update Projectiles
+    // 8. UPDATE PROJECTILES & PLATFORM CRUMBLE
     for (let i = this.projectiles.length - 1; i >= 0; i--) {
       const proj = this.projectiles[i];
-      proj.update(dt, this.particles, this.level.platforms);
+      proj.update(dt);
 
-      if (proj.life <= 0 || proj.x < this.camera.x - 100 || proj.x > this.camera.x + this.viewportWidth + 100) {
+      if (proj.isOffscreen(this.camera.x - 100, this.camera.x + this.camera.viewportWidth + 100, 540)) {
         this.projectiles.splice(i, 1);
         continue;
       }
 
       // Check Destructibles hit
-      let hitBarricade = false;
+      let hit = false;
       for (const d of this.destructibles) {
         if (!d.dead && Physics.checkAABB(proj, d)) {
           d.takeDamage(proj.damage, this.particles, this.sound, this.drops);
-          if (d.dead) this.addScore(500);
-          hitBarricade = true;
-          if (!proj.penetrate) {
-            this.projectiles.splice(i, 1);
-            break;
-          }
+          hit = true;
+          break;
         }
       }
-      if (hitBarricade && !proj.penetrate) continue;
+      if (hit) {
+        this.projectiles.splice(i, 1);
+        continue;
+      }
 
-      // Check Enemies hit
+      // Check Platform impact crumble
+      for (const plat of this.level.platforms) {
+        if (Physics.checkAABB(proj, plat)) {
+          this.particles.emitCrumble(proj.x, proj.y, 6, '#FDE68A');
+          hit = true;
+          break;
+        }
+      }
+      if (hit && !proj.penetrate) {
+        this.projectiles.splice(i, 1);
+        continue;
+      }
+
+      // Check Enemy hit
       for (const enemy of this.enemies) {
-        if (!enemy.dead && !proj.hitEntities.has(enemy) && Physics.checkAABB(proj, enemy)) {
+        if (!enemy.dead && Physics.checkAABB(proj, enemy)) {
           enemy.takeDamage(proj.damage, this.particles, this.sound, proj.x);
-          proj.hitEntities.add(enemy);
-
-          if (enemy.dead) {
-            this.handleEnemyDeath(enemy);
-          }
-
-          if (!proj.penetrate) {
-            if (proj.type === 'ROCKET') {
-              this.explodeRocket(proj.x, proj.y);
-            }
-            this.projectiles.splice(i, 1);
-            break;
-          }
+          if (enemy.dead) this.handleEnemyDeath(enemy);
+          hit = true;
+          if (!proj.penetrate) break;
         }
       }
-
-      // Check Hostages hit
-      for (const hostage of this.hostages) {
-        if (!hostage.isRescued && Physics.checkAABB(proj, hostage)) {
-          hostage.rescue(this.particles, this.sound, this.drops);
-          this.rescuedHostages++;
-          this.addScore(1000);
-          if (!proj.penetrate) {
-            this.projectiles.splice(i, 1);
-            break;
-          }
-        }
+      if (hit && !proj.penetrate) {
+        this.projectiles.splice(i, 1);
+        continue;
       }
 
       // Check Boss hit
-      if (this.boss && !this.boss.dead && !this.boss.isDefeated && Physics.checkAABB(proj, this.boss)) {
+      if (this.boss && !this.boss.dead && !this.boss.isDefeated && !this.isBossIntroActive && Physics.checkAABB(proj, this.boss)) {
         this.boss.takeDamage(proj.damage, this.particles, this.sound, this.camera);
         if (proj.type === 'ROCKET') {
           this.explodeRocket(proj.x, proj.y);
         }
         if (!proj.penetrate) {
           this.projectiles.splice(i, 1);
+          continue;
+        }
+      }
+
+      // Check Hostages rescue via bullet
+      for (const hostage of this.hostages) {
+        if (!hostage.isRescued && Physics.checkAABB(proj, hostage)) {
+          hostage.rescue(this.particles, this.sound, this.drops);
+          this.rescuedHostages++;
+          this.addScore(1000);
         }
       }
     }
 
-    // 7. Update Enemy Projectiles
+    // 9. UPDATE ENEMY PROJECTILES
     for (let i = this.enemyProjectiles.length - 1; i >= 0; i--) {
       const eProj = this.enemyProjectiles[i];
-      eProj.update(dt, this.particles, this.level.platforms);
+      eProj.update(dt);
 
-      if (eProj.life <= 0 || eProj.x < this.camera.x - 100 || eProj.x > this.camera.x + this.viewportWidth + 100) {
+      if (eProj.isOffscreen(this.camera.x - 100, this.camera.x + this.camera.viewportWidth + 100, 540)) {
         this.enemyProjectiles.splice(i, 1);
         continue;
       }
 
-      // Barricades block enemy bullets
-      let blockedByBarricade = false;
+      // Check Barricade absorption
+      let blocked = false;
       for (const d of this.destructibles) {
         if (!d.dead && Physics.checkAABB(eProj, d)) {
           d.takeDamage(eProj.damage, this.particles, this.sound, this.drops);
-          this.enemyProjectiles.splice(i, 1);
-          blockedByBarricade = true;
+          blocked = true;
           break;
         }
       }
-      if (blockedByBarricade) continue;
+      if (blocked) {
+        this.enemyProjectiles.splice(i, 1);
+        continue;
+      }
 
-      // Check Vehicle Armor hit if player is inside
+      // Check Vehicle Armor hit
       if (this.vehicle && this.vehicle.isOccupied && !this.vehicle.isDestroyed && Physics.checkAABB(eProj, this.vehicle)) {
         this.vehicle.takeDamage(eProj.damage, eProj.x, this.particles, this.sound, this.camera);
         this.enemyProjectiles.splice(i, 1);
@@ -364,13 +399,14 @@ export class GameEngine {
       }
     }
 
-    // 8. Update Grenades
+    // 10. UPDATE GRENADES
     for (let i = this.grenades.length - 1; i >= 0; i--) {
       const g = this.grenades[i];
       g.update(dt, this.level.platforms, this.particles, this.sound);
 
       if (g.exploded) {
-        this.particles.emitExplosionSprite(g.x, g.y, 1.2);
+        this.particles.emitExplosionSprite(g.x, g.y, 1.3);
+        this.camera.shake(14, 0.4);
         for (const d of this.destructibles) {
           if (!d.dead && Physics.checkCircleAABB(g, d)) {
             d.takeDamage(50, this.particles, this.sound, this.drops);
@@ -379,9 +415,7 @@ export class GameEngine {
         for (const enemy of this.enemies) {
           if (!enemy.dead && Physics.checkCircleAABB(g, enemy)) {
             enemy.takeDamage(g.damage, this.particles, this.sound, g.x);
-            if (enemy.dead) {
-              this.handleEnemyDeath(enemy);
-            }
+            if (enemy.dead) this.handleEnemyDeath(enemy);
           }
         }
         for (const hostage of this.hostages) {
@@ -391,7 +425,7 @@ export class GameEngine {
             this.addScore(1000);
           }
         }
-        if (this.boss && !this.boss.dead && !this.boss.isDefeated && Physics.checkCircleAABB(g, this.boss)) {
+        if (this.boss && !this.boss.dead && !this.boss.isDefeated && !this.isBossIntroActive && Physics.checkCircleAABB(g, this.boss)) {
           this.boss.takeDamage(g.damage, this.particles, this.sound, this.camera);
         }
 
@@ -399,7 +433,7 @@ export class GameEngine {
       }
     }
 
-    // 9. Update Enemies
+    // 11. UPDATE ENEMIES
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const enemy = this.enemies[i];
       enemy.update(
@@ -421,7 +455,7 @@ export class GameEngine {
       }
     }
 
-    // 10. Update Hostages
+    // 12. UPDATE HOSTAGES
     for (const hostage of this.hostages) {
       hostage.update(dt, this.level.platforms, this.particles, this.sound, this.drops);
       if (!hostage.isRescued && !this.player.isDead && Physics.checkAABB(this.player, hostage)) {
@@ -431,11 +465,11 @@ export class GameEngine {
       }
     }
 
-    // 11. Update Drops
+    // 13. UPDATE DROPS
     for (let i = this.drops.length - 1; i >= 0; i--) {
       const drop = this.drops[i];
       drop.timer += dt;
-      drop.vy += 800 * dt;
+      drop.vy += 750 * dt;
       drop.x += drop.vx * dt;
       drop.y += drop.vy * dt;
 
@@ -449,78 +483,72 @@ export class GameEngine {
         ) {
           drop.y = plat.y - drop.height;
           drop.vy = 0;
-          drop.vx *= 0.5;
+          drop.vx = 0;
+          break;
         }
       }
 
-      if (!drop.collected && !this.player.isDead && Physics.checkAABB(this.player, drop)) {
-        drop.collected = true;
+      if (!this.player.isDead && Physics.checkAABB(this.player, drop)) {
         this.collectDrop(drop);
         this.drops.splice(i, 1);
       }
     }
 
-    // 12. Update Boss safely & Trigger Victory
+    // 14. UPDATE BOSS
     if (this.boss) {
-      this.boss.update(
-        dt,
-        this.player,
-        this.level.platforms,
-        this.enemyProjectiles,
-        this.enemies,
-        this.particles,
-        this.sound,
-        this.camera
-      );
-
-      if (!this.boss.dead && !this.boss.isDefeated && !this.player.isDead && Physics.checkAABB(this.player, this.boss)) {
-        this.player.takeDamage(1, this.boss.x + this.boss.width / 2, this.particles, this.sound, this.camera);
+      if (!this.isBossIntroActive) {
+        this.boss.update(
+          dt,
+          this.player,
+          this.level.platforms,
+          this.enemyProjectiles,
+          this.enemies,
+          this.particles,
+          this.sound,
+          this.camera
+        );
       }
 
-      if (this.boss.dead && this.state === 'PLAYING') {
-        this.victoryTimer += dt;
-        if (this.victoryTimer > 1.8) {
-          console.log('[GameEngine] Boss defeated! Victory triggered.');
-          this.player.isVictorious = true;
-          this.addScore(50000);
-          this.saveHighScore();
-          this.setState('VICTORY');
-          this.sound.stopBGM();
-        }
+      if (this.boss.dead && this.state !== 'VICTORY') {
+        this.addScore(10000);
+        this.saveHighScore();
+        this.setState('VICTORY');
+        this.sound.stopBGM();
+        this.sound.playMissionComplete();
       }
     }
 
-    // 13. Update Particle System
-    this.particles.update(dt);
+    // 15. UPDATE PARTICLES
+    this.particles.update(dt, this.level.platforms);
   }
 
   handleEnemyDeath(enemy) {
-    this.addScore(enemy.scoreValue);
+    this.addScore(100);
     const rand = Math.random();
-    if (rand < 0.12) {
+    if (rand < 0.15) {
       this.spawnDrop(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, 'ESTRELLA');
-    } else if (rand < 0.20) {
+    } else if (rand < 0.25) {
       this.spawnDrop(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, 'GRENADE');
     }
   }
 
   explodeRocket(x, y) {
     this.sound.playExplosion();
-    this.camera.shake(12, 0.4);
-    this.particles.emitExplosionSprite(x, y, 1.25);
-    this.particles.emitShockwave(x, y, 75, '#FF3388');
-    this.particles.emitSyrupSplash(x, y, 22, '#EF4444');
-    this.particles.emitSugarSmoke(x, y, 10, '#FDE68A');
+    this.camera.shake(16, 0.5);
+    this.particles.emitExplosionSprite(x, y, 1.4);
+    this.particles.emitShockwave(x, y, 90, '#FF3388');
+    this.particles.emitSyrupSplash(x, y, 25, '#EF4444');
+    this.particles.emitSugarSmoke(x, y, 12, '#FDE68A');
 
     for (const d of this.destructibles) {
-      if (!d.dead && Math.hypot(d.x + d.width / 2 - x, d.y + d.height / 2 - y) < 80) {
-        d.takeDamage(60, this.particles, this.sound, this.drops);
+      if (!d.dead && Math.hypot(d.x + d.width / 2 - x, d.y + d.height / 2 - y) < 85) {
+        d.takeDamage(65, this.particles, this.sound, this.drops);
       }
     }
 
     for (const enemy of this.enemies) {
-      if (!enemy.dead && Math.hypot(enemy.x + enemy.width / 2 - x, enemy.y + enemy.height / 2 - y) < 80) {
-        enemy.takeDamage(65, this.particles, this.sound, x);
+      if (!enemy.dead && Math.hypot(enemy.x + enemy.width / 2 - x, enemy.y + enemy.height / 2 - y) < 85) {
+        enemy.takeDamage(70, this.particles, this.sound, x);
         if (enemy.dead) this.handleEnemyDeath(enemy);
       }
     }
@@ -585,13 +613,13 @@ export class GameEngine {
     const ctx = this.ctx;
     ctx.clearRect(0, 0, this.viewportWidth, this.viewportHeight);
 
-    // 1. Draw 2-Layer Seamless Parallax Background
+    // 1. Draw 3-Layer Parallax Biome Background
     this.level.drawBackground(ctx, this.camera);
 
     // 2. Apply Camera World Transform
     this.camera.applyTransform(ctx);
 
-    // 3. Draw Level Platforms & Ground
+    // 3. Draw Level Platforms & Continuous Ground
     this.level.drawPlatforms(ctx, this.camera);
 
     // 4. Draw Destructibles (Barricades)
@@ -653,6 +681,24 @@ export class GameEngine {
 
     // 13. Restore Camera Transform
     this.camera.restoreTransform(ctx);
+
+    // 14. Draw Cinematic Boss Warning Overlay (Screen Space)
+    if (this.isBossIntroActive) {
+      ctx.save();
+      const flash = Math.floor(this.gameTime * 8) % 2 === 0;
+      ctx.fillStyle = flash ? 'rgba(239, 68, 68, 0.4)' : 'rgba(15, 23, 42, 0.6)';
+      ctx.fillRect(0, 80, this.viewportWidth, 90);
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = '900 24px "Bungee", cursive, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('⚠️ ALERTA: THE GUMBALL MECH TITAN ⚠️', this.viewportWidth / 2, 130);
+
+      ctx.fillStyle = '#FDE047';
+      ctx.font = 'bold 12px "Press Start 2P", monospace';
+      ctx.fillText('¡PREPÁRATE PARA LA BATALLA!', this.viewportWidth / 2, 155);
+      ctx.restore();
+    }
   }
 
   drawDrop(ctx, drop) {
@@ -661,7 +707,6 @@ export class GameEngine {
     const cy = drop.y + 14;
     const bob = Math.sin(drop.timer * 6) * 4;
 
-    // Ground Shadow for Item
     ctx.beginPath();
     ctx.ellipse(cx, drop.y + drop.height + 2, 14, 4, 0, 0, Math.PI * 2);
     ctx.fillStyle = 'rgba(0, 0, 0, 0.20)';
@@ -670,7 +715,6 @@ export class GameEngine {
     ctx.translate(cx, cy + bob);
 
     if (drop.type === 'ESTRELLA' || drop.type === 'CANDY_BONUS') {
-      // Rotating Star Collectible ('estrella.png')
       ctx.rotate(drop.timer * 3.5);
       const starSprite = imageLoader.getImage('estrella');
       if (starSprite && starSprite.complete && starSprite.naturalWidth > 0) {
@@ -682,7 +726,6 @@ export class GameEngine {
         ctx.fill();
       }
     } else {
-      // Supply Crate ('caja.png') with Floating Translucent Jelly Letter Badge
       const cajaSprite = imageLoader.getImage('caja');
       if (cajaSprite && cajaSprite.complete && cajaSprite.naturalWidth > 0) {
         ctx.drawImage(cajaSprite, -15, -15, 30, 30);
@@ -696,7 +739,6 @@ export class GameEngine {
         ctx.stroke();
       }
 
-      // Jelly Translucent Floating Letter [H], [S], [R], [G]
       let label = 'H';
       let jellyColor = 'rgba(236, 72, 153, 0.9)';
       if (drop.type === 'SHOTGUN') {

@@ -4,7 +4,7 @@ export class Camera {
     this.y = 0;
     this.viewportWidth = viewportWidth;
     this.viewportHeight = viewportHeight;
-    this.levelWidth = 3600;
+    this.levelWidth = 6400;
     this.levelHeight = 540;
     this.shakeIntensity = 0;
     this.shakeDuration = 0;
@@ -12,6 +12,8 @@ export class Camera {
     this.shakeOffsetY = 0;
     this.locked = false;
     this.lockedTargetX = 0;
+    this.zoom = 1.0;
+    this.targetZoom = 1.0;
   }
 
   setBounds(width, height) {
@@ -19,13 +21,15 @@ export class Camera {
     this.levelHeight = height;
   }
 
+  setZoom(zoomLevel = 1.0) {
+    this.targetZoom = zoomLevel;
+  }
+
   shake(arg1 = 8, arg2 = 0.3) {
-    // Flexible signature: supports shake(intensity, duration) or shake(msDuration, intensity)
     let finalIntensity = arg1;
     let finalDuration = arg2;
 
     if (arg1 > 30 && arg2 < 30) {
-      // e.g. shake(150, 3) -> 150ms duration, intensity 3
       finalDuration = arg1 / 1000;
       finalIntensity = arg2;
     }
@@ -34,12 +38,19 @@ export class Camera {
     this.shakeDuration = Math.max(this.shakeDuration, finalDuration);
   }
 
-  lockToArena(targetX = 2640) {
+  lockToArena(targetX = 5200) {
     this.locked = true;
     this.lockedTargetX = targetX;
   }
 
+  unlock() {
+    this.locked = false;
+  }
+
   update(dt, target) {
+    // Smooth zoom interpolation
+    this.zoom += (this.targetZoom - this.zoom) * Math.min(1, dt * 4.0);
+
     if (this.locked) {
       // Smoothly lerp towards arena lock position
       this.x += (this.lockedTargetX - this.x) * Math.min(1, dt * 3.5);
@@ -56,7 +67,7 @@ export class Camera {
       this.shakeDuration -= dt;
       this.shakeOffsetX = (Math.random() * 2 - 1) * this.shakeIntensity;
       this.shakeOffsetY = (Math.random() * 2 - 1) * this.shakeIntensity;
-      this.shakeIntensity = Math.max(0, this.shakeIntensity - dt * 20);
+      this.shakeIntensity = Math.max(0, this.shakeIntensity - dt * 18);
     } else {
       this.shakeOffsetX = 0;
       this.shakeOffsetY = 0;
@@ -65,6 +76,14 @@ export class Camera {
 
   applyTransform(ctx) {
     ctx.save();
+
+    // Center zoom
+    if (this.zoom !== 1.0) {
+      ctx.translate(this.viewportWidth / 2, this.viewportHeight / 2);
+      ctx.scale(this.zoom, this.zoom);
+      ctx.translate(-this.viewportWidth / 2, -this.viewportHeight / 2);
+    }
+
     ctx.translate(
       -Math.round(this.x + this.shakeOffsetX),
       -Math.round(this.y + this.shakeOffsetY)
