@@ -9,15 +9,20 @@ import { PauseModal } from './components/PauseModal.jsx';
 import { GameOverModal } from './components/GameOverModal.jsx';
 import { VictoryModal } from './components/VictoryModal.jsx';
 import { HowToPlayModal } from './components/HowToPlayModal.jsx';
+import { useBackgroundMusic } from './hooks/useBackgroundMusic.js';
 
 export function App() {
   const engineRef = useRef(null);
   const [gameState, setGameState] = useState('MENU');
   const [difficulty, setDifficulty] = useState('NORMAL');
-  const [isMuted, setIsMuted] = useState(false);
+  const [gameVolume, setGameVolume] = useState(0.5);
+  const [isGameMuted, setIsGameMuted] = useState(false);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [hudData, setHudData] = useState(null);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
+
+  // Background Music (BGM) Hook Integration
+  useBackgroundMusic(gameState, gameVolume, isGameMuted);
 
   // Detect touch device
   useEffect(() => {
@@ -72,7 +77,6 @@ export function App() {
         docEl.msRequestFullscreen();
       }
 
-      // Try orientation lock on mobile devices supporting Screen Orientation API
       try {
         if (screen.orientation && screen.orientation.lock) {
           screen.orientation.lock('landscape').catch(() => {});
@@ -106,10 +110,17 @@ export function App() {
   };
 
   const handleToggleMute = () => {
-    if (engineRef.current) {
-      const muted = engineRef.current.sound.toggleMute();
-      setIsMuted(muted);
-    }
+    setIsGameMuted((prevMuted) => {
+      const nextMuted = !prevMuted;
+      if (engineRef.current && engineRef.current.sound) {
+        if (typeof engineRef.current.sound.setMuted === 'function') {
+          engineRef.current.sound.setMuted(nextMuted);
+        } else if (typeof engineRef.current.sound.toggleMute === 'function') {
+          engineRef.current.sound.toggleMute();
+        }
+      }
+      return nextMuted;
+    });
   };
 
   const handleRestart = () => {
@@ -145,7 +156,7 @@ export function App() {
           hudData={hudData}
           onTogglePause={handleTogglePause}
           onToggleMute={handleToggleMute}
-          isMuted={isMuted}
+          isMuted={isGameMuted}
           onToggleFullscreen={handleToggleFullscreen}
         />
       )}
@@ -163,7 +174,7 @@ export function App() {
           difficulty={difficulty}
           onSelectDifficulty={setDifficulty}
           highScore={hudData ? hudData.highScore : parseInt(localStorage.getItem('lollipop_slug_highscore') || '0', 10)}
-          isMuted={isMuted}
+          isMuted={isGameMuted}
           onToggleMute={handleToggleMute}
           onToggleFullscreen={handleToggleFullscreen}
         />
@@ -175,7 +186,7 @@ export function App() {
           onResume={handleTogglePause}
           onRestart={handleRestart}
           onExitToMenu={handleExitToMenu}
-          isMuted={isMuted}
+          isMuted={isGameMuted}
           onToggleMute={handleToggleMute}
         />
       )}
