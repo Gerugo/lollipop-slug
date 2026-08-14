@@ -7,100 +7,128 @@ import { imageLoader } from '../engine/ImageLoader.js';
 
 export class Level1 {
   constructor() {
-    this.width = 3600;
+    // Extended World: 6000px (>6.25x viewport width)
+    this.width = 6000;
     this.height = 540;
-    this.bossTriggerX = 2650;
+    this.bossTriggerX = 5000;
 
-    // Level Platforms (Invisible logical collision boxes)
+    // Logical collision platforms (ground and elevated one-way candy platforms)
     this.platforms = [
-      // Main Ground Segments (Logical collision)
-      { x: 0, y: 460, width: 820, height: 80, type: 'ground', isOneWay: false },
-      { x: 880, y: 460, width: 600, height: 80, type: 'ground', isOneWay: false },
+      // --- ZONE 1: Cotton Candy Meadows (x: 0 - 1480) ---
+      { x: 0, y: 460, width: 860, height: 80, type: 'ground', isOneWay: false },
+      { x: 920, y: 460, width: 560, height: 80, type: 'ground', isOneWay: false },
+
+      { x: 240, y: 370, width: 160, height: 26, type: 'wafer', isOneWay: true },
+      { x: 440, y: 290, width: 180, height: 26, type: 'candy_cane', isOneWay: true },
+      { x: 680, y: 360, width: 150, height: 26, type: 'wafer', isOneWay: true },
+      { x: 1000, y: 350, width: 160, height: 26, type: 'candy_cane', isOneWay: true },
+      { x: 1220, y: 280, width: 180, height: 26, type: 'wafer', isOneWay: true },
+
+      // --- ZONE 2: Candy Cane Route & Aerial Outpost (x: 1480 - 3200) ---
       { x: 1540, y: 460, width: 900, height: 80, type: 'ground', isOneWay: false },
-      { x: 2480, y: 460, width: 1120, height: 80, type: 'ground', isOneWay: false }, // Boss Arena Ground
+      { x: 2500, y: 460, width: 720, height: 80, type: 'ground', isOneWay: false },
 
-      // Elevated Platforms (Alternating between Barquillo and Bastón)
-      { x: 220, y: 360, width: 160, height: 26, type: 'wafer', isOneWay: true },
-      { x: 440, y: 280, width: 180, height: 26, type: 'candy_cane', isOneWay: true },
-      { x: 680, y: 350, width: 140, height: 26, type: 'wafer', isOneWay: true },
+      { x: 1580, y: 370, width: 150, height: 26, type: 'wafer', isOneWay: true },
+      { x: 1780, y: 290, width: 180, height: 26, type: 'candy_cane', isOneWay: true },
+      { x: 2020, y: 210, width: 160, height: 26, type: 'wafer', isOneWay: true },
+      { x: 2240, y: 340, width: 160, height: 26, type: 'candy_cane', isOneWay: true },
+      { x: 2440, y: 300, width: 160, height: 26, type: 'wafer', isOneWay: true },
+      { x: 2680, y: 360, width: 170, height: 26, type: 'candy_cane', isOneWay: true },
+      { x: 2900, y: 280, width: 190, height: 26, type: 'wafer', isOneWay: true },
 
-      { x: 920, y: 370, width: 160, height: 26, type: 'candy_cane', isOneWay: true },
-      { x: 1140, y: 290, width: 180, height: 26, type: 'wafer', isOneWay: true },
-      { x: 1360, y: 360, width: 150, height: 26, type: 'candy_cane', isOneWay: true },
+      // --- ZONE 3: Candy Fortress Assault (x: 3200 - 4600) ---
+      { x: 3280, y: 460, width: 1320, height: 80, type: 'ground', isOneWay: false },
 
-      { x: 1620, y: 350, width: 200, height: 26, type: 'wafer', isOneWay: true },
-      { x: 1880, y: 270, width: 180, height: 26, type: 'candy_cane', isOneWay: true },
-      { x: 2120, y: 360, width: 160, height: 26, type: 'wafer', isOneWay: true },
-      { x: 2340, y: 300, width: 160, height: 26, type: 'candy_cane', isOneWay: true },
+      { x: 3340, y: 360, width: 160, height: 26, type: 'wafer', isOneWay: true },
+      { x: 3560, y: 280, width: 180, height: 26, type: 'candy_cane', isOneWay: true },
+      { x: 3780, y: 200, width: 170, height: 26, type: 'wafer', isOneWay: true },
+      { x: 4020, y: 280, width: 180, height: 26, type: 'candy_cane', isOneWay: true },
+      { x: 4260, y: 350, width: 170, height: 26, type: 'wafer', isOneWay: true },
+      { x: 4460, y: 270, width: 180, height: 26, type: 'candy_cane', isOneWay: true },
 
-      // Boss Arena Platforms
-      { x: 2560, y: 350, width: 160, height: 26, type: 'wafer', isOneWay: true },
-      { x: 2800, y: 280, width: 180, height: 26, type: 'candy_cane', isOneWay: true },
-      { x: 3040, y: 350, width: 160, height: 26, type: 'wafer', isOneWay: true }
+      // --- ZONE 4 & 5: Safe Prep Area & Final Boss Arena (x: 4600 - 6000) ---
+      { x: 4640, y: 460, width: 1360, height: 80, type: 'ground', isOneWay: false },
+
+      { x: 4780, y: 360, width: 160, height: 26, type: 'wafer', isOneWay: true },
+      { x: 5120, y: 360, width: 160, height: 26, type: 'wafer', isOneWay: true },
+      { x: 5360, y: 270, width: 190, height: 26, type: 'candy_cane', isOneWay: true },
+      { x: 5620, y: 350, width: 160, height: 26, type: 'wafer', isOneWay: true }
     ];
   }
 
   createEnemies() {
     return [
-      // Zone 1: Gummy patrols, pez flying fish, and first turret
-      new Enemy({ x: 350, y: 410, type: 'GUMMY' }),
-      new Enemy({ x: 460, y: 180, type: 'PEZ' }),
-      new Enemy({ x: 500, y: 230, type: 'GUMMY' }),
-      new Enemy({ x: 690, y: 300, type: 'TURRET' }),
-      new Enemy({ x: 740, y: 410, type: 'GUMMY' }),
+      // === ZONE 1: Warmup & Foot Soldiers (x: 0 - 1480) ===
+      new Enemy({ x: 380, y: 410, type: 'GUMMY' }),
+      new Enemy({ x: 520, y: 240, type: 'GUMMY' }),
+      new Enemy({ x: 620, y: 410, type: 'GUMMY' }),
+      new Enemy({ x: 740, y: 190, type: 'PEZ' }),
+      new Enemy({ x: 1040, y: 410, type: 'GUMMY' }),
+      new Enemy({ x: 1280, y: 230, type: 'GUMMY' }),
 
-      // Zone 2: Balloon bombers & Yellow Gummy Bombers
-      new Enemy({ x: 920, y: 120, type: 'GLOBO' }),
-      new Enemy({ x: 980, y: 410, type: 'GUMMY' }),
-      new Enemy({ x: 1180, y: 240, type: 'GUMMY' }),
-      new Enemy({ x: 1300, y: 190, type: 'PEZ' }),
-      new Enemy({ x: 1380, y: 410, type: 'GUMMY' }),
-
-      // Zone 3: Outpost with Balloon, Fish and Turrets
-      new Enemy({ x: 1650, y: 300, type: 'TURRET' }),
+      // === ZONE 2: Aerial Balloon Bombers & Turrets (x: 1480 - 3200) ===
+      new Enemy({ x: 1640, y: 120, type: 'GLOBO' }),
       new Enemy({ x: 1720, y: 410, type: 'GUMMY' }),
-      new Enemy({ x: 1820, y: 110, type: 'GLOBO' }),
-      new Enemy({ x: 1900, y: 220, type: 'GUMMY' }),
-      new Enemy({ x: 2000, y: 190, type: 'PEZ' }),
-      new Enemy({ x: 2150, y: 410, type: 'GUMMY' }),
-      new Enemy({ x: 2350, y: 250, type: 'GUMMY' }),
-      new Enemy({ x: 2420, y: 410, type: 'GUMMY' })
+      new Enemy({ x: 1940, y: 180, type: 'PEZ' }),
+      new Enemy({ x: 2040, y: 160, type: 'TURRET' }),
+      new Enemy({ x: 2180, y: 410, type: 'GUMMY' }),
+      new Enemy({ x: 2560, y: 110, type: 'GLOBO' }),
+      new Enemy({ x: 2640, y: 410, type: 'GUMMY' }),
+      new Enemy({ x: 2780, y: 180, type: 'PEZ' }),
+      new Enemy({ x: 2920, y: 230, type: 'GUMMY' }),
+      new Enemy({ x: 3040, y: 410, type: 'GUMMY' }),
+
+      // === ZONE 3: Candy Fortress Heavy Assault (x: 3200 - 4600) ===
+      new Enemy({ x: 3420, y: 410, type: 'GUMMY' }),
+      new Enemy({ x: 3520, y: 120, type: 'GLOBO' }),
+      new Enemy({ x: 3600, y: 230, type: 'TURRET' }),
+      new Enemy({ x: 3740, y: 410, type: 'GUMMY' }),
+      new Enemy({ x: 3880, y: 180, type: 'PEZ' }),
+      new Enemy({ x: 4060, y: 230, type: 'GUMMY' }),
+      new Enemy({ x: 4180, y: 110, type: 'GLOBO' }),
+      new Enemy({ x: 4300, y: 300, type: 'TURRET' }),
+      new Enemy({ x: 4380, y: 410, type: 'GUMMY' }),
+      new Enemy({ x: 4500, y: 220, type: 'GUMMY' })
     ];
   }
 
   createHostages() {
     return [
-      new Hostage({ x: 260, y: 310, rewardType: 'HMG' }),
-      new Hostage({ x: 620, y: 410, rewardType: 'GRENADE' }),
-      new Hostage({ x: 1160, y: 240, rewardType: 'SHOTGUN' }),
-      new Hostage({ x: 1880, y: 220, rewardType: 'ROCKET' }),
-      new Hostage({ x: 2340, y: 250, rewardType: 'ESTRELLA' })
+      // 5 Strategic Hostages scattered across elevated platforms
+      new Hostage({ x: 480, y: 240, rewardType: 'HMG' }),
+      new Hostage({ x: 1260, y: 230, rewardType: 'SHOTGUN' }),
+      new Hostage({ x: 1840, y: 240, rewardType: 'ROCKET' }),
+      new Hostage({ x: 2940, y: 230, rewardType: 'GRENADE' }),
+      new Hostage({ x: 3820, y: 150, rewardType: 'ESTRELLA' })
     ];
   }
 
   createDestructibles() {
     return [
-      new Destructible({ x: 760, y: 396, width: 54, height: 64, hp: 45, dropType: 'HMG' }),
-      new Destructible({ x: 1380, y: 396, width: 54, height: 64, hp: 45, dropType: 'GRENADE' }),
-      new Destructible({ x: 2180, y: 396, width: 54, height: 64, hp: 45, dropType: 'ESTRELLA' })
+      new Destructible({ x: 800, y: 396, width: 54, height: 64, hp: 45, dropType: 'HMG' }),
+      new Destructible({ x: 2100, y: 396, width: 54, height: 64, hp: 45, dropType: 'SHOTGUN' }),
+      new Destructible({ x: 3840, y: 396, width: 54, height: 64, hp: 50, dropType: 'ROCKET' }),
+      new Destructible({ x: 4720, y: 396, width: 54, height: 64, hp: 40, dropType: 'ESTRELLA' })
     ];
   }
 
   createVehicle() {
-    return new SlugVehicle(1450, 390);
+    // Tank placed midway in Zone 2 to breakthrough heavy fortified defenses
+    return new SlugVehicle(2350, 390);
   }
 
   createBoss() {
-    return new Boss(3100, 230);
+    // Grand Gumball Mech Titan inside the final arena
+    return new Boss(5680, 230);
   }
 
-  // --- 100% REAL PARALLAX BACKGROUND SYSTEM (2 LAYERS) ---
+  // --- 2-LAYER PARALLAX BACKGROUND SYSTEM ---
   drawBackground(ctx, camera) {
     const viewX = camera.x;
     const viewW = camera.viewportWidth;
     const viewH = camera.viewportHeight;
 
-    // LAYER 1: SKY WITH 3D SUN (fondo-cielo.jpg, scroll 0.05)
+    // LAYER 1: SKY WITH 3D SUN (fondo-cielo.jpg, scroll factor 0.05)
     const skyImg = imageLoader.getImage('cielo');
     if (skyImg && skyImg.complete && skyImg.naturalWidth > 0) {
       const skyAspect = skyImg.naturalWidth / skyImg.naturalHeight;
@@ -121,7 +149,7 @@ export class Level1 {
       ctx.fillRect(0, 0, viewW, viewH);
     }
 
-    // LAYER 2: CLAY ROLLING HILLS (fondo-colinas.jpg, scroll 0.35)
+    // LAYER 2: CLAY ROLLING HILLS (fondo-colinas.jpg, scroll factor 0.35)
     const hillsImg = imageLoader.getImage('colinas');
     if (hillsImg && hillsImg.complete && hillsImg.naturalWidth > 0) {
       const hillsAspect = hillsImg.naturalWidth / hillsImg.naturalHeight;
@@ -138,7 +166,7 @@ export class Level1 {
     }
   }
 
-  // --- CONTINUOUS ORGANIC CLAY GROUND RENDERER (NO TILE SEAMS) ---
+  // --- CONTINUOUS ORGANIC CLAY GROUND RENDERER WITH VIEWPORT CULLING ---
   drawPlatforms(ctx, camera) {
     this.drawContinuousGround(ctx, camera);
     this.drawFloatingPlatforms(ctx, camera);
@@ -153,8 +181,8 @@ export class Level1 {
       const topY = plat.y;
       const bottomY = this.height;
 
-      // Cull if out of camera viewport
-      if (endX < camera.x - 60 || startX > camera.x + camera.viewportWidth + 60) {
+      // Strict Viewport Culling
+      if (endX < camera.x - 80 || startX > camera.x + camera.viewportWidth + 80) {
         continue;
       }
 
@@ -208,11 +236,12 @@ export class Level1 {
       // 4. Wildflowers & Sprinkles across the continuous surface
       const flowerColors = ['#FF69B4', '#FBBF24', '#38BDF8', '#FFFFFF', '#C084FC'];
       for (let fx = startX + 24; fx < endX - 24; fx += 32) {
+        if (fx < camera.x - 30 || fx > camera.x + camera.viewportWidth + 30) continue;
+
         const wave = Math.sin(fx * 0.025) * 2.5;
         const fy = topY + wave + 6;
         const fColor = flowerColors[Math.floor(fx / 32) % flowerColors.length];
 
-        // Cute flower petals
         ctx.fillStyle = fColor;
         ctx.beginPath();
         ctx.arc(fx - 2, fy, 2, 0, Math.PI * 2);
@@ -221,7 +250,6 @@ export class Level1 {
         ctx.arc(fx, fy + 2, 2, 0, Math.PI * 2);
         ctx.fill();
 
-        // Flower Center
         ctx.fillStyle = '#F59E0B';
         ctx.beginPath();
         ctx.arc(fx, fy, 1.5, 0, Math.PI * 2);
@@ -239,7 +267,8 @@ export class Level1 {
     const floating = this.platforms.filter((p) => p.type !== 'ground');
 
     for (const plat of floating) {
-      if (!camera.isVisible(plat.x, plat.y, plat.width, plat.height)) continue;
+      // Strict Viewport Culling
+      if (!camera.isVisible(plat.x, plat.y, plat.width, plat.height, 80)) continue;
 
       if (plat.type === 'wafer') {
         // Floating Wafer Platform Sprite ('barquillo.png')

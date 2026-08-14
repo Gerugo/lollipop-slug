@@ -196,7 +196,7 @@ export class GameEngine {
     if (!this.boss && this.player.x >= this.level.bossTriggerX) {
       console.log('[GameEngine] Boss arena activated. Spawning Gumball Mech Titan...');
       this.boss = this.level.createBoss();
-      this.camera.lockToArena(2640);
+      this.camera.lockToArena(this.level.bossTriggerX - 20);
       this.sound.playBossAlarm();
       this.sound.startBGM('boss');
     }
