@@ -338,8 +338,14 @@ export class GameEngine {
     try {
       for (let i = this.projectiles.length - 1; i >= 0; i--) {
         const proj = this.projectiles[i];
-        proj.update(dt);
-        if (proj.isOffscreen(this.camera.x - 100, this.camera.x + this.camera.viewportWidth + 100, 540)) { this.projectiles.splice(i, 1); continue; }
+        proj.update(dt, this.particles, this.level.platforms);
+        // Remove if expired or out of bounds
+        if (
+          proj.life <= 0 ||
+          proj.x < this.camera.x - 200 ||
+          proj.x > this.camera.x + this.camera.viewportWidth + 200 ||
+          proj.y > 700 || proj.y < -300
+        ) { this.projectiles.splice(i, 1); continue; }
         let hit = false;
         for (const d of this.destructibles) { if (!d.dead && Physics.checkAABB(proj, d)) { d.takeDamage(proj.damage, this.particles, this.sound, this.drops); hit = true; break; } }
         if (hit) { this.projectiles.splice(i, 1); continue; }
@@ -356,8 +362,14 @@ export class GameEngine {
     try {
       for (let i = this.enemyProjectiles.length - 1; i >= 0; i--) {
         const eProj = this.enemyProjectiles[i];
-        eProj.update(dt);
-        if (eProj.isOffscreen(this.camera.x - 100, this.camera.x + this.camera.viewportWidth + 100, 540)) { this.enemyProjectiles.splice(i, 1); continue; }
+        eProj.update(dt, this.particles);
+        // Remove if expired or out of bounds
+        if (
+          eProj.life <= 0 ||
+          eProj.x < this.camera.x - 300 ||
+          eProj.x > this.camera.x + this.camera.viewportWidth + 300 ||
+          eProj.y > 700 || eProj.y < -300
+        ) { this.enemyProjectiles.splice(i, 1); continue; }
         let blocked = false;
         for (const d of this.destructibles) { if (!d.dead && Physics.checkAABB(eProj, d)) { d.takeDamage(eProj.damage, this.particles, this.sound, this.drops); blocked = true; break; } }
         if (blocked) { this.enemyProjectiles.splice(i, 1); continue; }
