@@ -34,10 +34,10 @@ export class GameEngine {
     this.lastTime = 0;
     this.animFrameId = null;
 
-    // Entities
-    this.player = null;
+    // Entities (Safely initialized for MENU preview & background rendering)
+    this.level = new Level1();
+    this.player = new Player(100, 350);
     this.vehicle = null;
-    this.level = null;
     this.enemies = [];
     this.hostages = [];
     this.destructibles = [];
@@ -661,7 +661,7 @@ export class GameEngine {
     }
 
     // 10. Draw Player (hidden when riding inside vehicle)
-    if (!this.vehicle || !this.vehicle.isOccupied) {
+    if (this.player && (!this.vehicle || !this.vehicle.isOccupied)) {
       this.player.draw(ctx);
     }
 

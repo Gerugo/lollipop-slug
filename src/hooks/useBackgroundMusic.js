@@ -11,20 +11,26 @@ import bgmUrl from '../assets/sugar_strike_fury.mp3';
 export function useBackgroundMusic(gameState, volume = 0.5, isMuted = false) {
   const audioRef = useRef(null);
 
-  // Initialize and cleanup Audio instance
+  // Initialize and cleanup Audio instance safely
   useEffect(() => {
-    const audio = new Audio(bgmUrl);
-    audio.loop = true;
-    audio.preload = 'auto';
-    audio.volume = Math.max(0, Math.min(1, volume));
-    audio.muted = isMuted;
+    try {
+      const audio = new Audio(bgmUrl);
+      audio.loop = true;
+      audio.preload = 'auto';
+      audio.volume = Math.max(0, Math.min(1, volume));
+      audio.muted = isMuted;
 
-    audioRef.current = audio;
+      audioRef.current = audio;
+    } catch (err) {
+      console.warn('[useBackgroundMusic] Failed to initialize Audio object:', err);
+    }
 
     return () => {
       if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = '';
+        try {
+          audioRef.current.pause();
+          audioRef.current.src = '';
+        } catch (_) {}
         audioRef.current = null;
       }
     };
@@ -33,8 +39,12 @@ export function useBackgroundMusic(gameState, volume = 0.5, isMuted = false) {
   // Update volume and muted state dynamically
   useEffect(() => {
     if (!audioRef.current) return;
-    audioRef.current.volume = Math.max(0, Math.min(1, volume));
-    audioRef.current.muted = isMuted;
+    try {
+      audioRef.current.volume = Math.max(0, Math.min(1, volume));
+      audioRef.current.muted = isMuted;
+    } catch (err) {
+      console.warn('[useBackgroundMusic] Failed to update volume/mute:', err);
+    }
   }, [volume, isMuted]);
 
   // Handle play / pause based on gameState
@@ -44,19 +54,22 @@ export function useBackgroundMusic(gameState, volume = 0.5, isMuted = false) {
 
     const normalizedState = (gameState || '').toLowerCase();
 
-    if (normalizedState === 'playing') {
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch((err) => {
-          // Autoplay policy or user interaction required
-          console.warn('[useBackgroundMusic] Audio playback blocked by browser policy:', err);
-        });
+    try {
+      if (normalizedState === 'playing') {
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((err) => {
+            console.warn('[useBackgroundMusic] Audio playback awaiting user interaction:', err);
+          });
+        }
+      } else {
+        audio.pause();
+        if (normalizedState === 'menu') {
+          audio.currentTime = 0;
+        }
       }
-    } else {
-      audio.pause();
-      if (normalizedState === 'menu') {
-        audio.currentTime = 0;
-      }
+    } catch (err) {
+      console.warn('[useBackgroundMusic] Play/pause error:', err);
     }
   }, [gameState]);
 
