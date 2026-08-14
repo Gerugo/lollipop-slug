@@ -19,11 +19,12 @@ class ImageLoader {
       estrella: './estrella.png',
       cielo: './fondo-cielo.jpg',
       colinas: './fondo-colinas.jpg',
+      suelo: './suelo-arcilla.png',
       barquillo: './barquillo.png',
       baston: './baston.png',
       caja: './caja.png',
       obstaculo: './obstaculo.png',
-      suelo: './suelo-arcilla.png',
+      barricada: './barricada.png',
       tanque: './tanque.png',
       explosion: './explosion.png'
     };
@@ -55,12 +56,12 @@ class ImageLoader {
         };
 
         img.onerror = () => {
-          console.warn(`[ImageLoader] Warning: Failed to load ${src}, trying fallback path...`);
           const fallbackImg = new Image();
           let fallbackSrc = `./assets/${key}.png`;
           if (key === 'cielo') fallbackSrc = './assets/fondo-cielo.jpg';
           if (key === 'colinas') fallbackSrc = './assets/fondo-colinas.jpg';
           if (key === 'suelo') fallbackSrc = './assets/suelo-arcilla.png';
+          if (key === 'barricada') fallbackSrc = './assets/obstaculo.png';
 
           fallbackImg.onload = () => {
             this.images[key] = fallbackImg;
@@ -72,28 +73,6 @@ class ImageLoader {
           };
 
           fallbackImg.onerror = () => {
-            if (key === 'colinas') {
-              const thirdImg = new Image();
-              thirdImg.onload = () => {
-                this.images[key] = thirdImg;
-                this.count++;
-                if (this.count >= this.total) {
-                  this.loaded = true;
-                  resolve();
-                }
-              };
-              thirdImg.onerror = () => {
-                this.count++;
-                if (this.count >= this.total) {
-                  this.loaded = true;
-                  resolve();
-                }
-              };
-              thirdImg.src = './fondo-colinas.png';
-              return;
-            }
-
-            console.warn(`[ImageLoader] Non-critical asset load fallback ended: ${key}`);
             this.count++;
             if (this.count >= this.total) {
               this.loaded = true;

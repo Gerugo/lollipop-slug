@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Keyboard, Smartphone, Sparkles, Zap, Bomb, HelpCircle } from 'lucide-react';
+import { X, Keyboard, Smartphone, Sparkles, Zap, Bomb, HelpCircle, Shield } from 'lucide-react';
 
 export const HowToPlayModal = ({ onClose }) => {
   return (
@@ -35,8 +35,9 @@ export const HowToPlayModal = ({ onClose }) => {
               <li><strong className="text-white">W / Flecha Arriba:</strong> Apuntar hacia arriba</li>
               <li><strong className="text-white">S / Flecha Abajo:</strong> Agacharse (esquivar balas)</li>
               <li><strong className="text-white">Espacio / W:</strong> Saltar (y descender con S+Espacio)</li>
-              <li><strong className="text-white">J / Z / Click Izq:</strong> Disparar arma</li>
-              <li><strong className="text-white">K / X / Click Der:</strong> Lanzar Manzana Explosiva</li>
+              <li><strong className="text-white">J / Z:</strong> Disparar arma / Cañón del Tanque</li>
+              <li><strong className="text-white">K / X:</strong> Lanzar Manzana Explosiva</li>
+              <li><strong className="text-white">E:</strong> Montar o Salir del Tanque Lollipop Slug</li>
               <li><strong className="text-white">Esc / P:</strong> Pausa</li>
             </ul>
           </div>
@@ -48,47 +49,56 @@ export const HowToPlayModal = ({ onClose }) => {
               <span>GAMEPAD TÁCTIL</span>
             </div>
             <ul className="text-xs font-candy space-y-1.5 text-slate-300">
-              <li><strong className="text-white">D-Pad Izquierdo:</strong> Movimiento, salto, agacharse y apuntar</li>
-              <li><strong className="text-white">Botón Rosa [FUEGO]:</strong> Disparo continuo o ráfaga</li>
-              <li><strong className="text-white">Botón Verde [SALTO]:</strong> Salto fluido</li>
-              <li><strong className="text-white">Botón Azul [BOMBA]:</strong> Lanzamiento de manzanas explosivas</li>
-              <li><strong className="text-white">Gira tu móvil:</strong> Para activar el modo apaisado 16:9</li>
+              <li><strong className="text-white">D-Pad Izquierdo:</strong> Movimiento, salto y agacharse</li>
+              <li><strong className="text-white">Botón Rosa [FUEGO]:</strong> Disparo y cañón pesado</li>
+              <li><strong className="text-white">Botón Verde [SALTO]:</strong> Salto fluido y aplastamiento</li>
+              <li><strong className="text-white">Botón Azul [BOMBA]:</strong> Manzanas explosivas</li>
+              <li><strong className="text-white">Botón Ámbar [SLUG]:</strong> Montar / bajar del Tanque</li>
+              <li><strong className="text-white">Gira tu pantalla:</strong> Para modo apaisado 16:9</li>
             </ul>
           </div>
         </div>
 
         {/* Weapons & Items Guide */}
         <h3 className="font-bungee text-sm text-candy-yellow mb-2 tracking-wider flex items-center gap-2">
-          <Zap size={16} /> ARSENAL DULCE & ITEMS
+          <Zap size={16} /> CAJAS DE SUMINISTROS & LETRAS FLOTANTES
         </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6 text-xs font-candy">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4 text-xs font-candy">
           <div className="bg-slate-900/70 p-2.5 rounded-xl border border-white/10 text-center">
-            <span className="text-xl">🍬</span>
-            <div className="font-bold text-candy-pink mt-1">Pistola Chicle</div>
-            <div className="text-[11px] text-slate-400">Munición infinita básica.</div>
+            <span className="text-lg font-bungee text-pink-400">[H]</span>
+            <div className="font-bold text-slate-100 mt-0.5">Heavy Marshmallow</div>
+            <div className="text-[10px] text-slate-400">Ráfaga de nubes de azúcar.</div>
           </div>
           <div className="bg-slate-900/70 p-2.5 rounded-xl border border-white/10 text-center">
-            <span className="text-xl">☁️</span>
-            <div className="font-bold text-slate-100 mt-1">H.M.G. (200)</div>
-            <div className="text-[11px] text-slate-400">Ráfaga de nubes de azúcar.</div>
+            <span className="text-lg font-bungee text-sky-400">[S]</span>
+            <div className="font-bold text-candy-blue mt-0.5">Shot-Gum</div>
+            <div className="text-[10px] text-slate-400">Dispersión de plátanos y gominolas.</div>
           </div>
           <div className="bg-slate-900/70 p-2.5 rounded-xl border border-white/10 text-center">
-            <span className="text-xl">🍌</span>
-            <div className="font-bold text-candy-blue mt-1">Shot-Gum (Plátano)</div>
-            <div className="text-[11px] text-slate-400">Dispersión de plátanos y caramelos.</div>
+            <span className="text-lg font-bungee text-amber-400">[R]</span>
+            <div className="font-bold text-candy-yellow mt-0.5">Rocket Popsicle</div>
+            <div className="text-[10px] text-slate-400">Cohetes teledirigidos con onda.</div>
           </div>
           <div className="bg-slate-900/70 p-2.5 rounded-xl border border-white/10 text-center">
-            <span className="text-xl">🍎</span>
-            <div className="font-bold text-candy-yellow mt-1">Manzana Bomba</div>
-            <div className="text-[11px] text-slate-400">Granada con gran explosión AoE.</div>
+            <span className="text-lg font-bungee text-emerald-400">[G]</span>
+            <div className="font-bold text-emerald-300 mt-0.5">Granadas (+5)</div>
+            <div className="text-[10px] text-slate-400">Recarga de manzanas bomba.</div>
           </div>
         </div>
 
-        {/* Hostages & Boss Lore */}
-        <div className="bg-slate-900/60 p-3 rounded-2xl border border-white/15 text-xs font-candy text-slate-300 flex items-center gap-3 mb-4">
-          <span className="text-2xl">🐱</span>
-          <div>
-            <strong className="text-candy-mint">Gatitos Rehenes:</strong> Dispárales o tócalos para liberarlos. Te darán cajas de armas, estrellas doradas curativas o +10,000 puntos.
+        {/* Tank & Barricades Lore */}
+        <div className="bg-slate-900/60 p-3 rounded-2xl border border-white/15 text-xs font-candy text-slate-300 flex flex-col gap-2 mb-4">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">🛡️</span>
+            <div>
+              <strong className="text-sky-300">Tanque Lollipop Slug:</strong> Súbete con <strong className="text-white">[E]</strong> para disparar el cañón pesado, aplastar enemigos saltando y absorber hasta 5 impactos de blindaje.
+            </div>
+          </div>
+          <div className="flex items-center gap-2 border-t border-white/10 pt-2">
+            <span className="text-xl">🚧</span>
+            <div>
+              <strong className="text-amber-300">Barricadas y Gatitos:</strong> Destruye obstáculos de caramelo para desbloquear suministros y rescata a los gatitos atados para recibir recompensas especiales.
+            </div>
           </div>
         </div>
 

@@ -1,7 +1,21 @@
+import { imageLoader } from '../engine/ImageLoader.js';
+
 export class ParticleSystem {
   constructor() {
     this.particles = [];
     this.maxParticles = 500;
+  }
+
+  emitExplosionSprite(x, y, maxScale = 1.0) {
+    this.particles.push({
+      type: 'explosion_sprite',
+      x,
+      y,
+      scale: 0.3,
+      maxScale,
+      life: 0.35,
+      maxLife: 0.35
+    });
   }
 
   emitConfetti(x, y, count = 30) {
@@ -38,7 +52,7 @@ export class ParticleSystem {
         y: y + (Math.random() - 0.5) * 10,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed - 30,
-        gravity: -20, // Slowly rises
+        gravity: -20,
         drag: 0.94,
         radius: 6 + Math.random() * 8,
         growth: 12,
@@ -155,6 +169,12 @@ export class ParticleSystem {
         continue;
       }
 
+      if (p.type === 'explosion_sprite') {
+        const progress = 1 - p.life / p.maxLife;
+        p.scale = 0.3 + progress * (p.maxScale - 0.3);
+        continue;
+      }
+
       if (p.type === 'shockwave') {
         const progress = 1 - p.life / p.maxLife;
         p.radius = 5 + progress * (p.maxRadius - 5);
@@ -176,7 +196,6 @@ export class ParticleSystem {
       }
     }
 
-    // Limit maximum particles
     if (this.particles.length > this.maxParticles) {
       this.particles.splice(0, this.particles.length - this.maxParticles);
     }
@@ -188,7 +207,22 @@ export class ParticleSystem {
       ctx.save();
       ctx.globalAlpha = alpha;
 
-      if (p.type === 'confetti') {
+      if (p.type === 'explosion_sprite') {
+        const expImg = imageLoader.getImage('explosion');
+        ctx.translate(p.x, p.y);
+        ctx.scale(p.scale, p.scale);
+
+        if (expImg && expImg.complete && expImg.naturalWidth > 0) {
+          const w = 90;
+          const h = 90;
+          ctx.drawImage(expImg, -w / 2, -h / 2, w, h);
+        } else {
+          ctx.beginPath();
+          ctx.arc(0, 0, 35, 0, Math.PI * 2);
+          ctx.fillStyle = '#EF4444';
+          ctx.fill();
+        }
+      } else if (p.type === 'confetti') {
         ctx.translate(p.x, p.y);
         ctx.rotate(p.rot);
         ctx.fillStyle = p.color;
@@ -206,7 +240,6 @@ export class ParticleSystem {
         ctx.strokeStyle = '#FFFFFF';
         ctx.lineWidth = 1;
         ctx.stroke();
-        // Bubble highlight
         ctx.beginPath();
         ctx.arc(p.x - p.radius * 0.3, p.y - p.radius * 0.3, p.radius * 0.3, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';

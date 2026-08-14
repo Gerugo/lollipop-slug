@@ -1,6 +1,8 @@
 import { Enemy } from '../entities/Enemy.js';
 import { Hostage } from '../entities/Hostage.js';
 import { Boss } from '../entities/Boss.js';
+import { SlugVehicle } from '../entities/SlugVehicle.js';
+import { Destructible } from '../entities/Destructible.js';
 import { imageLoader } from '../engine/ImageLoader.js';
 
 export class Level1 {
@@ -17,24 +19,24 @@ export class Level1 {
       { x: 1520, y: 460, width: 900, height: 80, type: 'ground', isOneWay: false },
       { x: 2480, y: 460, width: 1120, height: 80, type: 'ground', isOneWay: false }, // Boss Arena Ground
 
-      // Elevated Biscuit & Wafer Platforms (Jump-through)
-      { x: 220, y: 360, width: 160, height: 22, type: 'wafer', isOneWay: true },
-      { x: 440, y: 280, width: 180, height: 22, type: 'wafer', isOneWay: true },
-      { x: 680, y: 350, width: 140, height: 22, type: 'wafer', isOneWay: true },
+      // Elevated Platforms (Alternating between Barquillo and Bastón)
+      { x: 220, y: 360, width: 160, height: 26, type: 'wafer', isOneWay: true },
+      { x: 440, y: 280, width: 180, height: 26, type: 'candy_cane', isOneWay: true },
+      { x: 680, y: 350, width: 140, height: 26, type: 'wafer', isOneWay: true },
 
-      { x: 920, y: 370, width: 150, height: 22, type: 'wafer', isOneWay: true },
-      { x: 1120, y: 290, width: 180, height: 22, type: 'candy_cane', isOneWay: true },
-      { x: 1340, y: 360, width: 140, height: 22, type: 'wafer', isOneWay: true },
+      { x: 920, y: 370, width: 160, height: 26, type: 'candy_cane', isOneWay: true },
+      { x: 1140, y: 290, width: 180, height: 26, type: 'wafer', isOneWay: true },
+      { x: 1360, y: 360, width: 150, height: 26, type: 'candy_cane', isOneWay: true },
 
-      { x: 1600, y: 350, width: 200, height: 22, type: 'wafer', isOneWay: true },
-      { x: 1860, y: 270, width: 180, height: 22, type: 'wafer', isOneWay: true },
-      { x: 2100, y: 360, width: 160, height: 22, type: 'candy_cane', isOneWay: true },
-      { x: 2320, y: 300, width: 160, height: 22, type: 'wafer', isOneWay: true },
+      { x: 1620, y: 350, width: 200, height: 26, type: 'wafer', isOneWay: true },
+      { x: 1880, y: 270, width: 180, height: 26, type: 'candy_cane', isOneWay: true },
+      { x: 2120, y: 360, width: 160, height: 26, type: 'wafer', isOneWay: true },
+      { x: 2340, y: 300, width: 160, height: 26, type: 'candy_cane', isOneWay: true },
 
       // Boss Arena Platforms
-      { x: 2560, y: 350, width: 160, height: 22, type: 'wafer', isOneWay: true },
-      { x: 2800, y: 280, width: 180, height: 22, type: 'wafer', isOneWay: true },
-      { x: 3040, y: 350, width: 160, height: 22, type: 'wafer', isOneWay: true }
+      { x: 2560, y: 350, width: 160, height: 26, type: 'wafer', isOneWay: true },
+      { x: 2800, y: 280, width: 180, height: 26, type: 'candy_cane', isOneWay: true },
+      { x: 3040, y: 350, width: 160, height: 26, type: 'wafer', isOneWay: true }
     ];
   }
 
@@ -76,6 +78,18 @@ export class Level1 {
     ];
   }
 
+  createDestructibles() {
+    return [
+      new Destructible({ x: 760, y: 396, width: 54, height: 64, hp: 45, dropType: 'HMG' }),
+      new Destructible({ x: 1380, y: 396, width: 54, height: 64, hp: 45, dropType: 'GRENADE' }),
+      new Destructible({ x: 2180, y: 396, width: 54, height: 64, hp: 45, dropType: 'ESTRELLA' })
+    ];
+  }
+
+  createVehicle() {
+    return new SlugVehicle(1450, 390);
+  }
+
   createBoss() {
     return new Boss(3100, 230);
   }
@@ -86,7 +100,7 @@ export class Level1 {
     const viewW = camera.viewportWidth;
     const viewH = camera.viewportHeight;
 
-    // --- LAYER 1: SKY WITH 3D SUN (fondo-cielo.jpg, scroll 0.05) ---
+    // LAYER 1: SKY WITH 3D SUN (fondo-cielo.jpg, scroll 0.05)
     const skyImg = imageLoader.getImage('cielo');
     if (skyImg && skyImg.complete && skyImg.naturalWidth > 0) {
       const skyAspect = skyImg.naturalWidth / skyImg.naturalHeight;
@@ -107,7 +121,7 @@ export class Level1 {
       ctx.fillRect(0, 0, viewW, viewH);
     }
 
-    // --- LAYER 2: CLAY HILLS & FLOWERS (fondo-colinas.jpg, scroll 0.35) ---
+    // LAYER 2: CLAY ROLLING HILLS (fondo-colinas.jpg, scroll 0.35)
     const hillsImg = imageLoader.getImage('colinas');
     if (hillsImg && hillsImg.complete && hillsImg.naturalWidth > 0) {
       const hillsAspect = hillsImg.naturalWidth / hillsImg.naturalHeight;
@@ -124,95 +138,58 @@ export class Level1 {
     }
   }
 
-  // --- PASTEL GREEN CLAY GROUND & PLATFORMS WITH BARQUILLO / BASTON SPRITES ---
+  // --- REAL TERRAIN & PLATFORMS RENDERED WITH SPRITES ---
   drawPlatforms(ctx, camera) {
-    const barquilloImg = imageLoader.getImage('barquillo');
-    const bastonImg = imageLoader.getImage('baston');
+    const barquilloImg = imageLoader.getImage('barquillo') || imageLoader.getImage('plataforma-barquillo');
+    const bastonImg = imageLoader.getImage('baston') || imageLoader.getImage('plataforma-baston');
     const sueloImg = imageLoader.getImage('suelo');
 
     for (const plat of this.platforms) {
       if (!camera.isVisible(plat.x, plat.y, plat.width, plat.height)) continue;
 
       if (plat.type === 'ground') {
-        // Pastel Green Clay Ground Base
-        const clayGrad = ctx.createLinearGradient(0, plat.y, 0, plat.y + plat.height);
-        clayGrad.addColorStop(0, '#4ADE80');
-        clayGrad.addColorStop(0.25, '#22C55E');
-        clayGrad.addColorStop(0.7, '#16A34A');
-        clayGrad.addColorStop(1, '#14532D');
-        ctx.fillStyle = clayGrad;
-        ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
-
-        // Suelo texture overlay if loaded
+        // Render suelo.png repeated horizontally across the segment
         if (sueloImg && sueloImg.complete && sueloImg.naturalWidth > 0) {
-          ctx.save();
-          ctx.globalAlpha = 0.35;
-          ctx.drawImage(sueloImg, plat.x, plat.y, plat.width, plat.height);
-          ctx.restore();
+          const tileW = 120;
+          for (let tx = plat.x; tx < plat.x + plat.width; tx += tileW) {
+            const currentW = Math.min(tileW, plat.x + plat.width - tx);
+            ctx.drawImage(sueloImg, 0, 0, (currentW / tileW) * sueloImg.naturalWidth, sueloImg.naturalHeight, tx, plat.y, currentW, plat.height);
+          }
+        } else {
+          // Pastel Green Clay Ground Fallback
+          const clayGrad = ctx.createLinearGradient(0, plat.y, 0, plat.y + plat.height);
+          clayGrad.addColorStop(0, '#4ADE80');
+          clayGrad.addColorStop(0.25, '#22C55E');
+          clayGrad.addColorStop(0.7, '#16A34A');
+          clayGrad.addColorStop(1, '#14532D');
+          ctx.fillStyle = clayGrad;
+          ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
         }
 
-        // Soft Mint Top Grass Edge
-        const grassTopGrad = ctx.createLinearGradient(0, plat.y, 0, plat.y + 14);
-        grassTopGrad.addColorStop(0, '#BBF7D0');
-        grassTopGrad.addColorStop(0.6, '#86EFAC');
-        grassTopGrad.addColorStop(1, '#4ADE80');
+        // Top Grass / Flora Edge Highlight
+        const grassTopGrad = ctx.createLinearGradient(0, plat.y, 0, plat.y + 8);
+        grassTopGrad.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+        grassTopGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
         ctx.fillStyle = grassTopGrad;
-
-        ctx.beginPath();
-        ctx.moveTo(plat.x, plat.y);
-        ctx.lineTo(plat.x + plat.width, plat.y);
-        ctx.lineTo(plat.x + plat.width, plat.y + 10);
-        for (let ix = plat.width; ix >= 0; ix -= 24) {
-          ctx.quadraticCurveTo(plat.x + ix - 12, plat.y + 14, plat.x + ix - 24, plat.y + 10);
-        }
-        ctx.closePath();
-        ctx.fill();
-
-        // Cute Little Colorful Wildflowers on Grass Surface
-        const flowerColors = ['#FF69B4', '#FBBF24', '#38BDF8', '#FFFFFF', '#C084FC'];
-        for (let s = 0; s < plat.width / 36; s++) {
-          const fx = plat.x + s * 36 + 10;
-          const fy = plat.y + 5;
-          const fColor = flowerColors[s % flowerColors.length];
-
-          ctx.fillStyle = fColor;
-          ctx.beginPath();
-          ctx.arc(fx - 2.5, fy, 2, 0, Math.PI * 2);
-          ctx.arc(fx + 2.5, fy, 2, 0, Math.PI * 2);
-          ctx.arc(fx, fy - 2.5, 2, 0, Math.PI * 2);
-          ctx.arc(fx, fy + 2.5, 2, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.fillStyle = '#F59E0B';
-          ctx.beginPath();
-          ctx.arc(fx, fy, 1.5, 0, Math.PI * 2);
-          ctx.fill();
-        }
+        ctx.fillRect(plat.x, plat.y, plat.width, 8);
       } else if (plat.type === 'wafer') {
-        // Barquillo Platform Sprite ('barquillo.png')
+        // Floating Wafer Platform Sprite ('barquillo.png')
         if (barquilloImg && barquilloImg.complete && barquilloImg.naturalWidth > 0) {
           ctx.drawImage(barquilloImg, plat.x, plat.y, plat.width, plat.height);
         } else {
-          // Procedural Wafer
           const waferGrad = ctx.createLinearGradient(0, plat.y, 0, plat.y + plat.height);
           waferGrad.addColorStop(0, '#FEF3C7');
-          waferGrad.addColorStop(0.4, '#FDE68A');
           waferGrad.addColorStop(1, '#D97706');
-
           ctx.beginPath();
           ctx.roundRect(plat.x, plat.y, plat.width, plat.height, 6);
           ctx.fillStyle = waferGrad;
           ctx.fill();
-          ctx.strokeStyle = '#B45309';
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
         }
       } else if (plat.type === 'candy_cane') {
-        // Candy Cane Bridge Sprite ('baston.png')
+        // Floating Candy Cane Platform Sprite ('baston.png')
         if (bastonImg && bastonImg.complete && bastonImg.naturalWidth > 0) {
           ctx.drawImage(bastonImg, plat.x, plat.y, plat.width, plat.height);
         } else {
-          // Procedural Candy Cane
           ctx.beginPath();
           ctx.roundRect(plat.x, plat.y, plat.width, plat.height, 8);
           ctx.fillStyle = '#FFFFFF';
@@ -220,23 +197,6 @@ export class Level1 {
           ctx.strokeStyle = '#EF4444';
           ctx.lineWidth = 2;
           ctx.stroke();
-
-          ctx.save();
-          ctx.beginPath();
-          ctx.roundRect(plat.x, plat.y, plat.width, plat.height, 8);
-          ctx.clip();
-
-          ctx.fillStyle = '#EF4444';
-          for (let sx = -plat.height; sx < plat.width + plat.height; sx += 18) {
-            ctx.beginPath();
-            ctx.moveTo(plat.x + sx, plat.y);
-            ctx.lineTo(plat.x + sx + 8, plat.y);
-            ctx.lineTo(plat.x + sx - 4, plat.y + plat.height);
-            ctx.lineTo(plat.x + sx - 12, plat.y + plat.height);
-            ctx.closePath();
-            ctx.fill();
-          }
-          ctx.restore();
         }
       }
     }

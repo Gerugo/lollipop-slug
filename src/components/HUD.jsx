@@ -1,5 +1,5 @@
 import React from 'react';
-import { Volume2, VolumeX, Pause, Maximize, Sparkles } from 'lucide-react';
+import { Volume2, VolumeX, Pause, Maximize, Sparkles, Shield } from 'lucide-react';
 
 export const HUD = ({ hudData, onTogglePause, onToggleMute, isMuted, onToggleFullscreen }) => {
   if (!hudData) return null;
@@ -14,6 +14,8 @@ export const HUD = ({ hudData, onTogglePause, onToggleMute, isMuted, onToggleFul
     weapon = { name: 'Pistol', shortName: 'PISTOL', ammo: Infinity },
     ammo = Infinity,
     grenades = 10,
+    vehicleArmor = null,
+    maxVehicleArmor = 5,
     boss = null
   } = hudData;
 
@@ -25,7 +27,7 @@ export const HUD = ({ hudData, onTogglePause, onToggleMute, isMuted, onToggleFul
     <div className="absolute inset-0 pointer-events-none p-3 md:p-4 flex flex-col justify-between select-none z-10">
       {/* Top Status Bar */}
       <div className="flex items-start justify-between gap-2 w-full">
-        {/* Top Left: Player 1 Lives & Health Bar */}
+        {/* Top Left: Player Lives, Health Bar & Slug Armor */}
         <div className="flex flex-col gap-1">
           {/* Life Avatar & Counter */}
           <div className="flex items-center gap-2 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-2xl border-2 border-candy-pink shadow-lg">
@@ -54,6 +56,27 @@ export const HUD = ({ hudData, onTogglePause, onToggleMute, isMuted, onToggleFul
               />
             ))}
           </div>
+
+          {/* Slug Armor Status (Visible when mounted) */}
+          {vehicleArmor !== null && (
+            <div className="flex items-center gap-1.5 bg-sky-950/90 backdrop-blur-md px-2.5 py-1 rounded-xl border-2 border-sky-400 shadow-md shadow-sky-500/30 animate-pulse">
+              <span className="font-arcade text-[10px] text-sky-300 flex items-center gap-1">
+                🛡️ SLUG
+              </span>
+              <div className="flex gap-1">
+                {Array.from({ length: maxVehicleArmor }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`w-3.5 h-3.5 rounded-sm transition-all duration-200 ${
+                      i < vehicleArmor
+                        ? 'bg-gradient-to-t from-sky-500 to-cyan-300 border border-white shadow-sm shadow-cyan-400/50 scale-100'
+                        : 'bg-slate-800 border border-slate-600 scale-90'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Top Center: Boss Health Bar OR Score / Time */}
@@ -110,7 +133,7 @@ export const HUD = ({ hudData, onTogglePause, onToggleMute, isMuted, onToggleFul
                 </div>
               </div>
               <div className="w-8 h-8 rounded-xl bg-candy-blue/20 border border-candy-blue flex items-center justify-center text-sm">
-                {weapon.id === 'HMG' ? '☁️' : weapon.id === 'SHOTGUN' ? '💥' : weapon.id === 'ROCKET' ? '🚀' : '🍬'}
+                {weapon.id === 'HMG' ? '☁️' : weapon.id === 'SHOTGUN' ? '🍌' : weapon.id === 'ROCKET' ? '🚀' : '🍬'}
               </div>
             </div>
 

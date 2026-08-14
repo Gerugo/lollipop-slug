@@ -8,6 +8,7 @@ export class InputManager {
       jump: false,
       shoot: false,
       grenade: false,
+      vehicle: false,
       pause: false
     };
 
@@ -23,6 +24,7 @@ export class InputManager {
       jump: false,
       shoot: false,
       grenade: false,
+      vehicle: false,
       pause: false
     };
 
@@ -45,7 +47,6 @@ export class InputManager {
 
   _onKeyDown(e) {
     const code = e.code;
-    // Prevent default scrolling keys
     if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(code)) {
       e.preventDefault();
     }
@@ -77,6 +78,9 @@ export class InputManager {
       case 'KeyK':
       case 'KeyX':
         this.keys.grenade = true;
+        break;
+      case 'KeyE':
+        this.keys.vehicle = true;
         break;
       case 'Escape':
       case 'KeyP':
@@ -117,6 +121,9 @@ export class InputManager {
       case 'KeyX':
         this.keys.grenade = false;
         break;
+      case 'KeyE':
+        this.keys.vehicle = false;
+        break;
       case 'Escape':
       case 'KeyP':
         this.keys.pause = false;
@@ -137,7 +144,6 @@ export class InputManager {
   }
 
   update() {
-    // Combine keyboard and touch state
     const currentCombined = {
       left: this.keys.left || this.touchState.left,
       right: this.keys.right || this.touchState.right,
@@ -146,10 +152,10 @@ export class InputManager {
       jump: this.keys.jump || this.touchState.jump,
       shoot: this.keys.shoot || this.touchState.shoot,
       grenade: this.keys.grenade || this.touchState.grenade,
+      vehicle: this.keys.vehicle || this.touchState.vehicle,
       pause: this.keys.pause || this.touchState.pause
     };
 
-    // Calculate just-pressed (rising edge)
     for (const key in currentCombined) {
       this.justPressedKeys[key] = currentCombined[key] && !this.prevKeys[key];
       this.prevKeys[key] = currentCombined[key];

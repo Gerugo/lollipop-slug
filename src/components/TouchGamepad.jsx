@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Zap, ArrowBigUp, Bomb } from 'lucide-react';
+import React from 'react';
+import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Zap, ArrowBigUp, Bomb, Shield } from 'lucide-react';
 
 export const TouchGamepad = ({ onTouchInput }) => {
   const handleTouch = (action, active, e) => {
@@ -75,7 +75,23 @@ export const TouchGamepad = ({ onTouchInput }) => {
       </div>
 
       {/* Right: Big Candy Action Buttons */}
-      <div className="pointer-events-auto flex items-end gap-3 sm:gap-4">
+      <div className="pointer-events-auto flex items-end gap-2.5 sm:gap-3">
+        {/* VEHICLE / SLUG Button */}
+        <div className="flex flex-col items-center gap-1 mb-1">
+          <button
+            aria-label="Montar o Salir del Tanque"
+            onTouchStart={(e) => handleTouch('vehicle', true, e)}
+            onTouchEnd={(e) => handleTouch('vehicle', false, e)}
+            onTouchCancel={(e) => handleTouch('vehicle', false, e)}
+            onMouseDown={() => handleTouch('vehicle', true)}
+            onMouseUp={() => handleTouch('vehicle', false)}
+            className="w-13 h-13 sm:w-14 sm:h-14 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 border-2 border-white rounded-full flex flex-col items-center justify-center text-white font-bungee text-[10px] shadow-lg active:scale-90 transition-transform"
+          >
+            <span className="text-base leading-none">🛡️</span>
+            <span className="text-[8px] tracking-tight">SLUG</span>
+          </button>
+        </div>
+
         {/* GRENADE Button */}
         <div className="flex flex-col items-center gap-1 mb-2">
           <button
