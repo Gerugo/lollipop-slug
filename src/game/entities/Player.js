@@ -18,7 +18,7 @@ export class Player {
     this.jumpForce = -530;
     this.gravity = 1100;
     this.isGrounded = false;
-    this.facing = 1; // 1 = right, -1 = left
+    this.facing = 1; // 1 = right, -1 = left (always reinforced by input)
 
     // Aim and State
     this.aimUp = false;
@@ -58,6 +58,7 @@ export class Player {
     this.prevY = y;
     this.vx = 0;
     this.vy = 0;
+    this.facing = 1;
     this.hp = this.maxHp;
     this.isDead = false;
     this.isGrounded = false;
@@ -157,12 +158,19 @@ export class Player {
       return;
     }
 
-    // 1. INPUT MOVEMENT
+    // 1. INPUT MOVEMENT & EXPLICIT FACING SYNC
     const moveLeft = input.isDown('left');
     const moveRight = input.isDown('right');
     const moveUp = input.isDown('up');
     const moveDown = input.isDown('down') || input.isDown('crouch');
     const jumpPressed = input.isJustPressed('jump');
+
+    // Always update facing immediately based on horizontal input
+    if (moveLeft && !moveRight) {
+      this.facing = -1;
+    } else if (moveRight && !moveLeft) {
+      this.facing = 1;
+    }
 
     // 2. CROUCH & AIM
     if (this.isGrounded && moveDown && !moveLeft && !moveRight) {
@@ -179,11 +187,9 @@ export class Player {
     if (!this.isCrouching) {
       if (moveLeft) {
         this.vx = -this.speed;
-        this.facing = -1;
         this.walkTimer += dt;
       } else if (moveRight) {
         this.vx = this.speed;
-        this.facing = 1;
         this.walkTimer += dt;
       } else {
         this.vx *= Math.pow(0.01, dt);
@@ -205,7 +211,7 @@ export class Player {
     // 4. PLATFORM DROP-THROUGH [DOWN + JUMP]
     if (moveDown && jumpPressed) {
       this.isDropping = true;
-      this.dropTimer = 0.25; // 250ms ignore one-way platforms
+      this.dropTimer = 0.25;
       this.vy = 180;
       this.isGrounded = false;
     } 
@@ -254,31 +260,37 @@ export class Player {
 
   shoot(projectiles, particles, soundManager) {
     this.fireTimer = this.currentWeapon.fireRate;
-    this.recoilX = -3 * this.facing;
+    this.recoilX = -4 * this.facing;
     this.shootShake = 0.06;
 
+    const bulletSpeed = 680;
     let bulletVx = 0;
     let bulletVy = 0;
     let bulletX = this.x + this.width / 2;
-    let bulletY = this.y + 18;
+    let bulletY = this.y + (this.isCrouching ? 28 : 20);
 
     if (this.aimUp) {
       if (this.vx !== 0) {
-        bulletVx = this.facing * 500;
-        bulletVy = -500;
-        bulletX += this.facing * 16;
-        bulletY -= 12;
+        // Diagonal shot while running
+        bulletVx = this.facing * bulletSpeed * 0.707;
+        bulletVy = -bulletSpeed * 0.707;
+        bulletX += this.facing * 18;
+        bulletY -= 14;
       } else {
+        // Pure vertical upward shot
         bulletVx = 0;
-        bulletVy = -700;
+        bulletVy = -bulletSpeed;
+        bulletX += this.facing * 4;
         bulletY -= 20;
       }
     } else {
-      bulletVx = this.facing * 650;
+      // Horizontal shot strictly in facing direction
+      bulletVx = this.facing * bulletSpeed;
       bulletVy = 0;
-      bulletX += this.facing * 20;
-      if (this.isCrouching) bulletY += 10;
+      bulletX += this.facing * 22;
     }
+
+    const shotAngle = Math.atan2(bulletVy, bulletVx);
 
     if (this.currentWeapon.id === 'PISTOL') {
       soundManager.playPistol();
@@ -290,7 +302,8 @@ export class Player {
           vy: bulletVy,
           type: 'PISTOL',
           damage: 12,
-          isPlayer: true
+          isPlayer: true,
+          rotation: shotAngle
         })
       );
       if (particles) particles.emitSugarSmoke(bulletX, bulletY, 2, '#FFB6D9');
@@ -307,17 +320,16 @@ export class Player {
           damage: 14,
           penetrate: true,
           isPlayer: true,
-          rotation: Math.atan2(bulletVy, bulletVx)
+          rotation: shotAngle
         })
       );
       this.ammo--;
     } else if (this.currentWeapon.id === 'SHOTGUN') {
       soundManager.playShotgun();
       const pelletCount = 6;
-      const baseAngle = Math.atan2(bulletVy, bulletVx);
       for (let i = 0; i < pelletCount; i++) {
-        const spreadAngle = baseAngle + ((i - (pelletCount - 1) / 2) * 0.12) + (Math.random() - 0.5) * 0.05;
-        const speed = 620 + Math.random() * 80;
+        const spreadAngle = shotAngle + ((i - (pelletCount - 1) / 2) * 0.12) + (Math.random() - 0.5) * 0.04;
+        const speed = 640 + Math.random() * 80;
         projectiles.push(
           new Projectile({
             x: bulletX,
@@ -339,11 +351,12 @@ export class Player {
         new Projectile({
           x: bulletX,
           y: bulletY,
-          vx: bulletVx * 0.9,
-          vy: bulletVy * 0.9,
+          vx: bulletVx * 0.95,
+          vy: bulletVy * 0.95,
           type: 'ROCKET',
           damage: 75,
-          isPlayer: true
+          isPlayer: true,
+          rotation: shotAngle
         })
       );
       this.ammo--;
@@ -365,7 +378,7 @@ export class Player {
 
     grenades.push(
       new Grenade({
-        x: this.x + this.width / 2 + this.facing * 15,
+        x: this.x + this.width / 2 + this.facing * 18,
         y: this.y + 10,
         vx: gVx,
         vy: gVy
@@ -415,11 +428,12 @@ export class Player {
 
     // Landing Impact Squash (Lerp recovery in 0.15s)
     if (this.landSquashTimer > 0) {
-      const t = this.landSquashTimer / 0.15; // 1 to 0
+      const t = this.landSquashTimer / 0.15;
       scaleY = 1 - (0.24 * t);
       scaleX = 1 + (0.24 * t);
     }
 
+    // Flip horizontally when facing === -1 (perfect mirror with center pivot)
     ctx.scale(this.facing * scaleX, scaleY);
 
     const sprite = imageLoader.getImage('player');
@@ -439,9 +453,9 @@ export class Player {
       ctx.stroke();
     }
 
-    // Draw Gun Overlay in Hand
+    // Draw Gun Overlay in Hand (aligned with facing direction)
     const gunX = this.aimUp ? 6 : 14;
-    const gunY = this.aimUp ? -renderH + 12 : (this.isCrouching ? -renderH + 34 : -renderH + 26);
+    const gunY = this.aimUp ? -renderH + 14 : (this.isCrouching ? -renderH + 34 : -renderH + 26);
 
     ctx.save();
     ctx.translate(gunX, gunY);
@@ -449,9 +463,9 @@ export class Player {
 
     if (this.currentWeapon.id === 'PISTOL') {
       ctx.fillStyle = '#FF5A9E';
-      ctx.fillRect(-2, -3, 10, 6);
+      ctx.fillRect(-2, -3, 12, 6);
       ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(8, -2, 4, 4);
+      ctx.fillRect(10, -2, 4, 4);
     } else if (this.currentWeapon.id === 'HMG') {
       ctx.fillStyle = '#E2E8F0';
       ctx.fillRect(-4, -5, 18, 9);

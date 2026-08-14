@@ -11,12 +11,12 @@ export class Level1 {
     this.height = 540;
     this.bossTriggerX = 2650;
 
-    // Level Platforms (solid ground and elevated wafer/biscuit platforms)
+    // Level Platforms (Invisible logical collision boxes)
     this.platforms = [
-      // Main Ground Segments
-      { x: 0, y: 460, width: 800, height: 80, type: 'ground', isOneWay: false },
-      { x: 860, y: 460, width: 600, height: 80, type: 'ground', isOneWay: false },
-      { x: 1520, y: 460, width: 900, height: 80, type: 'ground', isOneWay: false },
+      // Main Ground Segments (Logical collision)
+      { x: 0, y: 460, width: 820, height: 80, type: 'ground', isOneWay: false },
+      { x: 880, y: 460, width: 600, height: 80, type: 'ground', isOneWay: false },
+      { x: 1540, y: 460, width: 900, height: 80, type: 'ground', isOneWay: false },
       { x: 2480, y: 460, width: 1120, height: 80, type: 'ground', isOneWay: false }, // Boss Arena Ground
 
       // Elevated Platforms (Alternating between Barquillo and Bastón)
@@ -138,41 +138,110 @@ export class Level1 {
     }
   }
 
-  // --- REAL TERRAIN & PLATFORMS RENDERED WITH SPRITES ---
+  // --- CONTINUOUS ORGANIC CLAY GROUND RENDERER (NO TILE SEAMS) ---
   drawPlatforms(ctx, camera) {
+    this.drawContinuousGround(ctx, camera);
+    this.drawFloatingPlatforms(ctx, camera);
+  }
+
+  drawContinuousGround(ctx, camera) {
+    const groundPlatforms = this.platforms.filter((p) => p.type === 'ground');
+
+    for (const plat of groundPlatforms) {
+      const startX = plat.x;
+      const endX = plat.x + plat.width;
+      const topY = plat.y;
+      const bottomY = this.height;
+
+      // Cull if out of camera viewport
+      if (endX < camera.x - 60 || startX > camera.x + camera.viewportWidth + 60) {
+        continue;
+      }
+
+      ctx.save();
+
+      // 1. Single Continuous Organic Bezier Ground Path
+      ctx.beginPath();
+      ctx.moveTo(startX, bottomY);
+      ctx.lineTo(startX, topY + 18);
+      // Smooth rounded cliff top-left
+      ctx.quadraticCurveTo(startX, topY, startX + 18, topY);
+
+      // Smooth flowing top edge with subtle organic clay undulations
+      const step = 40;
+      for (let curX = startX + 18; curX < endX - 18; curX += step) {
+        const nextX = Math.min(endX - 18, curX + step);
+        const midX = (curX + nextX) / 2;
+        const wave = Math.sin(midX * 0.025) * 2.5;
+        ctx.quadraticCurveTo(midX, topY + wave, nextX, topY);
+      }
+
+      // Smooth rounded cliff top-right
+      ctx.lineTo(endX - 18, topY);
+      ctx.quadraticCurveTo(endX, topY, endX, topY + 18);
+      ctx.lineTo(endX, bottomY);
+      ctx.closePath();
+
+      // 2. Rich Continuous Pastel Clay Gradient Fill
+      const groundGrad = ctx.createLinearGradient(0, topY, 0, bottomY);
+      groundGrad.addColorStop(0, '#4ADE80');    // Soft Mint Pastel Top
+      groundGrad.addColorStop(0.15, '#22C55E');  // Candy Green
+      groundGrad.addColorStop(0.45, '#16A34A');  // Deep Clay Dough
+      groundGrad.addColorStop(0.8, '#15803D');   // Shadowed Base
+      groundGrad.addColorStop(1, '#14532D');     // Deepest Earth
+      ctx.fillStyle = groundGrad;
+      ctx.fill();
+
+      // 3. Marshmallow Frosting / Glaze Highlight on Top Surface
+      ctx.beginPath();
+      ctx.moveTo(startX + 6, topY + 4);
+      for (let curX = startX + 18; curX < endX - 18; curX += step) {
+        const nextX = Math.min(endX - 18, curX + step);
+        const midX = (curX + nextX) / 2;
+        const wave = Math.sin(midX * 0.025) * 2.5;
+        ctx.quadraticCurveTo(midX, topY + wave + 4, nextX, topY + 4);
+      }
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      // 4. Wildflowers & Sprinkles across the continuous surface
+      const flowerColors = ['#FF69B4', '#FBBF24', '#38BDF8', '#FFFFFF', '#C084FC'];
+      for (let fx = startX + 24; fx < endX - 24; fx += 32) {
+        const wave = Math.sin(fx * 0.025) * 2.5;
+        const fy = topY + wave + 6;
+        const fColor = flowerColors[Math.floor(fx / 32) % flowerColors.length];
+
+        // Cute flower petals
+        ctx.fillStyle = fColor;
+        ctx.beginPath();
+        ctx.arc(fx - 2, fy, 2, 0, Math.PI * 2);
+        ctx.arc(fx + 2, fy, 2, 0, Math.PI * 2);
+        ctx.arc(fx, fy - 2, 2, 0, Math.PI * 2);
+        ctx.arc(fx, fy + 2, 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Flower Center
+        ctx.fillStyle = '#F59E0B';
+        ctx.beginPath();
+        ctx.arc(fx, fy, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+  }
+
+  drawFloatingPlatforms(ctx, camera) {
     const barquilloImg = imageLoader.getImage('barquillo') || imageLoader.getImage('plataforma-barquillo');
     const bastonImg = imageLoader.getImage('baston') || imageLoader.getImage('plataforma-baston');
-    const sueloImg = imageLoader.getImage('suelo');
 
-    for (const plat of this.platforms) {
+    const floating = this.platforms.filter((p) => p.type !== 'ground');
+
+    for (const plat of floating) {
       if (!camera.isVisible(plat.x, plat.y, plat.width, plat.height)) continue;
 
-      if (plat.type === 'ground') {
-        // Render suelo.png repeated horizontally across the segment
-        if (sueloImg && sueloImg.complete && sueloImg.naturalWidth > 0) {
-          const tileW = 120;
-          for (let tx = plat.x; tx < plat.x + plat.width; tx += tileW) {
-            const currentW = Math.min(tileW, plat.x + plat.width - tx);
-            ctx.drawImage(sueloImg, 0, 0, (currentW / tileW) * sueloImg.naturalWidth, sueloImg.naturalHeight, tx, plat.y, currentW, plat.height);
-          }
-        } else {
-          // Pastel Green Clay Ground Fallback
-          const clayGrad = ctx.createLinearGradient(0, plat.y, 0, plat.y + plat.height);
-          clayGrad.addColorStop(0, '#4ADE80');
-          clayGrad.addColorStop(0.25, '#22C55E');
-          clayGrad.addColorStop(0.7, '#16A34A');
-          clayGrad.addColorStop(1, '#14532D');
-          ctx.fillStyle = clayGrad;
-          ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
-        }
-
-        // Top Grass / Flora Edge Highlight
-        const grassTopGrad = ctx.createLinearGradient(0, plat.y, 0, plat.y + 8);
-        grassTopGrad.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
-        grassTopGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        ctx.fillStyle = grassTopGrad;
-        ctx.fillRect(plat.x, plat.y, plat.width, 8);
-      } else if (plat.type === 'wafer') {
+      if (plat.type === 'wafer') {
         // Floating Wafer Platform Sprite ('barquillo.png')
         if (barquilloImg && barquilloImg.complete && barquilloImg.naturalWidth > 0) {
           ctx.drawImage(barquilloImg, plat.x, plat.y, plat.width, plat.height);
@@ -181,9 +250,12 @@ export class Level1 {
           waferGrad.addColorStop(0, '#FEF3C7');
           waferGrad.addColorStop(1, '#D97706');
           ctx.beginPath();
-          ctx.roundRect(plat.x, plat.y, plat.width, plat.height, 6);
+          ctx.roundRect(plat.x, plat.y, plat.width, plat.height, 8);
           ctx.fillStyle = waferGrad;
           ctx.fill();
+          ctx.strokeStyle = '#B45309';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
         }
       } else if (plat.type === 'candy_cane') {
         // Floating Candy Cane Platform Sprite ('baston.png')
