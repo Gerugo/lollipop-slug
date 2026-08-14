@@ -18,6 +18,14 @@ export const GameOverModal = ({
     return () => clearInterval(timer);
   }, [countdown]);
 
+  const safeScore = (score !== undefined && score !== null)
+    ? Number(score).toString().padStart(6, '0')
+    : '000000';
+
+  const safeHighScore = (highScore !== undefined && highScore !== null)
+    ? Number(highScore).toString().padStart(6, '0')
+    : '000000';
+
   return (
     <div className="absolute inset-0 z-40 bg-slate-950/90 backdrop-blur-lg flex items-center justify-center p-4 select-none">
       <div className="candy-card rounded-3xl p-6 sm:p-8 max-w-md w-full flex flex-col items-center text-center shadow-2xl animate-bounce-soft border-2 border-red-500/50">
@@ -43,14 +51,14 @@ export const GameOverModal = ({
         <div className="w-full bg-slate-900/80 rounded-2xl p-3 border border-white/10 flex justify-around items-center mb-6">
           <div className="flex flex-col items-center">
             <span className="text-[10px] font-arcade text-slate-400">PUNTUACIÓN</span>
-            <span className="text-lg font-arcade text-candy-yellow">{score.toString().padStart(6, '0')}</span>
+            <span className="text-lg font-arcade text-candy-yellow">{safeScore}</span>
           </div>
           <div className="h-8 w-px bg-white/10" />
           <div className="flex flex-col items-center">
             <span className="text-[10px] font-arcade text-slate-400 flex items-center gap-1">
               <Trophy size={12} className="text-amber-400" /> RÉCORD
             </span>
-            <span className="text-lg font-arcade text-white">{highScore.toString().padStart(6, '0')}</span>
+            <span className="text-lg font-arcade text-white">{safeHighScore}</span>
           </div>
         </div>
 

@@ -10,17 +10,25 @@ import bgmUrl from '../assets/sugar_strike_fury.mp3';
  */
 export function useBackgroundMusic(gameState, volume = 0.5, isMuted = false) {
   const audioRef = useRef(null);
+  const isPlayingRef = useRef(false);
 
   // Initialize and cleanup Audio instance safely
   useEffect(() => {
     try {
-      const audio = new Audio(bgmUrl);
-      audio.loop = true;
-      audio.preload = 'auto';
-      audio.volume = Math.max(0, Math.min(1, volume));
-      audio.muted = isMuted;
+      if (typeof window !== 'undefined' && typeof Audio !== 'undefined' && bgmUrl) {
+        const audio = new Audio();
+        audio.src = bgmUrl;
+        audio.loop = true;
+        audio.preload = 'auto';
+        audio.volume = Math.max(0, Math.min(1, volume));
+        audio.muted = isMuted;
 
-      audioRef.current = audio;
+        audio.addEventListener('error', (e) => {
+          console.warn('[useBackgroundMusic] Audio resource error (non-fatal):', e);
+        });
+
+        audioRef.current = audio;
+      }
     } catch (err) {
       console.warn('[useBackgroundMusic] Failed to initialize Audio object:', err);
     }
@@ -56,14 +64,24 @@ export function useBackgroundMusic(gameState, volume = 0.5, isMuted = false) {
 
     try {
       if (normalizedState === 'playing') {
-        const playPromise = audio.play();
-        if (playPromise !== undefined) {
-          playPromise.catch((err) => {
-            console.warn('[useBackgroundMusic] Audio playback awaiting user interaction:', err);
-          });
+        if (!isPlayingRef.current) {
+          const playPromise = audio.play();
+          if (playPromise !== undefined) {
+            playPromise
+              .then(() => {
+                isPlayingRef.current = true;
+              })
+              .catch((err) => {
+                isPlayingRef.current = false;
+                console.warn('[useBackgroundMusic] Audio playback awaiting user interaction:', err);
+              });
+          }
         }
       } else {
-        audio.pause();
+        if (isPlayingRef.current) {
+          audio.pause();
+          isPlayingRef.current = false;
+        }
         if (normalizedState === 'menu') {
           audio.currentTime = 0;
         }

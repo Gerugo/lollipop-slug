@@ -4,19 +4,27 @@ import { Play, HelpCircle, Trophy, Sparkles, Volume2, VolumeX, Maximize2 } from 
 export const MainMenu = ({
   onStartGame,
   onOpenHowToPlay,
-  difficulty,
+  difficulty = 'NORMAL',
   onSelectDifficulty,
-  highScore,
-  isMuted,
+  highScore = 0,
+  isMuted = false,
   onToggleMute,
   onToggleFullscreen
 }) => {
   const handlePlayClick = () => {
     if (onToggleFullscreen) {
-      onToggleFullscreen();
+      try {
+        onToggleFullscreen();
+      } catch (_) {}
     }
-    onStartGame();
+    if (onStartGame) {
+      onStartGame();
+    }
   };
+
+  const safeHighScore = (highScore !== undefined && highScore !== null)
+    ? Number(highScore).toString().padStart(6, '0')
+    : '000000';
 
   return (
     <div className="absolute inset-0 z-30 flex flex-col items-center justify-between p-4 sm:p-6 bg-gradient-to-b from-slate-950/90 via-slate-900/80 to-slate-950/95 backdrop-blur-md select-none overflow-y-auto">
@@ -26,7 +34,7 @@ export const MainMenu = ({
           <Trophy size={16} className="text-candy-yellow" />
           <span className="font-arcade text-[10px] sm:text-xs text-slate-300">RÉCORD:</span>
           <span className="font-arcade text-xs sm:text-sm text-candy-yellow tracking-wider">
-            {highScore.toString().padStart(6, '0')}
+            {safeHighScore}
           </span>
         </div>
 
@@ -55,15 +63,8 @@ export const MainMenu = ({
       <div className="flex flex-col items-center text-center my-auto py-2 sm:py-4">
         {/* Hero Mascot Avatar */}
         <div className="relative mb-2 sm:mb-3 animate-float">
-          <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-gradient-to-tr from-candy-pink via-candy-yellow to-candy-blue p-1.5 shadow-2xl shadow-candy-pink/50">
-            <img
-              src="./mascota.png"
-              alt="Lulipop Hero"
-              className="w-full h-full object-cover rounded-full"
-              onError={(e) => {
-                e.target.style.display = 'none';
-              }}
-            />
+          <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-gradient-to-tr from-candy-pink via-candy-yellow to-candy-blue p-1.5 shadow-2xl shadow-candy-pink/50 flex items-center justify-center">
+            <span className="text-4xl sm:text-5xl">🍭</span>
           </div>
           <div className="absolute -bottom-1 -right-1 bg-candy-yellow text-slate-900 font-bungee text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full border border-white shadow">
             1P HERO
@@ -110,7 +111,7 @@ export const MainMenu = ({
             ].map((diff) => (
               <button
                 key={diff.id}
-                onClick={() => onSelectDifficulty(diff.id)}
+                onClick={() => onSelectDifficulty && onSelectDifficulty(diff.id)}
                 className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl font-candy text-[11px] sm:text-xs transition-all ${
                   difficulty === diff.id
                     ? 'bg-candy-pink text-white font-bold shadow-md scale-105'

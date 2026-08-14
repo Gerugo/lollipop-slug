@@ -10,22 +10,26 @@ export const VictoryModal = ({
   onPlayAgain,
   onExitToMenu
 }) => {
-  const minutes = Math.floor(gameTime / 60);
-  const seconds = gameTime % 60;
+  const safeTime = Number(gameTime || 0);
+  const minutes = Math.floor(safeTime / 60);
+  const seconds = safeTime % 60;
   const timeStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+  const numScore = Number(score || 0);
+  const safeScore = numScore.toString().padStart(6, '0');
 
   // Calculate Rank
   let rank = 'B';
   let rankColor = 'text-candy-blue';
-  if (score >= 80000) {
+  if (numScore >= 80000) {
     rank = 'S';
     rankColor = 'text-candy-yellow';
-  } else if (score >= 50000) {
+  } else if (numScore >= 50000) {
     rank = 'A';
     rankColor = 'text-candy-pink';
   }
 
-  const hostageBonus = rescuedHostages * 10000;
+  const hostageBonus = Number(rescuedHostages || 0) * 10000;
 
   return (
     <div className="absolute inset-0 z-40 bg-slate-950/90 backdrop-blur-lg flex items-center justify-center p-4 select-none overflow-y-auto">
@@ -72,7 +76,7 @@ export const VictoryModal = ({
           <div className="flex justify-between items-center pt-1 text-sm">
             <span className="text-candy-pink font-bold">PUNTUACIÓN TOTAL:</span>
             <span className="text-candy-yellow text-lg font-bold tracking-wider">
-              {score.toString().padStart(6, '0')}
+              {safeScore}
             </span>
           </div>
         </div>
