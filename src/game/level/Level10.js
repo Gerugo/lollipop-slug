@@ -116,7 +116,90 @@ export class Level10 {
   }
 
   drawPlatforms(ctx, camera) {
-    for (const plat of this.platforms) {
+    this.drawContinuousGround(ctx, camera);
+    this.drawFloatingPlatforms(ctx, camera);
+  }
+
+  drawContinuousGround(ctx, camera) {
+    const groundPlatforms = this.platforms.filter((p) => p.type === 'ground');
+
+    for (const plat of groundPlatforms) {
+      const startX = plat.x;
+      const endX = plat.x + plat.width;
+      const topY = plat.y;
+      const bottomY = this.height;
+
+      if (endX < camera.x - 80 || startX > camera.x + camera.viewportWidth + 80) continue;
+
+      const biome = this.getCurrentBiome(startX + plat.width / 2);
+
+      ctx.save();
+
+      // Organic Bezier Ground Path
+      ctx.beginPath();
+      ctx.moveTo(startX, bottomY);
+      ctx.lineTo(startX, topY + 18);
+      ctx.quadraticCurveTo(startX, topY, startX + 18, topY);
+
+      const step = 40;
+      for (let curX = startX + 18; curX < endX - 18; curX += step) {
+        const nextX = Math.min(endX - 18, curX + step);
+        const midX = (curX + nextX) / 2;
+        const wave = Math.sin(midX * 0.025) * 2.5;
+        ctx.quadraticCurveTo(midX, topY + wave, nextX, topY);
+      }
+
+      ctx.lineTo(endX - 18, topY);
+      ctx.quadraticCurveTo(endX, topY, endX, topY + 18);
+      ctx.lineTo(endX, bottomY);
+      ctx.closePath();
+
+      const groundGrad = ctx.createLinearGradient(0, topY, 0, bottomY);
+      const cols = biome.groundGradient;
+      groundGrad.addColorStop(0, cols[0]);
+      groundGrad.addColorStop(0.2, cols[1]);
+      groundGrad.addColorStop(0.5, cols[2]);
+      groundGrad.addColorStop(1, cols[3]);
+      ctx.fillStyle = groundGrad;
+      ctx.fill();
+
+      // 3D Clay Texture Overlay
+      const sueloImg = imageLoader.getImage('suelo');
+      if (sueloImg && sueloImg.complete && sueloImg.naturalWidth > 0) {
+        ctx.save();
+        ctx.clip();
+        ctx.globalAlpha = 0.45;
+        const tileW = 140;
+        const tileH = 80;
+        for (let tx = startX; tx < endX; tx += tileW) {
+          ctx.drawImage(sueloImg, tx, topY, tileW, tileH);
+        }
+        ctx.restore();
+      }
+
+      // Imperial Gold & Ruby Sugar Frosting Highlight
+      ctx.beginPath();
+      ctx.moveTo(startX + 6, topY + 4);
+      for (let curX = startX + 18; curX < endX - 18; curX += step) {
+        const nextX = Math.min(endX - 18, curX + step);
+        const midX = (curX + nextX) / 2;
+        const wave = Math.sin(midX * 0.025) * 2.5;
+        ctx.quadraticCurveTo(midX, topY + wave + 4, nextX, topY + 4);
+      }
+      ctx.strokeStyle = biome.frostingColor || '#F59E0B';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      ctx.restore();
+    }
+  }
+
+  drawFloatingPlatforms(ctx, camera) {
+    const barquilloImg = imageLoader.getImage('barquillo');
+    const bastonImg = imageLoader.getImage('baston');
+    const floating = this.platforms.filter((p) => p.type !== 'ground');
+
+    for (const plat of floating) {
       if (!camera.isVisible(plat.x, plat.y - 20, plat.width, plat.height + 40)) continue;
 
       ctx.save();
@@ -145,47 +228,19 @@ export class Level10 {
           ctx.stroke();
         }
       }
-      // SOLID IMPERIAL GOLDEN GROUND
-      else if (plat.type === 'ground') {
-        const groundGrad = ctx.createLinearGradient(0, plat.y, 0, plat.y + plat.height);
-        groundGrad.addColorStop(0, '#78350F');
-        groundGrad.addColorStop(0.3, '#451A03');
-        groundGrad.addColorStop(1, '#1C1917');
-
-        ctx.fillStyle = groundGrad;
-        ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
-
-        // Regal Gold Top Rim
-        ctx.fillStyle = '#F59E0B';
-        ctx.fillRect(plat.x, plat.y, plat.width, 7);
-
-        // Starlight Diamond Inlays
-        for (let x = plat.x + 20; x < plat.x + plat.width - 20; x += 50) {
+      // WAFER PLATFORMS WITH 3D BISCUITS
+      else if (plat.type === 'wafer') {
+        if (barquilloImg && barquilloImg.complete && barquilloImg.naturalWidth > 0) {
+          ctx.drawImage(barquilloImg, plat.x, plat.y, plat.width, plat.height);
+        } else {
+          ctx.fillStyle = '#78350F';
           ctx.beginPath();
-          ctx.moveTo(x, plat.y + 7);
-          ctx.lineTo(x + 8, plat.y + 15);
-          ctx.lineTo(x, plat.y + 23);
-          ctx.lineTo(x - 8, plat.y + 15);
-          ctx.closePath();
-          ctx.fillStyle = '#FDE047';
+          ctx.roundRect(plat.x, plat.y, plat.width, plat.height, 6);
           ctx.fill();
         }
       }
-      // WAFER PLATFORMS
-      else if (plat.type === 'wafer') {
-        ctx.fillStyle = '#78350F';
-        ctx.beginPath();
-        ctx.roundRect(plat.x, plat.y, plat.width, plat.height, 6);
-        ctx.fill();
-        ctx.strokeStyle = '#FDE68A';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        ctx.fillStyle = '#F59E0B';
-        ctx.fillRect(plat.x + 2, plat.y + 1, plat.width - 4, 3);
-      }
       // ULTRA ELASTIC TRAMPOLINES
-      else if (plat.type === 'elastic') {
+      else if (plat.type === 'elastic' || plat.type === 'bounce') {
         ctx.beginPath();
         ctx.roundRect(plat.x, plat.y, plat.width, plat.height, 12);
         ctx.fillStyle = 'rgba(245, 158, 11, 0.85)';
@@ -199,41 +254,29 @@ export class Level10 {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
         ctx.fill();
       }
-      // BOUNCE TRAMPOLINES
-      else if (plat.type === 'bounce') {
-        ctx.beginPath();
-        ctx.roundRect(plat.x, plat.y, plat.width, plat.height, 12);
-        ctx.fillStyle = 'rgba(236, 72, 153, 0.85)';
-        ctx.fill();
-        ctx.strokeStyle = '#F472B6';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-      }
       // SINKING PLATFORMS
       else if (plat.type === 'sinking') {
         const sinkOffset = plat.sinkOffset || 0;
-        ctx.save();
         ctx.translate(0, sinkOffset);
-
-        ctx.beginPath();
-        ctx.roundRect(plat.x, plat.y, plat.width, plat.height, 6);
-        ctx.fillStyle = '#4C0519';
-        ctx.fill();
-        ctx.strokeStyle = '#F59E0B';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        ctx.restore();
+        if (barquilloImg && barquilloImg.complete && barquilloImg.naturalWidth > 0) {
+          ctx.drawImage(barquilloImg, plat.x, plat.y, plat.width, plat.height);
+        } else {
+          ctx.beginPath();
+          ctx.roundRect(plat.x, plat.y, plat.width, plat.height, 6);
+          ctx.fillStyle = '#4C0519';
+          ctx.fill();
+        }
       }
       // CANDY CANE / GOLDEN COLUMNS
       else if (plat.type === 'candy_cane') {
-        ctx.beginPath();
-        ctx.roundRect(plat.x, plat.y, plat.width, plat.height, 8);
-        ctx.fillStyle = '#D97706';
-        ctx.fill();
-        ctx.strokeStyle = '#FDE047';
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        if (bastonImg && bastonImg.complete && bastonImg.naturalWidth > 0) {
+          ctx.drawImage(bastonImg, plat.x, plat.y, plat.width, plat.height);
+        } else {
+          ctx.beginPath();
+          ctx.roundRect(plat.x, plat.y, plat.width, plat.height, 8);
+          ctx.fillStyle = '#D97706';
+          ctx.fill();
+        }
       }
 
       ctx.restore();
