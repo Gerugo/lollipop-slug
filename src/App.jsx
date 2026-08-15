@@ -133,6 +133,12 @@ export function App() {
     }
   };
 
+  const handleRestartLevel = () => {
+    if (engineRef.current) {
+      engineRef.current.restartCurrentLevel();
+    }
+  };
+
   const handleNextLevel = () => {
     if (engineRef.current) {
       engineRef.current.advanceToNextLevel();
@@ -210,7 +216,9 @@ export function App() {
         <GameOverModal
           score={hudData?.score}
           highScore={hudData?.highScore}
-          onContinue={handleRestart}
+          currentLevel={hudData?.currentLevel || 1}
+          onRetryLevel={handleRestartLevel}
+          onStartOver={handleRestart}
           onExitToMenu={handleExitToMenu}
         />
       )}

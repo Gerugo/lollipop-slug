@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { RotateCcw, Home, Skull, Trophy } from 'lucide-react';
+import { RotateCcw, Home, Skull, Trophy, Play, FastForward } from 'lucide-react';
 
 export const GameOverModal = ({
   score = 0,
   highScore = 0,
+  currentLevel = 1,
+  onRetryLevel,
+  onStartOver,
   onContinue,
   onExitToMenu
 }) => {
@@ -26,6 +29,16 @@ export const GameOverModal = ({
     ? Number(highScore).toString().padStart(6, '0')
     : '000000';
 
+  const handleRetry = () => {
+    if (onRetryLevel) onRetryLevel();
+    else if (onContinue) onContinue();
+  };
+
+  const handleStartFromScratch = () => {
+    if (onStartOver) onStartOver();
+    else if (onContinue) onContinue();
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-lg flex items-center justify-center p-2 sm:p-4 select-none overflow-y-auto">
       <div className="candy-card rounded-2xl sm:rounded-3xl p-3 sm:p-5 max-w-md w-full flex flex-col items-center text-center shadow-2xl animate-bounce-soft border-2 border-red-500/50 m-auto max-h-[96dvh] overflow-y-auto">
@@ -37,6 +50,11 @@ export const GameOverModal = ({
             <h2 className="text-xl sm:text-3xl font-bungee text-red-500 tracking-wider text-stroke-thin animate-pulse">
               GAME OVER
             </h2>
+            {currentLevel > 1 && (
+              <span className="font-arcade text-[9px] sm:text-[10px] text-candy-yellow">
+                CHECKPOINT: NIVEL {currentLevel}
+              </span>
+            )}
           </div>
         </div>
 
@@ -66,22 +84,37 @@ export const GameOverModal = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-row gap-2 sm:gap-3 w-full">
-          <button
-            onClick={onContinue}
-            className="flex-1 py-2.5 sm:py-3.5 px-3 sm:px-6 candy-button-pink rounded-xl sm:rounded-2xl font-bungee text-white text-xs sm:text-sm tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-transform shadow-lg"
-          >
-            <RotateCcw size={16} className="sm:w-5 sm:h-5" />
-            REINICIAR
-          </button>
+        <div className="flex flex-col gap-2 w-full">
+          <div className="flex flex-row gap-2 w-full">
+            {/* Reintentar nivel actual / checkpoint */}
+            <button
+              onClick={handleRetry}
+              className="flex-1 py-2.5 sm:py-3 px-3 candy-button-pink rounded-xl sm:rounded-2xl font-bungee text-white text-xs sm:text-sm tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-transform shadow-lg"
+            >
+              <RotateCcw size={16} className="sm:w-5 sm:h-5" />
+              {currentLevel > 1 ? `REPETIR NIVEL ${currentLevel}` : 'REINTENTAR'}
+            </button>
 
-          <button
-            onClick={onExitToMenu}
-            className="py-2.5 sm:py-3.5 px-3 sm:px-6 bg-slate-800/90 hover:bg-slate-700 active:scale-95 border border-white/20 rounded-xl sm:rounded-2xl font-candy text-slate-300 text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5"
-          >
-            <Home size={16} className="sm:w-5 sm:h-5" />
-            MENÚ
-          </button>
+            {/* Si está en nivel 2+, opción para empezar desde Nivel 1 */}
+            {currentLevel > 1 && (
+              <button
+                onClick={handleStartFromScratch}
+                className="py-2.5 sm:py-3 px-3 bg-amber-600/90 hover:bg-amber-500 active:scale-95 border border-white/20 rounded-xl sm:rounded-2xl font-candy text-white text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5 shadow"
+                title="Empezar desde el Nivel 1"
+              >
+                <RotateCcw size={14} />
+                DESDE NIVEL 1
+              </button>
+            )}
+
+            <button
+              onClick={onExitToMenu}
+              className="py-2.5 sm:py-3 px-3 sm:px-4 bg-slate-800/90 hover:bg-slate-700 active:scale-95 border border-white/20 rounded-xl sm:rounded-2xl font-candy text-slate-300 text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5"
+            >
+              <Home size={16} className="sm:w-5 sm:h-5" />
+              MENÚ
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -10,7 +10,7 @@ export const TouchGamepad = ({ onTouchInput }) => {
   };
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-20 flex justify-between items-end p-3 sm:p-6 md:p-8 select-none">
+    <div className="fixed inset-0 pointer-events-none z-20 flex justify-between items-end pb-1.5 px-2 sm:pb-3 sm:px-4 md:p-6 select-none">
       {/* 1. Left: Lightweight Transparent Glass D-Pad */}
       <div className="pointer-events-auto relative w-36 h-36 sm:w-40 sm:h-40">
         {/* Subtle center indicator */}

@@ -150,6 +150,39 @@ export class GameEngine {
     }
   }
 
+  restartCurrentLevel() {
+    this.transitioning = true;
+    try {
+      this.loadLevel(this.currentLevelIndex);
+
+      if (this.difficulty === 'EASY') {
+        this.player.maxHp = 4;
+        this.player.hp = 4;
+      } else if (this.difficulty === 'HARD') {
+        this.player.maxHp = 2;
+        this.player.hp = 2;
+      } else {
+        this.player.maxHp = 3;
+        this.player.hp = 3;
+      }
+
+      this.transitioning = false;
+      this.setState('PLAYING');
+
+      try {
+        if (this.sound) {
+          if (typeof this.sound.startBGM === 'function') this.sound.startBGM('level');
+          if (typeof this.sound.playMissionStart === 'function') this.sound.playMissionStart();
+        }
+      } catch (audioErr) {
+        console.warn('[GameEngine] Audio init on restart level warning:', audioErr);
+      }
+    } catch (err) {
+      this.transitioning = false;
+      console.error('[GameEngine] Error restarting level:', err);
+    }
+  }
+
   loadLevel(index) {
     if (index === 1) {
       this.level = new Level1();
@@ -241,6 +274,7 @@ export class GameEngine {
           grenades: this.player.grenades,
           vehicleArmor: this.vehicle && this.vehicle.isOccupied ? this.vehicle.armor : null,
           maxVehicleArmor: this.vehicle ? this.vehicle.maxArmor : 5,
+          currentLevel: this.currentLevelIndex,
           boss: this.boss ? {
             name: this.boss.name,
             hp: this.boss.hp,
