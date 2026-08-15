@@ -278,11 +278,12 @@ export class GameEngine {
           vehicleArmor: this.vehicle && this.vehicle.isOccupied ? this.vehicle.armor : null,
           maxVehicleArmor: this.vehicle ? this.vehicle.maxArmor : 5,
           currentLevel: this.currentLevelIndex,
-          boss: this.boss ? {
+          boss: (this.boss && !this.boss.dead) ? {
             name: this.boss.name,
             hp: this.boss.hp,
             maxHp: this.boss.maxHp,
-            phase: this.boss.phase
+            phase: this.boss.phase,
+            isDefeated: this.boss.isDefeated
           } : null
         });
       }

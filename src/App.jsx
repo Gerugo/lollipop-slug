@@ -22,8 +22,9 @@ export function App() {
   const [hudData, setHudData] = useState(null);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
 
-  // Background Music (BGM) Hook Integration
-  useBackgroundMusic(gameState, gameVolume, isGameMuted);
+  // Background Music (BGM) Hook Integration: Switches to distinct Boss Theme during boss fights
+  const isBossActive = Boolean(hudData?.boss && !hudData.boss.isDefeated);
+  useBackgroundMusic(gameState, gameVolume, isGameMuted, isBossActive);
 
   // Detect touch device
   useEffect(() => {
