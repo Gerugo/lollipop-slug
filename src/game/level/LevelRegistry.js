@@ -73,7 +73,7 @@ export const LEVEL_REGISTRY = [
     borderColor: 'border-cyan-400/50',
     activeBorder: 'border-cyan-300 ring-2 ring-cyan-400/60 shadow-cyan-500/30',
     badge: 'bg-cyan-500 text-cyan-950',
-    previewKey: 'cielo5'
+    previewKey: 'pantano'
   },
   {
     id: 6,
@@ -86,7 +86,7 @@ export const LEVEL_REGISTRY = [
     borderColor: 'border-sky-400/50',
     activeBorder: 'border-sky-300 ring-2 ring-sky-400/60 shadow-sky-500/30',
     badge: 'bg-sky-500 text-sky-950',
-    previewKey: 'cielo6'
+    previewKey: 'glaciar'
   },
   {
     id: 7,
@@ -99,7 +99,7 @@ export const LEVEL_REGISTRY = [
     borderColor: 'border-rose-400/50',
     activeBorder: 'border-rose-300 ring-2 ring-rose-400/60 shadow-rose-500/30',
     badge: 'bg-rose-500 text-rose-950',
-    previewKey: 'cielo7'
+    previewKey: 'gelatina'
   },
   {
     id: 8,
@@ -112,7 +112,7 @@ export const LEVEL_REGISTRY = [
     borderColor: 'border-orange-500/50',
     activeBorder: 'border-orange-400 ring-2 ring-orange-500/60 shadow-orange-500/30',
     badge: 'bg-orange-500 text-orange-950',
-    previewKey: 'cielo8'
+    previewKey: 'volcan'
   },
   {
     id: 9,
@@ -125,7 +125,7 @@ export const LEVEL_REGISTRY = [
     borderColor: 'border-purple-500/50',
     activeBorder: 'border-purple-400 ring-2 ring-purple-500/60 shadow-purple-500/30',
     badge: 'bg-purple-500 text-purple-950',
-    previewKey: 'cielo9'
+    previewKey: 'murallas'
   },
   {
     id: 10,
@@ -138,7 +138,7 @@ export const LEVEL_REGISTRY = [
     borderColor: 'border-amber-400/70',
     activeBorder: 'border-amber-300 ring-4 ring-amber-400/80 shadow-amber-500/50',
     badge: 'bg-amber-400 text-amber-950 font-black',
-    previewKey: 'cielo10'
+    previewKey: 'sanctum'
   }
 ];
 

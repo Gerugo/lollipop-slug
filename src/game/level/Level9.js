@@ -13,7 +13,7 @@ export class Level9 {
     this.height = LEVEL_9_CONFIG.height;
     this.bossTriggerX = LEVEL_9_CONFIG.bossTriggerX;
     this.bossArenaLockX = LEVEL_9_CONFIG.bossArenaLockX;
-    this.platforms = LEVEL_9_CONFIG.platforms;
+    this.platforms = JSON.parse(JSON.stringify(LEVEL_9_CONFIG.platforms));
     this.biomes = LEVEL_9_CONFIG.biomes;
     this.animTime = 0;
   }

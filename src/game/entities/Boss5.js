@@ -78,7 +78,7 @@ export class Boss5 {
     }
   }
 
-  update(dt, player, enemyProjectiles, particles, soundManager, enemies) {
+  update(dt, player, platforms, enemyProjectiles, enemies, particles, soundManager, camera) {
     if (this.dead) return;
 
     this.animTime += dt;

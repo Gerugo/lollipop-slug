@@ -1,4 +1,5 @@
 import { Projectile } from './Weapons.js';
+import { Physics } from '../engine/Physics.js';
 import { imageLoader } from '../engine/ImageLoader.js';
 
 export class Boss6 {
@@ -77,7 +78,7 @@ export class Boss6 {
     }
   }
 
-  update(dt, player, enemyProjectiles, particles, soundManager, enemies) {
+  update(dt, player, platforms, enemyProjectiles, enemies, particles, soundManager, camera) {
     if (this.dead) return;
 
     this.animTime += dt;
@@ -209,6 +210,15 @@ export class Boss6 {
         });
         if (soundManager && soundManager.playSodaGrenadeFizz) soundManager.playSodaGrenadeFizz();
       }
+    }
+
+    // Apply gravity & physics
+    if (platforms) {
+      this.vy += this.gravity * dt;
+      this.x += this.vx * dt;
+      this.y += this.vy * dt;
+      this.isGrounded = false;
+      Physics.resolvePlatforms(this, platforms);
     }
 
     // Keep within arena bounds

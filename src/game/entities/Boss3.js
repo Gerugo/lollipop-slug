@@ -47,7 +47,7 @@ export class Boss3 {
     this.orbAngle = 0;
   }
 
-  takeDamage(amount, particles, soundManager, attackerX = 0) {
+  takeDamage(amount, particles, soundManager, camera = null) {
     if (this.dead || this.isDefeated || this.invulnerableTimer > 0) return;
 
     this.hp -= amount;
@@ -99,7 +99,7 @@ export class Boss3 {
     }
   }
 
-  update(dt, player, enemyProjectiles, enemies, particles, soundManager, camera) {
+  update(dt, player, platforms, enemyProjectiles, enemies, particles, soundManager, camera) {
     this.animTime += dt;
     this.orbAngle += dt * 3.5;
 

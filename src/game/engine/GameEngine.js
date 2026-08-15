@@ -524,7 +524,8 @@ export class GameEngine {
           this.projectiles,
           this.grenades,
           this.particles,
-          this.sound
+          this.sound,
+          this.camera
         );
       }
     } catch(e) { console.error('[update] step 5 player:', e); }

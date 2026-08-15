@@ -120,9 +120,10 @@ export class Player {
     }
   }
 
-  update(dt, input, platforms, projectiles, grenades, particles, soundManager) {
+  update(dt, input, platforms, projectiles, grenades, particles, soundManager, camera) {
     this.animTime += dt;
     this.prevY = this.y;
+    this._camera = camera || null; // Store for Physics hazard damage camera shake
 
     if (this.invulnerableTimer > 0) {
       this.invulnerableTimer -= dt;
@@ -235,7 +236,7 @@ export class Player {
 
     const wasGrounded = this.isGrounded;
     this.isGrounded = false;
-    Physics.resolvePlatforms(this, platforms, this.isDropping);
+    Physics.resolvePlatforms(this, platforms, this.isDropping, soundManager, particles, this._camera);
 
     // Landing Impact Squash Trigger
     if (!wasGrounded && this.isGrounded) {

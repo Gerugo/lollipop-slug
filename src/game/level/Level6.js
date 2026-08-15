@@ -13,7 +13,7 @@ export class Level6 {
     this.height = LEVEL_6_CONFIG.height;
     this.bossTriggerX = LEVEL_6_CONFIG.bossTriggerX;
     this.bossArenaLockX = LEVEL_6_CONFIG.bossArenaLockX;
-    this.platforms = LEVEL_6_CONFIG.platforms;
+    this.platforms = JSON.parse(JSON.stringify(LEVEL_6_CONFIG.platforms));
     this.biomes = LEVEL_6_CONFIG.biomes;
     this.animTime = 0;
   }

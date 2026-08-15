@@ -1,4 +1,5 @@
 import { Projectile } from './Weapons.js';
+import { Physics } from '../engine/Physics.js';
 import { imageLoader } from '../engine/ImageLoader.js';
 
 export class Boss10 {
@@ -80,7 +81,7 @@ export class Boss10 {
     }
   }
 
-  update(dt, player, enemyProjectiles, particles, soundManager, enemies) {
+  update(dt, player, platforms, enemyProjectiles, enemies, particles, soundManager, camera) {
     if (this.dead) return;
 
     this.animTime += dt;
@@ -229,6 +230,15 @@ export class Boss10 {
         });
         if (soundManager && soundManager.playExplosion) soundManager.playExplosion();
       }
+    }
+
+    // Apply gravity & physics for grounded phases
+    if (platforms && this.phase < 3) {
+      this.vy += this.gravity * dt;
+      this.x += this.vx * dt;
+      this.y += this.vy * dt;
+      this.isGrounded = false;
+      Physics.resolvePlatforms(this, platforms);
     }
 
     // Keep within arena bounds

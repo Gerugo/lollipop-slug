@@ -13,7 +13,7 @@ export class Level5 {
     this.height = LEVEL_5_CONFIG.height;
     this.bossTriggerX = LEVEL_5_CONFIG.bossTriggerX;
     this.bossArenaLockX = LEVEL_5_CONFIG.bossArenaLockX;
-    this.platforms = LEVEL_5_CONFIG.platforms;
+    this.platforms = JSON.parse(JSON.stringify(LEVEL_5_CONFIG.platforms));
     this.biomes = LEVEL_5_CONFIG.biomes;
     this.animTime = 0;
     this.tideLevel = 0; // Oscillating soda swamp tide

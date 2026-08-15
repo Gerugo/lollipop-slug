@@ -572,7 +572,7 @@ export class Enemy {
           this.whipTimer = 0.22;
           // Whip strike check
           if (distToPlayer < 160 && player && !player.isDead) {
-            player.takeDamage(1, this.x, particles, soundManager);
+            player.takeDamage(1, this.x, particles, soundManager, camera);
           }
           if (particles) {
             particles.emitSparkles(this.x + (this.facing === -1 ? -40 : this.width + 40), this.y + 24, 8, '#A3E635');

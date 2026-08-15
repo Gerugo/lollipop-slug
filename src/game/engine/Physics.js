@@ -69,7 +69,7 @@ export class Physics {
   }
 
   // Robust One-Way, Solid, Bounce, Sticky & Hazard Platform Collision Detection
-  static resolvePlatforms(entity, platforms, isDroppingDown = false, sound = null, particles = null) {
+  static resolvePlatforms(entity, platforms, isDroppingDown = false, sound = null, particles = null, camera = null) {
     const dropping = isDroppingDown || entity.isDropping;
     const entityBottom = entity.y + entity.height;
     const prevBottom = entity.prevY !== undefined ? entity.prevY + entity.height : entityBottom - entity.vy * 0.016;
@@ -85,7 +85,7 @@ export class Physics {
       if (plat.type === 'acid_pool' || plat.type === 'soda_tide' || plat.type === 'lava_caramel' || plat.type === 'spikes') {
         if (entity.vy >= 0 && prevBottom <= platY + 18 && entityBottom >= platY) {
           if (entity.takeDamage) {
-            entity.takeDamage(1, entity.x + entity.width / 2, particles, sound);
+            entity.takeDamage(1, entity.x + entity.width / 2, particles, sound, camera);
           }
           if (particles) {
             let sparkCol = '#84CC16';
