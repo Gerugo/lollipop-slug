@@ -60,53 +60,60 @@ export class Level9 {
   }
 
   drawBackground(ctx, camera) {
-    const vpW = camera.viewportWidth;
-    const vpH = camera.viewportHeight;
+    const viewX = camera.x;
+    const viewW = camera.viewportWidth;
+    const viewH = camera.viewportHeight;
 
-    const biome = this.getCurrentBiome(camera.x + vpW / 2);
-    const grad = ctx.createLinearGradient(0, 0, 0, vpH);
-    grad.addColorStop(0, biome.skyGradient[0]);
-    grad.addColorStop(0.55, biome.skyGradient[1]);
-    grad.addColorStop(1, biome.skyGradient[2]);
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, vpW, vpH);
+    const currentBiome = this.getCurrentBiome(viewX + viewW / 2);
 
-    // LAYER 1: Distant Gothic Citadel & Blood Moon (factor: 0.15)
-    const bgSky = imageLoader.getImage('cielo9');
-    if (bgSky && bgSky.complete && bgSky.naturalWidth > 0) {
-      const imgW = bgSky.naturalWidth;
-      const imgH = bgSky.naturalHeight;
-      const scale = vpH / imgH;
-      const drawW = imgW * scale;
-      const factor = 0.15;
-      const offsetX = -(camera.x * factor) % drawW;
+    // 1. DYNAMIC ATMOSPHERIC SKY LAYER (Interpolated per Biome)
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, viewH);
+    const cols = currentBiome.skyGradient;
+    skyGrad.addColorStop(0, cols[0]);
+    skyGrad.addColorStop(0.5, cols[1]);
+    skyGrad.addColorStop(1, cols[2]);
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, viewW, viewH);
 
-      for (let x = offsetX - drawW; x < vpW + drawW; x += drawW) {
-        ctx.drawImage(bgSky, x, 0, drawW, vpH);
+    // LAYER 1 (Distant Parallax 0.08): Distant Gothic Citadel & Blood Moon ('cielo9')
+    const skyImg = imageLoader.getImage('cielo9');
+    if (skyImg && skyImg.complete && skyImg.naturalWidth > 0) {
+      const skyAspect = skyImg.naturalWidth / skyImg.naturalHeight;
+      const skyRenderW = Math.round(viewH * skyAspect);
+      const skyOffsetX = Math.round((viewX * 0.08) % skyRenderW);
+
+      ctx.save();
+      ctx.globalAlpha = 0.92;
+      let startX = -skyOffsetX;
+      while (startX < viewW) {
+        ctx.drawImage(skyImg, startX, 0, skyRenderW + 1, viewH);
+        startX += skyRenderW;
       }
+      ctx.restore();
     }
 
-    // LAYER 2: Dark Chocolate Battlements Parallax (factor: 0.40)
-    const bgWalls = imageLoader.getImage('murallas');
-    if (bgWalls && bgWalls.complete && bgWalls.naturalWidth > 0) {
-      const imgW = bgWalls.naturalWidth;
-      const imgH = bgWalls.naturalHeight;
-      const scale = 0.9;
-      const drawW = imgW * scale;
-      const drawH = imgH * scale;
-      const factor = 0.40;
-      const offsetX = -(camera.x * factor) % drawW;
-      const offsetY = vpH - drawH;
+    // LAYER 2 (Midground Parallax 0.28): Dark Chocolate Battlements ('murallas')
+    const midImg = imageLoader.getImage('murallas');
+    if (midImg && midImg.complete && midImg.naturalWidth > 0) {
+      const midAspect = midImg.naturalWidth / midImg.naturalHeight;
+      const midH = Math.round(viewH * 0.75);
+      const midRenderW = Math.round(midH * midAspect);
+      const midOffsetX = Math.round((viewX * 0.28) % midRenderW);
 
-      for (let x = offsetX - drawW; x < vpW + drawW; x += drawW) {
-        ctx.drawImage(bgWalls, x, offsetY, drawW, drawH);
+      ctx.save();
+      ctx.globalAlpha = 0.95;
+      let startX = -midOffsetX;
+      while (startX < viewW) {
+        ctx.drawImage(midImg, startX, viewH - midH, midRenderW + 1, midH);
+        startX += midRenderW;
       }
+      ctx.restore();
     }
 
     // LAYER 3: Ambient Dark Energy Particles
     for (let i = 0; i < 20; i++) {
-      const sx = ((i * 67 + this.animTime * 20) % (vpW + 40)) - 20;
-      const sy = ((i * 47 + this.animTime * 45) % (vpH - 40)) + 20;
+      const sx = ((i * 67 + this.animTime * 20) % (viewW + 40)) - 20;
+      const sy = ((i * 47 + this.animTime * 45) % (viewH - 40)) + 20;
       const sr = (i % 3) + 1.5;
       ctx.beginPath();
       ctx.arc(sx, sy, sr, 0, Math.PI * 2);

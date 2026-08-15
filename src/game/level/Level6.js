@@ -60,54 +60,61 @@ export class Level6 {
   }
 
   drawBackground(ctx, camera) {
-    const vpW = camera.viewportWidth;
-    const vpH = camera.viewportHeight;
+    const viewX = camera.x;
+    const viewW = camera.viewportWidth;
+    const viewH = camera.viewportHeight;
 
-    const biome = this.getCurrentBiome(camera.x + vpW / 2);
-    const grad = ctx.createLinearGradient(0, 0, 0, vpH);
-    grad.addColorStop(0, biome.skyGradient[0]);
-    grad.addColorStop(0.55, biome.skyGradient[1]);
-    grad.addColorStop(1, biome.skyGradient[2]);
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, vpW, vpH);
+    const currentBiome = this.getCurrentBiome(viewX + viewW / 2);
 
-    // LAYER 1: Distant Candy Mountain & Aurora Borealis Parallax (factor: 0.15)
-    const bgSky = imageLoader.getImage('cielo6');
-    if (bgSky && bgSky.complete && bgSky.naturalWidth > 0) {
-      const imgW = bgSky.naturalWidth;
-      const imgH = bgSky.naturalHeight;
-      const scale = vpH / imgH;
-      const drawW = imgW * scale;
-      const factor = 0.15;
-      const offsetX = -(camera.x * factor) % drawW;
+    // 1. DYNAMIC ATMOSPHERIC SKY LAYER (Interpolated per Biome)
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, viewH);
+    const cols = currentBiome.skyGradient;
+    skyGrad.addColorStop(0, cols[0]);
+    skyGrad.addColorStop(0.5, cols[1]);
+    skyGrad.addColorStop(1, cols[2]);
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, viewW, viewH);
 
-      for (let x = offsetX - drawW; x < vpW + drawW; x += drawW) {
-        ctx.drawImage(bgSky, x, 0, drawW, vpH);
+    // LAYER 1 (Distant Parallax 0.08): Frozen Aurora Peaks Horizon ('cielo6')
+    const skyImg = imageLoader.getImage('cielo6');
+    if (skyImg && skyImg.complete && skyImg.naturalWidth > 0) {
+      const skyAspect = skyImg.naturalWidth / skyImg.naturalHeight;
+      const skyRenderW = Math.round(viewH * skyAspect);
+      const skyOffsetX = Math.round((viewX * 0.08) % skyRenderW);
+
+      ctx.save();
+      ctx.globalAlpha = 0.92;
+      let startX = -skyOffsetX;
+      while (startX < viewW) {
+        ctx.drawImage(skyImg, startX, 0, skyRenderW + 1, viewH);
+        startX += skyRenderW;
       }
+      ctx.restore();
     }
 
-    // LAYER 2: Crystal Glacier Spires Parallax (factor: 0.40)
-    const bgGlacier = imageLoader.getImage('glaciar');
-    if (bgGlacier && bgGlacier.complete && bgGlacier.naturalWidth > 0) {
-      const imgW = bgGlacier.naturalWidth;
-      const imgH = bgGlacier.naturalHeight;
-      const scale = 0.9;
-      const drawW = imgW * scale;
-      const drawH = imgH * scale;
-      const factor = 0.40;
-      const offsetX = -(camera.x * factor) % drawW;
-      const offsetY = vpH - drawH;
+    // LAYER 2 (Midground Parallax 0.28): Crystal Glacier Spires ('glaciar')
+    const midImg = imageLoader.getImage('glaciar');
+    if (midImg && midImg.complete && midImg.naturalWidth > 0) {
+      const midAspect = midImg.naturalWidth / midImg.naturalHeight;
+      const midH = Math.round(viewH * 0.75);
+      const midRenderW = Math.round(midH * midAspect);
+      const midOffsetX = Math.round((viewX * 0.28) % midRenderW);
 
-      for (let x = offsetX - drawW; x < vpW + drawW; x += drawW) {
-        ctx.drawImage(bgGlacier, x, offsetY, drawW, drawH);
+      ctx.save();
+      ctx.globalAlpha = 0.95;
+      let startX = -midOffsetX;
+      while (startX < viewW) {
+        ctx.drawImage(midImg, startX, viewH - midH, midRenderW + 1, midH);
+        startX += midRenderW;
       }
+      ctx.restore();
     }
 
     // LAYER 3: Ambient Falling Snowflakes
     ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
     for (let i = 0; i < 24; i++) {
-      const sx = ((i * 67 + this.animTime * 35) % (vpW + 40)) - 20;
-      const sy = ((i * 43 + this.animTime * 85) % (vpH + 20)) - 10;
+      const sx = ((i * 67 + this.animTime * 35) % (viewW + 40)) - 20;
+      const sy = ((i * 43 + this.animTime * 85) % (viewH + 20)) - 10;
       const sr = (i % 3) + 1.5;
       ctx.beginPath();
       ctx.arc(sx, sy, sr, 0, Math.PI * 2);
