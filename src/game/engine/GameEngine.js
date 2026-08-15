@@ -808,6 +808,10 @@ export class GameEngine {
         weaponKey = 'arma_plasma';
         label = 'P';
         jellyColor = '#9333EA';
+      } else if (drop.type === 'CANON_COSMICO') {
+        weaponKey = 'arma_cosmic';
+        label = 'C';
+        jellyColor = '#F59E0B';
       } else if (drop.type === 'GRENADE' || drop.type === 'G') {
         weaponKey = 'arma_grenade';
         label = 'G';

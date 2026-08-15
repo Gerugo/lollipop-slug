@@ -90,6 +90,15 @@ export const WEAPON_TYPES = {
     fireRate: 0.35,
     iconColor: '#9333EA',
     description: 'Orbes de plasma oscuro de regaliz que crean implosiones de vacío y daño masivo.'
+  },
+  CANON_COSMICO: {
+    id: 'CANON_COSMICO',
+    name: 'Cañón Cósmico',
+    shortName: 'COSMIC CANNON',
+    ammo: 35,
+    fireRate: 0.40,
+    iconColor: '#F59E0B',
+    description: 'La máxima arma de azúcar estelar. Ráfaga galáctica con daño colosal de 100.'
   }
 };
 
@@ -449,6 +458,42 @@ export class Projectile {
       ctx.fillStyle = '#E11D48';
       ctx.fill();
       ctx.strokeStyle = '#FBBF24';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    } else if (this.type === 'COSMIC_BURST') {
+      // Pulsing starlight cosmic orb
+      ctx.beginPath();
+      ctx.arc(0, 0, 20, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(250, 204, 21, 0.75)';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(0, 0, 13, 0, Math.PI * 2);
+      ctx.fillStyle = '#EC4899';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(0, 0, 6, 0, Math.PI * 2);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fill();
+    } else if (this.type === 'RUNE_BLAST') {
+      // Golden magic rune diamond
+      ctx.beginPath();
+      ctx.moveTo(0, -14);
+      ctx.lineTo(14, 0);
+      ctx.lineTo(0, 14);
+      ctx.lineTo(-14, 0);
+      ctx.closePath();
+      ctx.fillStyle = '#F59E0B';
+      ctx.fill();
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    } else if (this.type === 'ROYAL_BEAM') {
+      // Imperial golden laser beam
+      ctx.beginPath();
+      ctx.roundRect(-28, -6, 56, 12, 6);
+      ctx.fillStyle = '#FDE047';
+      ctx.fill();
+      ctx.strokeStyle = '#E11D48';
       ctx.lineWidth = 2;
       ctx.stroke();
     }

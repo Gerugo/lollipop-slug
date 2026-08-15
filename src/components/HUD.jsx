@@ -11,6 +11,7 @@ import armaHieloUrl from '../assets/arma_hielo.png';
 import armaLaserUrl from '../assets/arma_laser.png';
 import armaFlamethrowerUrl from '../assets/arma_flamethrower.png';
 import armaPlasmaUrl from '../assets/arma_plasma.png';
+import armaCosmicUrl from '../assets/arma_cosmic.png';
 
 export const HUD = ({ hudData, onTogglePause, onToggleMute, isMuted = false, onToggleFullscreen }) => {
   if (!hudData) return null;
@@ -58,6 +59,7 @@ export const HUD = ({ hudData, onTogglePause, onToggleMute, isMuted = false, onT
       case 'RAYO_LASER': return armaLaserUrl;
       case 'LANZALLAMAS': return armaFlamethrowerUrl;
       case 'CANON_PLASMA': return armaPlasmaUrl;
+      case 'CANON_COSMICO': return armaCosmicUrl;
       default: return armaPistolUrl;
     }
   };

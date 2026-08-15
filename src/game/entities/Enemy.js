@@ -205,6 +205,15 @@ export class Enemy {
       this.speed = 40;
       this.shieldUp = true;
       this.thrustTimer = 0;
+    } else if (this.type === 'HECHICERO_DULCE') {
+      this.gravity = 0;
+      this.width = 50;
+      this.height = 54;
+      this.hp = 52;
+      this.scoreValue = 650;
+      this.speed = 70;
+      this.hoverY = this.y;
+      this.castTimer = 0;
     } else {
       this.type = 'GUMMY';
     }
@@ -947,6 +956,31 @@ export class Enemy {
       return;
     }
 
+    // 17. HECHICERO_DULCE (Dark Candy Sorcerer)
+    if (this.type === 'HECHICERO_DULCE') {
+      this.facing = dirToPlayer;
+      this.x += dirToPlayer * 50 * dt;
+      this.y = this.hoverY + Math.sin(this.animTime * 3) * 45;
+
+      this.castTimer += dt;
+      if (this.castTimer >= 2.0 && distToPlayer < 460) {
+        this.castTimer = 0;
+        enemyProjectiles.push(
+          new Projectile({
+            x: this.x + this.width / 2,
+            y: this.y + this.height / 2,
+            vx: dirToPlayer * 250,
+            vy: 0,
+            type: 'RUNE_BLAST',
+            damage: 1,
+            isPlayer: false
+          })
+        );
+        if (particles) particles.emitSparkles(this.x + this.width / 2, this.y + this.height / 2, 8, '#F59E0B');
+      }
+      return;
+    }
+
     // 8. DEFAULT GUMMY SOLDIER
     const inSight = distToPlayer < 420;
 
@@ -1475,6 +1509,29 @@ export class Enemy {
         ctx.beginPath();
         ctx.ellipse(0, -renderH / 2, 24, 28, 0, 0, Math.PI * 2);
         ctx.fillStyle = '#27272A';
+        ctx.fill();
+      }
+
+      ctx.restore();
+      return;
+    }
+
+    // --- 19. HECHICERO_DULCE SPRITE ---
+    if (this.type === 'HECHICERO_DULCE') {
+      ctx.translate(cx, this.y + this.height / 2);
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      ctx.scale(this.facing, 1);
+
+      const sorSprite = imageLoader.getImage('hechicero');
+      const renderW = 50;
+      const renderH = 54;
+
+      if (sorSprite && sorSprite.complete && sorSprite.naturalWidth > 0) {
+        ctx.drawImage(sorSprite, -renderW / 2, -renderH / 2, renderW, renderH);
+      } else {
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 22, 24, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#581C87';
         ctx.fill();
       }
 

@@ -7,6 +7,7 @@ import { Level6 } from './Level6.js';
 import { Level7 } from './Level7.js';
 import { Level8 } from './Level8.js';
 import { Level9 } from './Level9.js';
+import { Level10 } from './Level10.js';
 
 export const LEVEL_REGISTRY = [
   {
@@ -125,6 +126,19 @@ export const LEVEL_REGISTRY = [
     activeBorder: 'border-purple-400 ring-2 ring-purple-500/60 shadow-purple-500/30',
     badge: 'bg-purple-500 text-purple-950',
     previewKey: 'cielo9'
+  },
+  {
+    id: 10,
+    LevelClass: Level10,
+    title: 'Nivel 10 - FINAL',
+    name: 'El Trono del Rey Amargo',
+    emoji: '👑',
+    desc: 'La Gran Batalla Final: hechiceros, rayos cósmicos & El Rey Amargo',
+    color: 'from-amber-600/50 via-rose-900/60 to-zinc-950/80',
+    borderColor: 'border-amber-400/70',
+    activeBorder: 'border-amber-300 ring-4 ring-amber-400/80 shadow-amber-500/50',
+    badge: 'bg-amber-400 text-amber-950 font-black',
+    previewKey: 'cielo10'
   }
 ];
 

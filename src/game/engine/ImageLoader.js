@@ -79,7 +79,12 @@ class ImageLoader {
       gargola: new URL('../../assets/gargola.png', import.meta.url).href,
       guardia_real: new URL('../../assets/guardia_real.png', import.meta.url).href,
       boss9: new URL('../../assets/boss9.png', import.meta.url).href,
-      arma_plasma: new URL('../../assets/arma_plasma.png', import.meta.url).href
+      arma_plasma: new URL('../../assets/arma_plasma.png', import.meta.url).href,
+      cielo10: new URL('../../assets/fondo-trono.jpg', import.meta.url).href,
+      sanctum: new URL('../../assets/fondo-sanctum.png', import.meta.url).href,
+      hechicero: new URL('../../assets/hechicero.png', import.meta.url).href,
+      boss10: new URL('../../assets/boss10.png', import.meta.url).href,
+      arma_cosmic: new URL('../../assets/arma_cosmic.png', import.meta.url).href
     };
 
     // Immediately start preloading in constructor

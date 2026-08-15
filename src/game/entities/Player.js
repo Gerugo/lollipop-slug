@@ -483,6 +483,29 @@ export class Player {
         particles.emitShockwave(bulletX + this.facing * 14, bulletY, 25, '#E11D48');
       }
       this.ammo--;
+    } else if (this.currentWeapon.id === 'CANON_COSMICO') {
+      soundManager.playLaserShoot();
+      projectiles.push(
+        new Projectile({
+          x: bulletX + this.facing * 14,
+          y: bulletY,
+          vx: bulletVx * 1.4,
+          vy: bulletVy * 1.4,
+          type: 'COSMIC_BURST',
+          damage: 100,
+          width: 40,
+          height: 40,
+          life: 1.2,
+          penetrate: true,
+          isPlayer: true,
+          rotation: shotAngle
+        })
+      );
+      if (particles) {
+        particles.emitSparkles(bulletX + this.facing * 16, bulletY, 14, '#FDE047');
+        particles.emitShockwave(bulletX + this.facing * 16, bulletY, 35, '#EC4899');
+      }
+      this.ammo--;
     }
 
     if (this.ammo <= 0 && this.currentWeapon.id !== 'PISTOL') {
@@ -622,6 +645,10 @@ export class Player {
       gunH = 16;
     } else if (this.currentWeapon.id === 'CANON_PLASMA') {
       gunSpriteKey = 'arma_plasma';
+      gunW = 28;
+      gunH = 16;
+    } else if (this.currentWeapon.id === 'CANON_COSMICO') {
+      gunSpriteKey = 'arma_cosmic';
       gunW = 28;
       gunH = 16;
     }
