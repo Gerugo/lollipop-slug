@@ -8,6 +8,53 @@ import { LEVEL_REGISTRY, getLevelEntry } from '../level/LevelRegistry.js';
 import { WEAPON_TYPES } from '../entities/Weapons.js';
 import { imageLoader } from './ImageLoader.js';
 
+class DamageNumber {
+  constructor(x, y, amount, color = '#FFFFFF', isCrit = false) {
+    this.x = x + (Math.random() - 0.5) * 16;
+    this.y = y - 10;
+    this.text = `${amount}`;
+    this.color = color;
+    this.isCrit = isCrit;
+    this.vx = (Math.random() - 0.5) * 45;
+    this.vy = isCrit ? -150 : -105;
+    this.gravity = 200;
+    this.life = isCrit ? 0.85 : 0.65;
+    this.maxLife = this.life;
+  }
+
+  update(dt) {
+    this.life -= dt;
+    this.x += this.vx * dt;
+    this.y += this.vy * dt;
+    this.vy += this.gravity * dt;
+  }
+
+  draw(ctx) {
+    if (this.life <= 0) return;
+    const progress = 1 - (this.life / this.maxLife);
+    const alpha = Math.min(1, this.life * 3.0);
+    const scale = this.isCrit ? Math.max(1.1, 1.6 - progress * 0.5) : Math.max(0.9, 1.3 - progress * 0.4);
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(this.x, this.y);
+    ctx.scale(scale, scale);
+
+    ctx.font = this.isCrit ? '900 18px "Bungee", system-ui, sans-serif' : '800 14px "Bungee", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    ctx.lineWidth = this.isCrit ? 4 : 3;
+    ctx.strokeStyle = '#09090B';
+    ctx.strokeText(this.text, 0, 0);
+
+    ctx.fillStyle = this.color;
+    ctx.fillText(this.text, 0, 0);
+
+    ctx.restore();
+  }
+}
+
 export class GameEngine {
   constructor(canvas, callbacks = {}) {
     this.canvas = canvas;
@@ -23,6 +70,16 @@ export class GameEngine {
     this.sound = soundManager;
     this.camera = new Camera(this.viewportWidth, this.viewportHeight);
     this.particles = new ParticleSystem();
+
+    // Studio Juice Toolkit
+    this.timeScale = 1.0;
+    this.hitStopTimer = 0;
+    this.damageNumbers = [];
+    this.comboCount = 0;
+    this.comboTimer = 0;
+    this.levelIntroTimer = 0;
+    this.levelIntroTitle = '';
+    this.levelIntroSubtitle = '';
 
     // Game State
     this.state = 'MENU';
@@ -190,6 +247,38 @@ export class GameEngine {
     }
   }
 
+  triggerHitStop(duration = 0.05, scale = 0.05) {
+    this.hitStopTimer = duration;
+    this.timeScale = scale;
+  }
+
+  addDamageNumber(x, y, amount, color = '#FFFFFF', isCrit = false) {
+    this.damageNumbers.push(new DamageNumber(x, y, amount, color, isCrit));
+    if (this.damageNumbers.length > 50) {
+      this.damageNumbers.shift();
+    }
+  }
+
+  addCombo(amount = 1) {
+    this.comboCount += amount;
+    this.comboTimer = 2.4;
+    if (this.comboCount > 1 && this.comboCount % 5 === 0) {
+      this.addScore(this.comboCount * 50);
+      try { this.sound.playCandyPickup(); } catch (_) {}
+    }
+  }
+
+  resetCombo() {
+    this.comboCount = 0;
+    this.comboTimer = 0;
+  }
+
+  triggerHaptic(ms = 35) {
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      try { navigator.vibrate(ms); } catch (_) {}
+    }
+  }
+
   loadLevel(index) {
     const levelEntry = getLevelEntry(index);
     this.level = new levelEntry.LevelClass();
@@ -198,6 +287,16 @@ export class GameEngine {
     this.camera.x = 0;
     this.camera.unlock();
     this.camera.setZoom(1.0);
+
+    this.levelIntroTitle = levelEntry.title ? `${levelEntry.title}: ${levelEntry.name}` : `NIVEL ${index}`;
+    this.levelIntroSubtitle = levelEntry.desc || '¡Libera a los rehenes y derrota al Rey Amargo!';
+    this.levelIntroTimer = 2.5;
+
+    this.damageNumbers = [];
+    this.comboCount = 0;
+    this.comboTimer = 0;
+    this.timeScale = 1.0;
+    this.hitStopTimer = 0;
 
     // Keep the same player instance if advancing, or create new if startNewGame
     if (!this.player) {
@@ -251,16 +350,26 @@ export class GameEngine {
         return;
       }
 
-      const dt = Math.min((currentTime - this.lastTime) / 1000, 0.05);
+      const rawDt = Math.min((currentTime - this.lastTime) / 1000, 0.05);
       this.lastTime = currentTime;
 
+      // Handle hit-stop freeze frames
+      if (this.hitStopTimer > 0) {
+        this.hitStopTimer -= rawDt;
+        if (this.hitStopTimer <= 0) {
+          this.timeScale = 1.0;
+        }
+      }
+
+      const effectiveDt = rawDt * this.timeScale;
+
       if (this.state === 'PLAYING') {
-        this.update(dt);
+        this.update(effectiveDt, rawDt);
       }
 
       this.render();
 
-      this.hudTimer = (this.hudTimer || 0) + dt;
+      this.hudTimer = (this.hudTimer || 0) + rawDt;
       if (this.hudTimer >= 0.06 && this.callbacks.onHUDUpdate && this.player) {
         this.hudTimer = 0;
         this.callbacks.onHUDUpdate({
@@ -276,6 +385,10 @@ export class GameEngine {
           vehicleArmor: this.vehicle && this.vehicle.isOccupied ? this.vehicle.armor : null,
           maxVehicleArmor: this.vehicle ? this.vehicle.maxArmor : 5,
           currentLevel: this.currentLevelIndex,
+          combo: this.comboCount >= 2 ? {
+            count: this.comboCount,
+            timer: this.comboTimer
+          } : null,
           boss: (this.boss && !this.boss.dead) ? {
             name: this.boss.name,
             hp: this.boss.hp,
@@ -292,7 +405,7 @@ export class GameEngine {
     }
   }
 
-  update(dt) {
+  update(dt, rawDt = dt) {
     if (this.input && typeof this.input.update === 'function') {
       this.input.update();
     }
@@ -300,6 +413,26 @@ export class GameEngine {
     this.gameTime += dt;
     if (this.level) {
       this.level.update(dt);
+    }
+
+    // Update Damage Numbers
+    for (let i = this.damageNumbers.length - 1; i >= 0; i--) {
+      const dn = this.damageNumbers[i];
+      dn.update(dt);
+      if (dn.life <= 0) this.damageNumbers.splice(i, 1);
+    }
+
+    // Update Combo Timer
+    if (this.comboTimer > 0) {
+      this.comboTimer -= dt;
+      if (this.comboTimer <= 0) {
+        this.resetCombo();
+      }
+    }
+
+    // Update Level Intro Banner
+    if (this.levelIntroTimer > 0) {
+      this.levelIntroTimer -= rawDt;
     }
 
     const currentBiome = this.level ? this.level.getCurrentBiome(this.player ? this.player.x : 0) : { id: 'BIOME_A' };
@@ -318,28 +451,51 @@ export class GameEngine {
       if (this.candyRainDuration > 0) {
         this.candyRainDuration -= dt;
         if (Math.random() < 0.05) {
-          const dropX = this.camera.x + Math.random() * this.camera.viewportWidth;
-          this.spawnDrop(dropX, -20, Math.random() < 0.4 ? 'ESTRELLA' : 'CANDY_BONUS');
+          const dropX = this.camera.x + Math.random() * this.viewportWidth;
+          const dropTypes = ['ESTRELLA', 'PLATANO', 'MANZANA'];
+          const randomType = dropTypes[Math.floor(Math.random() * dropTypes.length)];
+          this.drops.push({
+            x: dropX,
+            y: 0,
+            width: 28,
+            height: 28,
+            type: randomType,
+            vx: (Math.random() - 0.5) * 50,
+            vy: 100,
+            timer: 0
+          });
         }
       }
     } catch(e) { console.error('[update] step 2 candy rain:', e); }
 
-    // 3. CINEMATIC BOSS INTRO & ARENA TRIGGER
+    // 3. BOSS TRIGGER & UPDATE
     try {
-      if (!this.boss && this.player.x >= this.level.bossTriggerX) {
+      if (
+        !this.boss &&
+        this.level.config.boss &&
+        this.player.x >= this.level.bossTriggerX
+      ) {
         this.boss = this.level.createBoss();
-        this.boss.y = -180;
-        this.boss.vy = 400;
         this.camera.lockToArena(this.level.bossArenaLockX);
-        this.camera.setZoom(1.15);
         this.isBossIntroActive = true;
-        this.bossIntroTimer = 3.0;
-        this.sound.playBossAlarm();
+        this.bossIntroTimer = 2.0;
+        this.camera.shake(18, 0.8);
+        this.camera.setZoom(1.06);
+        this.sound.playBossWarning();
       }
 
-      if (this.isBossIntroActive) {
-        this.bossIntroTimer -= dt;
-        if (this.boss && this.boss.y < 230) {
+      if (this.boss) {
+        if (!this.boss.dead && !this.isBossIntroActive) {
+          this.boss.update(
+            dt,
+            this.player,
+            this.enemyProjectiles,
+            this.particles,
+            this.sound,
+            this.enemies
+          );
+        } else if (this.isBossIntroActive) {
+          this.bossIntroTimer -= dt;
           this.boss.y += this.boss.vy * dt;
           this.boss.vy += 800 * dt;
           if (this.boss.y >= 230) {
@@ -352,7 +508,7 @@ export class GameEngine {
             this.particles.emitConfetti(this.boss.x + this.boss.width / 2, this.boss.y + this.boss.height, 50);
           }
         }
-        if (this.bossIntroTimer <= 0) {
+        if (this.bossIntroTimer <= 0 && this.isBossIntroActive) {
           this.isBossIntroActive = false;
           this.camera.setZoom(1.0);
           this.sound.startBGM('boss');
@@ -431,9 +587,61 @@ export class GameEngine {
         if (hit) { this.projectiles.splice(i, 1); continue; }
         for (const plat of this.level.platforms) { if (Physics.checkAABB(proj, plat)) { this.particles.emitCrumble(proj.x, proj.y, 6, '#FDE68A'); hit = true; break; } }
         if (hit && !proj.penetrate) { this.projectiles.splice(i, 1); continue; }
-        for (const enemy of this.enemies) { if (!enemy.dead && Physics.checkAABB(proj, enemy)) { enemy.takeDamage(proj.damage, this.particles, this.sound, proj.x); if (enemy.dead) this.handleEnemyDeath(enemy); hit = true; if (!proj.penetrate) break; } }
+        for (const enemy of this.enemies) {
+          if (!enemy.dead && Physics.checkAABB(proj, enemy)) {
+            const isCrit = proj.damage >= 45 || proj.type === 'ROCKET' || proj.type === 'COSMIC_BURST';
+            this.triggerHitStop(isCrit ? 0.07 : 0.045, 0.05);
+
+            let dmgColor = '#FFFFFF';
+            if (proj.type === 'ICE_SHARD') dmgColor = '#38BDF8';
+            else if (proj.type === 'BUBBLE') dmgColor = '#06B6D4';
+            else if (proj.type === 'FLAME_BLAST') dmgColor = '#EA580C';
+            else if (proj.type === 'LASER_BEAM') dmgColor = '#FB7185';
+            else if (proj.type === 'PLASMA_ORB') dmgColor = '#C084FC';
+            else if (proj.type === 'COSMIC_BURST') dmgColor = '#FDE047';
+            else if (isCrit) dmgColor = '#FEF08A';
+
+            this.addDamageNumber(enemy.x + enemy.width / 2, enemy.y + 10, proj.damage, dmgColor, isCrit);
+            this.addCombo(1);
+            this.triggerHaptic(isCrit ? 45 : 25);
+
+            if (isCrit) {
+              this.camera.punchZoom(1.05, 4.0);
+              this.camera.shake(6, 0.2, proj.vx > 0 ? 1 : -1, 0);
+            }
+
+            enemy.takeDamage(proj.damage, this.particles, this.sound, proj.x);
+            if (enemy.dead) this.handleEnemyDeath(enemy);
+            hit = true;
+            if (!proj.penetrate) break;
+          }
+        }
         if (hit && !proj.penetrate) { this.projectiles.splice(i, 1); continue; }
-        if (this.boss && !this.boss.dead && !this.boss.isDefeated && !this.isBossIntroActive && Physics.checkAABB(proj, this.boss)) { this.boss.takeDamage(proj.damage, this.particles, this.sound, this.camera); if (proj.type === 'ROCKET') { this.explodeRocket(proj.x, proj.y); } if (!proj.penetrate) { this.projectiles.splice(i, 1); continue; } }
+        if (this.boss && !this.boss.dead && !this.boss.isDefeated && !this.isBossIntroActive && Physics.checkAABB(proj, this.boss)) {
+          const isCrit = proj.damage >= 45 || proj.type === 'ROCKET' || proj.type === 'COSMIC_BURST';
+          this.triggerHitStop(isCrit ? 0.08 : 0.045, 0.04);
+
+          let dmgColor = '#FFFFFF';
+          if (proj.type === 'ICE_SHARD') dmgColor = '#38BDF8';
+          else if (proj.type === 'FLAME_BLAST') dmgColor = '#EA580C';
+          else if (proj.type === 'LASER_BEAM') dmgColor = '#FB7185';
+          else if (proj.type === 'PLASMA_ORB') dmgColor = '#C084FC';
+          else if (proj.type === 'COSMIC_BURST') dmgColor = '#FDE047';
+          else if (isCrit) dmgColor = '#FEF08A';
+
+          this.addDamageNumber(this.boss.x + this.boss.width / 2, this.boss.y + 20, proj.damage, dmgColor, isCrit);
+          this.addCombo(1);
+          this.triggerHaptic(isCrit ? 50 : 30);
+
+          if (isCrit) {
+            this.camera.punchZoom(1.07, 3.5);
+            this.camera.shake(8, 0.25);
+          }
+
+          this.boss.takeDamage(proj.damage, this.particles, this.sound, this.camera);
+          if (proj.type === 'ROCKET') { this.explodeRocket(proj.x, proj.y); }
+          if (!proj.penetrate) { this.projectiles.splice(i, 1); continue; }
+        }
         for (const hostage of this.hostages) { if (!hostage.isRescued && Physics.checkAABB(proj, hostage)) { hostage.rescue(this.particles, this.sound, this.drops); this.rescuedHostages++; this.addScore(1000); } }
       }
     } catch(e) { console.error('[update] step 8 projectiles:', e); }
@@ -453,8 +661,18 @@ export class GameEngine {
         let blocked = false;
         for (const d of this.destructibles) { if (!d.dead && Physics.checkAABB(eProj, d)) { d.takeDamage(eProj.damage, this.particles, this.sound, this.drops); blocked = true; break; } }
         if (blocked) { this.enemyProjectiles.splice(i, 1); continue; }
-        if (this.vehicle && this.vehicle.isOccupied && !this.vehicle.isDestroyed && Physics.checkAABB(eProj, this.vehicle)) { this.vehicle.takeDamage(eProj.damage, eProj.x, this.particles, this.sound, this.camera); this.enemyProjectiles.splice(i, 1); continue; }
-        if (!this.player.isDead && Physics.checkAABB(eProj, this.player)) { this.player.takeDamage(eProj.damage, eProj.x, this.particles, this.sound, this.camera); this.enemyProjectiles.splice(i, 1); }
+        if (this.vehicle && this.vehicle.isOccupied && !this.vehicle.isDestroyed && Physics.checkAABB(eProj, this.vehicle)) {
+          this.triggerHaptic(40);
+          this.vehicle.takeDamage(eProj.damage, eProj.x, this.particles, this.sound, this.camera);
+          this.enemyProjectiles.splice(i, 1);
+          continue;
+        }
+        if (!this.player.isDead && Physics.checkAABB(eProj, this.player)) {
+          this.resetCombo();
+          this.triggerHaptic(60);
+          this.player.takeDamage(eProj.damage, eProj.x, this.particles, this.sound, this.camera);
+          this.enemyProjectiles.splice(i, 1);
+        }
       }
     } catch(e) { console.error('[update] step 9 eprojectiles:', e); }
 
@@ -465,11 +683,25 @@ export class GameEngine {
         g.update(dt, this.level.platforms, this.particles, this.sound);
         if (g.exploded) {
           this.particles.emitExplosionSprite(g.x, g.y, 1.3);
-          this.camera.shake(14, 0.4);
+          this.camera.shake(16, 0.45);
+          this.camera.punchZoom(1.08, 3.5);
+          this.triggerHitStop(0.08, 0.03);
+          this.triggerHaptic(50);
           for (const d of this.destructibles) { if (!d.dead && Physics.checkCircleAABB(g, d)) { d.takeDamage(50, this.particles, this.sound, this.drops); } }
-          for (const enemy of this.enemies) { if (!enemy.dead && Physics.checkCircleAABB(g, enemy)) { enemy.takeDamage(g.damage, this.particles, this.sound, g.x); if (enemy.dead) this.handleEnemyDeath(enemy); } }
+          for (const enemy of this.enemies) {
+            if (!enemy.dead && Physics.checkCircleAABB(g, enemy)) {
+              this.addDamageNumber(enemy.x + enemy.width / 2, enemy.y, g.damage, '#FEF08A', true);
+              this.addCombo(1);
+              enemy.takeDamage(g.damage, this.particles, this.sound, g.x);
+              if (enemy.dead) this.handleEnemyDeath(enemy);
+            }
+          }
           for (const hostage of this.hostages) { if (!hostage.isRescued && Physics.checkCircleAABB(g, hostage)) { hostage.rescue(this.particles, this.sound, this.drops); this.rescuedHostages++; this.addScore(1000); } }
-          if (this.boss && !this.boss.dead && !this.boss.isDefeated && !this.isBossIntroActive && Physics.checkCircleAABB(g, this.boss)) { this.boss.takeDamage(g.damage, this.particles, this.sound, this.camera); }
+          if (this.boss && !this.boss.dead && !this.boss.isDefeated && !this.isBossIntroActive && Physics.checkCircleAABB(g, this.boss)) {
+            this.addDamageNumber(this.boss.x + this.boss.width / 2, this.boss.y + 20, g.damage, '#FEF08A', true);
+            this.addCombo(1);
+            this.boss.takeDamage(g.damage, this.particles, this.sound, this.camera);
+          }
           this.grenades.splice(i, 1);
         }
       }
@@ -482,8 +714,11 @@ export class GameEngine {
         enemy.update(dt, this.player, this.level.platforms, this.enemyProjectiles, this.particles, this.sound, this.camera);
         if (!enemy.dead) {
           if (this.vehicle && this.vehicle.isOccupied && !this.vehicle.isDestroyed && Physics.checkAABB(this.vehicle, enemy)) {
+            this.triggerHaptic(40);
             this.vehicle.takeDamage(1, enemy.x, this.particles, this.sound, this.camera);
           } else if (!this.player.isDead && Physics.checkAABB(this.player, enemy)) {
+            this.resetCombo();
+            this.triggerHaptic(60);
             this.player.takeDamage(1, enemy.x + enemy.width / 2, this.particles, this.sound, this.camera);
           }
         }
@@ -706,13 +941,49 @@ export class GameEngine {
       eProj.draw(ctx);
     }
 
-    // 12. Draw Particle System
+    // 12. Draw Floating Damage Numbers (World Space)
+    for (const dn of this.damageNumbers) {
+      dn.draw(ctx);
+    }
+
+    // 13. Draw Particle System
     this.particles.draw(ctx);
 
-    // 13. Restore Camera Transform
+    // 14. Restore Camera Transform
     this.camera.restoreTransform(ctx);
 
-    // 14. Draw Cinematic Boss Warning Overlay (Screen Space)
+    // 15. Draw Cinematic Level Intro Title Banner (Screen Space)
+    if (this.levelIntroTimer > 0 && !this.isBossIntroActive) {
+      ctx.save();
+      const progress = this.levelIntroTimer / 2.5;
+      const alpha = Math.min(1, progress * 3.0, (2.5 - this.levelIntroTimer) * 4);
+      ctx.globalAlpha = alpha;
+
+      const bannerY = 80;
+      const bannerH = 75;
+
+      // Dark Glass Backdrop Banner
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+      ctx.fillRect(0, bannerY, this.viewportWidth, bannerH);
+      ctx.strokeStyle = '#F59E0B';
+      ctx.lineWidth = 2.5;
+      ctx.strokeRect(0, bannerY, this.viewportWidth, bannerH);
+
+      ctx.font = '900 20px "Bungee", cursive, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.shadowColor = '#F59E0B';
+      ctx.shadowBlur = 10;
+      ctx.fillText(this.levelIntroTitle, this.viewportWidth / 2, bannerY + 34);
+
+      ctx.font = 'bold 11px "Press Start 2P", monospace';
+      ctx.fillStyle = '#FDE68A';
+      ctx.shadowBlur = 0;
+      ctx.fillText(this.levelIntroSubtitle, this.viewportWidth / 2, bannerY + 58);
+      ctx.restore();
+    }
+
+    // 16. Draw Cinematic Boss Warning Overlay (Screen Space)
     if (this.isBossIntroActive) {
       ctx.save();
       const flash = Math.floor(this.gameTime * 8) % 2 === 0;

@@ -6,14 +6,18 @@ export class Camera {
     this.viewportHeight = viewportHeight;
     this.levelWidth = 6400;
     this.levelHeight = 540;
+    this.shakeTotalDuration = 0.3;
     this.shakeIntensity = 0;
     this.shakeDuration = 0;
     this.shakeOffsetX = 0;
     this.shakeOffsetY = 0;
+    this.shakeDirX = 0;
+    this.shakeDirY = 0;
     this.locked = false;
     this.lockedTargetX = 0;
     this.zoom = 1.0;
     this.targetZoom = 1.0;
+    this.punchZoomSpeed = 3.5;
   }
 
   setBounds(width, height) {
@@ -25,7 +29,13 @@ export class Camera {
     this.targetZoom = zoomLevel;
   }
 
-  shake(arg1 = 8, arg2 = 0.3) {
+  punchZoom(targetZoom = 1.08, returnSpeed = 3.8) {
+    this.zoom = targetZoom;
+    this.targetZoom = 1.0;
+    this.punchZoomSpeed = returnSpeed;
+  }
+
+  shake(arg1 = 8, arg2 = 0.3, dirX = 0, dirY = 0) {
     let finalIntensity = arg1;
     let finalDuration = arg2;
 
@@ -36,6 +46,9 @@ export class Camera {
 
     this.shakeIntensity = Math.max(this.shakeIntensity, finalIntensity);
     this.shakeDuration = Math.max(this.shakeDuration, finalDuration);
+    this.shakeTotalDuration = Math.max(this.shakeTotalDuration, this.shakeDuration);
+    this.shakeDirX = dirX;
+    this.shakeDirY = dirY;
   }
 
   lockToArena(targetX = 5200) {
@@ -48,8 +61,8 @@ export class Camera {
   }
 
   update(dt, target) {
-    // Smooth zoom interpolation
-    this.zoom += (this.targetZoom - this.zoom) * Math.min(1, dt * 4.0);
+    // Smooth zoom interpolation with punch speed
+    this.zoom += (this.targetZoom - this.zoom) * Math.min(1, dt * (this.punchZoomSpeed || 4.0));
 
     if (this.locked) {
       // Smoothly lerp towards arena lock position
@@ -65,12 +78,21 @@ export class Camera {
 
     if (this.shakeDuration > 0) {
       this.shakeDuration -= dt;
-      this.shakeOffsetX = (Math.random() * 2 - 1) * this.shakeIntensity;
-      this.shakeOffsetY = (Math.random() * 2 - 1) * this.shakeIntensity;
-      this.shakeIntensity = Math.max(0, this.shakeIntensity - dt * 18);
+      // Quadratic ease-out decay curve for heavier physical impact feel
+      const progress = Math.max(0, this.shakeDuration / (this.shakeTotalDuration || 0.3));
+      const easedIntensity = this.shakeIntensity * Math.pow(progress, 1.8);
+
+      const noiseX = (Math.random() * 2 - 1);
+      const noiseY = (Math.random() * 2 - 1);
+
+      this.shakeOffsetX = (this.shakeDirX * 0.6 + noiseX * 0.4) * easedIntensity;
+      this.shakeOffsetY = (this.shakeDirY * 0.6 + noiseY * 0.4) * easedIntensity;
     } else {
       this.shakeOffsetX = 0;
       this.shakeOffsetY = 0;
+      this.shakeIntensity = 0;
+      this.shakeDirX = 0;
+      this.shakeDirY = 0;
     }
   }
 

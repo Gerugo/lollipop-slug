@@ -133,7 +133,10 @@ export const HUD = ({ hudData, onTogglePause, onToggleMute, isMuted = false, onT
                   FASE {boss.phase || 1}/3
                 </span>
               </div>
-              <div className="w-full h-3.5 bg-slate-900/80 rounded-full overflow-hidden border border-white/50 p-0.5">
+              <div className="relative w-full h-3.5 bg-slate-900/80 rounded-full overflow-hidden border border-white/50 p-0.5">
+                {/* Boss Phase Separator Notches */}
+                <div className="absolute top-0 bottom-0 left-[33.3%] w-0.5 bg-white/80 z-10 shadow-[0_0_4px_#FFF]" />
+                <div className="absolute top-0 bottom-0 left-[66.6%] w-0.5 bg-white/80 z-10 shadow-[0_0_4px_#FFF]" />
                 <div
                   className="h-full rounded-full transition-all duration-200 bg-gradient-to-r from-amber-400 via-pink-500 to-red-600 shadow-inner"
                   style={{ width: `${Math.max(0, Math.min(100, ((boss.hp || 0) / (boss.maxHp || 1)) * 100))}%` }}
@@ -165,14 +168,14 @@ export const HUD = ({ hudData, onTogglePause, onToggleMute, isMuted = false, onT
         <div className="flex items-start gap-1.5 sm:gap-2">
           {/* Current Weapon & Ammo */}
           <div className="flex flex-col items-end gap-1">
-            <div className="bg-blue-500/25 backdrop-blur-[6px] px-2.5 py-1 rounded-3xl border-2 border-white/50 shadow-[0_4px_16px_rgba(56,189,248,0.3),inset_0_1px_2px_rgba(255,255,255,0.6)] flex items-center gap-1.5">
+            <div className="bg-blue-500/25 backdrop-blur-[6px] px-2.5 py-1 rounded-3xl border-2 border-white/50 shadow-[0_4px_16px_rgba(56,189,248,0.3),inset_0_1px_2px_rgba(255,255,255,0.6)] flex items-center gap-1.5 ring-2 ring-sky-400/40 animate-pulse-soft">
               <div className="text-right">
                 <div className="font-arcade text-[9px] text-sky-200">{safeWeaponName}</div>
                 <div className="font-arcade text-xs text-white drop-shadow">
                   {safeAmmoStr}
                 </div>
               </div>
-              <div className="w-8 h-8 rounded-2xl bg-white/20 border border-white/40 flex items-center justify-center p-0.5 shadow-inner overflow-hidden">
+              <div className="w-8 h-8 rounded-2xl bg-white/25 border border-white/60 flex items-center justify-center p-0.5 shadow-[0_0_10px_rgba(255,255,255,0.4)] overflow-hidden">
                 <img
                   src={getWeaponImg()}
                   alt={safeWeaponName}
@@ -214,6 +217,25 @@ export const HUD = ({ hudData, onTogglePause, onToggleMute, isMuted = false, onT
           </div>
         </div>
       </div>
+
+      {/* Floating Combo Counter Badge */}
+      {hudData.combo && (
+        <div className="absolute top-24 right-4 sm:right-6 flex flex-col items-end pointer-events-none animate-bounce-soft">
+          <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-pink-500 px-3.5 py-1.5 rounded-2xl border-2 border-yellow-200 shadow-[0_0_20px_rgba(245,158,11,0.7),inset_0_1px_2px_rgba(255,255,255,0.8)] flex items-center gap-2">
+            <span className="font-arcade text-[10px] text-yellow-100 uppercase tracking-wider">COMBO</span>
+            <span className="font-arcade text-lg sm:text-xl text-white font-black drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+              x{hudData.combo.count}
+            </span>
+          </div>
+          {/* Combo Decay Timer Bar */}
+          <div className="w-full h-1.5 bg-slate-950/70 rounded-full mt-1 overflow-hidden border border-white/40 shadow-inner">
+            <div
+              className="h-full bg-yellow-300 rounded-full transition-all duration-75 shadow-[0_0_8px_#FDE047]"
+              style={{ width: `${Math.max(0, Math.min(100, (hudData.combo.timer / 2.4) * 100))}%` }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

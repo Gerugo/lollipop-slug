@@ -90,7 +90,10 @@ export class Player {
     this.hp -= amount;
     this.invulnerableTimer = this.invulnerableDuration;
     soundManager.playHurt();
-    if (camera) camera.shake(9, 0.35);
+    if (camera) {
+      camera.shake(14, 0.38, this.x < fromX ? -1 : 1, 0);
+      if (camera.punchZoom) camera.punchZoom(1.06, 3.2);
+    }
 
     if (particles) {
       particles.emitCandyShards(this.x + this.width / 2, this.y + this.height / 2, 12);
@@ -587,8 +590,12 @@ export class Player {
     const renderW = 38;
 
     if (sprite && sprite.complete && sprite.naturalWidth > 0) {
-      // Draw PNG Mascot Sprite anchored firmly at bottom-center: (-renderW / 2, -renderH)
+      // Draw PNG Mascot Sprite with subtle studio rim-light backlight
+      ctx.save();
+      ctx.shadowColor = 'rgba(255, 255, 255, 0.45)';
+      ctx.shadowBlur = 5;
       ctx.drawImage(sprite, -renderW / 2, -renderH, renderW, renderH);
+      ctx.restore();
     } else {
       ctx.beginPath();
       ctx.arc(0, -renderH / 2, 18, 0, Math.PI * 2);

@@ -1060,7 +1060,7 @@ export class Enemy {
     // --- 1. PEZ SPRITE ---
     if (this.type === 'PEZ') {
       ctx.translate(cx, this.y + this.height / 2);
-      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.6) drop-shadow(0 0 6px rgba(255,255,255,0.85))';
       ctx.rotate(this.rotation);
       ctx.scale(this.facing, 1);
 
@@ -1080,7 +1080,7 @@ export class Enemy {
     // --- 2. GLOBO / DRONE SPRITE ---
     if (this.type === 'DRONE' || this.type === 'GLOBO') {
       ctx.translate(cx, this.y + this.height / 2);
-      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.6) drop-shadow(0 0 6px rgba(255,255,255,0.85))';
       ctx.rotate(this.rotation);
 
       const globoSprite = imageLoader.getImage('globo');
@@ -1099,7 +1099,7 @@ export class Enemy {
     // --- 3. ROLLER SPRITE ---
     if (this.type === 'ROLLER') {
       ctx.translate(cx, this.y + this.height / 2);
-      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.6) drop-shadow(0 0 6px rgba(255,255,255,0.85))';
       ctx.rotate(this.rotation);
 
       const rollerSprite = imageLoader.getImage('roller');
@@ -1142,7 +1142,7 @@ export class Enemy {
       }
 
       ctx.translate(cx, bottomY);
-      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.6) drop-shadow(0 0 6px rgba(255,255,255,0.85))';
       ctx.scale(this.facing, 1);
 
       const sniperSprite = imageLoader.getImage('sniper');
@@ -1161,7 +1161,7 @@ export class Enemy {
     // --- 5. MOTH SPRITE ---
     if (this.type === 'MOTH') {
       ctx.translate(cx, this.y + this.height / 2);
-      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.6) drop-shadow(0 0 6px rgba(255,255,255,0.85))';
       ctx.rotate(this.rotation);
       ctx.scale(this.facing, 1 + Math.sin(this.animTime * 14) * 0.12);
 
@@ -1181,7 +1181,7 @@ export class Enemy {
     // --- 6. KNIGHT SPRITE ---
     if (this.type === 'KNIGHT') {
       ctx.translate(cx, bottomY);
-      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.6) drop-shadow(0 0 6px rgba(255,255,255,0.85))';
       const stabOffset = this.isStabbing ? this.facing * 8 : 0;
       ctx.scale(this.facing, 1);
 
@@ -1204,7 +1204,7 @@ export class Enemy {
     // --- 7. LATIGO SPRITE ---
     if (this.type === 'LATIGO') {
       ctx.translate(cx, bottomY + 1);
-      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.6) drop-shadow(0 0 6px rgba(255,255,255,0.85))';
       ctx.scale(this.facing, 1);
 
       const latigoSprite = imageLoader.getImage('latigo');
@@ -1236,7 +1236,7 @@ export class Enemy {
     // --- 8. ACIDO SPRITE ---
     if (this.type === 'ACIDO') {
       ctx.translate(cx, this.y + this.height / 2);
-      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.6) drop-shadow(0 0 6px rgba(255,255,255,0.85))';
       ctx.rotate(this.rotation);
       ctx.scale(this.facing, 1);
 
@@ -1263,7 +1263,7 @@ export class Enemy {
       let scaleY = this.frogState === 'CROUCH' ? 0.85 : 1.12;
 
       ctx.translate(cx, bottomY + 1);
-      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.6) drop-shadow(0 0 6px rgba(255,255,255,0.85))';
       ctx.scale(this.facing * scaleX, scaleY);
 
       const ranaSprite = imageLoader.getImage('rana');
@@ -1296,7 +1296,7 @@ export class Enemy {
       }
 
       ctx.translate(cx, this.y + this.height / 2);
-      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.6) drop-shadow(0 0 6px rgba(255,255,255,0.85))';
       ctx.scale(this.facing, 1);
 
       const angSprite = imageLoader.getImage('anguila');
@@ -1328,7 +1328,7 @@ export class Enemy {
     // --- 11. PINGUINO SPRITE ---
     if (this.type === 'PINGUINO') {
       ctx.translate(cx, bottomY + 1);
-      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.6) drop-shadow(0 0 6px rgba(255,255,255,0.85))';
       ctx.scale(this.facing, 1);
 
       const pingSprite = imageLoader.getImage('pinguino');
@@ -1354,7 +1354,7 @@ export class Enemy {
       let scaleY = this.slamState === 'PREPARE' ? 1.2 : 1;
 
       ctx.translate(cx, bottomY + 1);
-      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.6) drop-shadow(0 0 6px rgba(255,255,255,0.85))';
       ctx.scale(this.facing * scaleX, scaleY);
 
       const yetiSprite = imageLoader.getImage('yeti');
@@ -1377,7 +1377,7 @@ export class Enemy {
     // --- 13. MURCIELAGO SPRITE ---
     if (this.type === 'MURCIELAGO') {
       ctx.translate(cx, this.y + this.height / 2);
-      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.6) drop-shadow(0 0 6px rgba(255,255,255,0.85))';
       ctx.scale(this.facing, 1);
 
       const batSprite = imageLoader.getImage('murcielago');
@@ -1404,7 +1404,7 @@ export class Enemy {
       let scaleY = isWalking ? (1 - Math.sin(this.animTime * 8) * 0.12) : 1;
 
       ctx.translate(cx, bottomY + 1);
-      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.6) drop-shadow(0 0 6px rgba(255,255,255,0.85))';
       ctx.scale(this.facing * scaleX, scaleY);
 
       const slimeSprite = imageLoader.getImage('slime');
@@ -1427,7 +1427,7 @@ export class Enemy {
     // --- 15. SALAMANDRA SPRITE ---
     if (this.type === 'SALAMANDRA') {
       ctx.translate(cx, bottomY + 1);
-      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.6) drop-shadow(0 0 6px rgba(255,255,255,0.85))';
       ctx.scale(this.facing, 1);
 
       const salSprite = imageLoader.getImage('salamandra');
@@ -1450,7 +1450,7 @@ export class Enemy {
     // --- 16. AVISPA_FUEGO SPRITE ---
     if (this.type === 'AVISPA_FUEGO') {
       ctx.translate(cx, this.y + this.height / 2);
-      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.6) drop-shadow(0 0 6px rgba(255,255,255,0.85))';
       ctx.scale(this.facing, 1);
 
       const waspSprite = imageLoader.getImage('avispa');
@@ -1473,7 +1473,7 @@ export class Enemy {
     // --- 17. GARGOYLA SPRITE ---
     if (this.type === 'GARGOYLA') {
       ctx.translate(cx, this.y + this.height / 2);
-      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.6) drop-shadow(0 0 6px rgba(255,255,255,0.85))';
       ctx.scale(this.facing, 1);
 
       const garSprite = imageLoader.getImage('gargola');
@@ -1496,7 +1496,7 @@ export class Enemy {
     // --- 18. GUARDIA_REAL SPRITE ---
     if (this.type === 'GUARDIA_REAL') {
       ctx.translate(cx, bottomY + 1);
-      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.6) drop-shadow(0 0 6px rgba(255,255,255,0.85))';
       ctx.scale(this.facing, 1);
 
       const guardSprite = imageLoader.getImage('guardia_real');
@@ -1519,7 +1519,7 @@ export class Enemy {
     // --- 19. HECHICERO_DULCE SPRITE ---
     if (this.type === 'HECHICERO_DULCE') {
       ctx.translate(cx, this.y + this.height / 2);
-      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.6) drop-shadow(0 0 6px rgba(255,255,255,0.85))';
       ctx.scale(this.facing, 1);
 
       const sorSprite = imageLoader.getImage('hechicero');

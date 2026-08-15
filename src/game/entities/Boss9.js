@@ -225,7 +225,7 @@ export class Boss9 {
     ctx.translate(cx, bottomY + 1);
 
     if (this.hurtTimer > 0) {
-      ctx.filter = 'brightness(2.6) contrast(1.3)';
+      ctx.filter = 'brightness(2.6) drop-shadow(0 0 10px rgba(255, 255, 255, 0.95)) contrast(1.2)';
     }
 
     ctx.scale(this.facing, 1);
