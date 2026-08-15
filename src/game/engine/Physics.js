@@ -47,20 +47,17 @@ export class Physics {
         }
       } else if (plat.type === 'sinking') {
         plat.sinkY = plat.sinkY || 0;
-        plat.sinkTimer = plat.sinkTimer || 0;
-        plat.isCrumbling = plat.isCrumbling || false;
+        plat.maxSink = 24; // Smooth maximum depression
 
         if (plat.isStandingOn) {
-          plat.sinkTimer += dt;
-          plat.sinkY = Math.min(40, plat.sinkY + 45 * dt);
-          if (plat.sinkTimer > 1.2 && !plat.isCrumbling) {
-            plat.isCrumbling = true;
-            if (particles) particles.emitCrumble(plat.x + plat.width / 2, plat.y + 10, 16, '#FDA4AF');
+          // Smoothly depress under player weight (capped at 24px)
+          plat.sinkY = Math.min(plat.maxSink, plat.sinkY + 36 * dt);
+          if (particles && Math.random() < 0.15) {
+            particles.emitCandyShards(plat.x + Math.random() * plat.width, plat.y + plat.sinkY, 1);
           }
         } else {
-          plat.sinkTimer = Math.max(0, plat.sinkTimer - dt * 0.8);
-          plat.sinkY = Math.max(0, plat.sinkY - dt * 25);
-          if (plat.sinkY <= 0) plat.isCrumbling = false;
+          // Smoothly spring back up when stepped off
+          plat.sinkY = Math.max(0, plat.sinkY - 30 * dt);
         }
 
         plat.isStandingOn = false; // Reset each frame
@@ -75,11 +72,6 @@ export class Physics {
     const prevBottom = entity.prevY !== undefined ? entity.prevY + entity.height : entityBottom - entity.vy * 0.016;
 
     for (const plat of platforms) {
-      // If sinking platform is currently fully crumbled, ignore collision
-      if (plat.type === 'sinking' && plat.isCrumbling && plat.sinkY >= 35) {
-        continue;
-      }
-
       const platY = plat.y + (plat.sinkY || 0);
 
       // Horizontal overlap check with safety margin
@@ -88,7 +80,7 @@ export class Physics {
 
       // Bounce / Trampoline platform
       if (plat.type === 'bounce') {
-        if (entity.vy >= 0 && prevBottom <= platY + 18 && entityBottom >= platY) {
+        if (entity.vy >= 0 && prevBottom <= platY + 20 && entityBottom >= platY - 2) {
           entity.y = platY - entity.height;
           entity.vy = -740; // Super bounce launch!
           entity.isGrounded = false;
@@ -105,7 +97,8 @@ export class Physics {
       if (plat.isOneWay) {
         if (dropping) continue;
 
-        if (entity.vy >= 0 && prevBottom <= platY + 14 && entityBottom >= platY) {
+        // One-Way platform landing: check if falling down onto top surface
+        if (entity.vy >= 0 && prevBottom <= platY + 18 && entityBottom >= platY - 4) {
           entity.y = platY - entity.height;
           entity.vy = 0;
           entity.isGrounded = true;
@@ -120,7 +113,7 @@ export class Physics {
         }
       } else {
         // Solid ground platform
-        if (entity.vy >= 0 && prevBottom <= platY + 16 && entityBottom >= platY) {
+        if (entity.vy >= 0 && prevBottom <= platY + 20 && entityBottom >= platY - 4) {
           entity.y = platY - entity.height;
           entity.vy = 0;
           entity.isGrounded = true;

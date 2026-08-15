@@ -89,30 +89,30 @@ export class Hostage {
     const cx = this.x + this.width / 2;
     const bottomY = this.y + this.height;
 
-    // Ground Shadow
+    // Ground Shadow right under paws
     ctx.save();
     ctx.beginPath();
-    ctx.ellipse(cx, bottomY + 2, 16, 5, 0, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+    ctx.ellipse(cx, bottomY + 1, 14, 4.5, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
     ctx.fill();
     ctx.restore();
 
-    // Shiver vibration when tied up
-    const shiverX = !this.isRescued ? Math.sin(this.animTime * 24) * 1.2 : 0;
+    // Shiver vibration when waiting for rescue
+    const shiverX = !this.isRescued ? Math.sin(this.animTime * 20) * 1.0 : 0;
 
-    // Universal Bottom-Center Pivot
-    ctx.translate(cx + shiverX, bottomY);
+    // Universal Bottom-Center Pivot anchored firmly on ground
+    ctx.translate(cx + shiverX, bottomY + 1);
     if (this.isRescued && this.saluteTimer > 0 && !this.isGrounded) {
       ctx.rotate(this.spinAngle);
     }
     ctx.scale(this.facing, 1);
 
     const catSprite = imageLoader.getImage('gato');
-    const renderW = 44;
-    const renderH = 48;
+    const renderW = 38;
+    const renderH = 46;
 
     if (catSprite && catSprite.complete && catSprite.naturalWidth > 0) {
-      // Draw Cat PNG anchored at bottom-center: (-renderW / 2, -renderH)
+      // Draw Cat PNG anchored firmly at bottom-center: (-renderW / 2, -renderH)
       ctx.drawImage(catSprite, -renderW / 2, -renderH, renderW, renderH);
     } else {
       ctx.beginPath();
@@ -121,19 +121,9 @@ export class Hostage {
       ctx.fill();
     }
 
-    // Ropes / Rescue Speech Badges
+    // Rescue Speech Badges & Sweet Ribbon
     if (!this.isRescued) {
-      // Licorice Ropes overlay
-      ctx.strokeStyle = '#1E1B4B';
-      ctx.lineWidth = 3.5;
-      ctx.beginPath();
-      ctx.moveTo(-16, -renderH + 28);
-      ctx.lineTo(16, -renderH + 28);
-      ctx.moveTo(-16, -renderH + 36);
-      ctx.lineTo(16, -renderH + 36);
-      ctx.stroke();
-
-      // "¡AYUDA!" badge
+      // "¡AYUDA!" badge with sweet candy styling
       const wave = Math.sin(this.animTime * 6);
       ctx.fillStyle = '#FF3388';
       ctx.font = 'bold 11px Fredoka, sans-serif';
@@ -144,7 +134,7 @@ export class Hostage {
         ctx.fillStyle = '#10B981';
         ctx.font = 'bold 12px Fredoka, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('THANK YOU!', 0, -renderH - 8);
+        ctx.fillText('¡GRACIAS!', 0, -renderH - 8);
       }
     }
 

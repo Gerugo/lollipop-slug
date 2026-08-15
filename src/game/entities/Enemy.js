@@ -654,10 +654,10 @@ export class Enemy {
 
     // --- 8. GUMMY BEAR SOLDIER ---
     const isWalking = Math.abs(this.vx) > 5;
-    const bounceY = (isWalking && this.isGrounded) ? Math.abs(Math.sin(this.animTime * 12)) * 4 : Math.sin(this.animTime * 3) * 1.5;
+    const bounceY = (isWalking && this.isGrounded) ? Math.abs(Math.sin(this.animTime * 12)) * 2.5 : 0;
 
-    let scaleX = isWalking ? (1 + Math.sin(this.animTime * 12) * 0.08) : (1 - Math.sin(this.animTime * 3) * 0.03);
-    let scaleY = isWalking ? (1 - Math.sin(this.animTime * 12) * 0.08) : (1 + Math.sin(this.animTime * 3) * 0.03);
+    let scaleX = isWalking ? (1 + Math.sin(this.animTime * 12) * 0.06) : (1 - Math.sin(this.animTime * 3) * 0.03);
+    let scaleY = isWalking ? (1 - Math.sin(this.animTime * 12) * 0.06) : (1 + Math.sin(this.animTime * 3) * 0.03);
 
     if (this.hitWobble > 0) {
       const wobble = Math.sin(this.wobblePhase) * this.hitWobble;
@@ -665,7 +665,8 @@ export class Enemy {
       scaleY -= wobble;
     }
 
-    ctx.translate(cx, bottomY - bounceY);
+    // Anchored firmly on ground
+    ctx.translate(cx, bottomY + 1 - bounceY);
 
     if (this.hurtTimer > 0) {
       ctx.filter = 'brightness(2.5) contrast(1.4)';
@@ -674,8 +675,8 @@ export class Enemy {
     ctx.scale(this.facing * scaleX, scaleY);
 
     const gummySprite = imageLoader.getImage('gummybear');
-    const renderW = 46;
-    const renderH = 52;
+    const renderH = 48;
+    const renderW = 38;
 
     if (gummySprite && gummySprite.complete && gummySprite.naturalWidth > 0) {
       ctx.drawImage(gummySprite, -renderW / 2, -renderH, renderW, renderH);

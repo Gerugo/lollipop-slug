@@ -399,16 +399,16 @@ export class Player {
     const cx = this.x + this.width / 2;
     const bottomY = this.y + this.height;
 
-    // 1. Soft Elliptical Ground Shadow
+    // 1. Soft Elliptical Ground Shadow right under feet
     ctx.save();
     ctx.beginPath();
-    ctx.ellipse(cx, bottomY + 2, 16, 5, 0, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+    ctx.ellipse(cx, bottomY + 1, 15, 4.5, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
     ctx.fill();
     ctx.restore();
 
-    // 2. Universal Bottom-Center Pivot Transformation
-    ctx.translate(cx + this.recoilX, bottomY - this.stepArc);
+    // 2. Universal Bottom-Center Pivot Transformation anchored firmly on ground
+    ctx.translate(cx + this.recoilX, bottomY + 1 - this.stepArc);
     ctx.rotate(this.rotation);
 
     // Calculate dynamic Squash & Stretch
@@ -417,35 +417,35 @@ export class Player {
 
     // Idle Breathing
     if (this.isGrounded && Math.abs(this.vx) <= 15) {
-      scaleY = 1 + Math.sin(this.animTime * 4) * 0.04;
-      scaleX = 1 - Math.sin(this.animTime * 4) * 0.04;
+      scaleY = 1 + Math.sin(this.animTime * 4) * 0.03;
+      scaleX = 1 - Math.sin(this.animTime * 4) * 0.03;
     } 
     // Jump Stretch (Ascending)
     else if (!this.isGrounded && this.vy < -50) {
-      scaleY = 1.22;
-      scaleX = 0.82;
+      scaleY = 1.18;
+      scaleX = 0.85;
     }
 
     // Landing Impact Squash (Lerp recovery in 0.15s)
     if (this.landSquashTimer > 0) {
       const t = this.landSquashTimer / 0.15;
-      scaleY = 1 - (0.24 * t);
-      scaleX = 1 + (0.24 * t);
+      scaleY = 1 - (0.20 * t);
+      scaleX = 1 + (0.20 * t);
     }
 
     // Flip horizontally when facing === -1 (perfect mirror with center pivot)
     ctx.scale(this.facing * scaleX, scaleY);
 
     const sprite = imageLoader.getImage('player');
-    const renderW = 54;
-    const renderH = 58;
+    const renderH = 50;
+    const renderW = 38;
 
     if (sprite && sprite.complete && sprite.naturalWidth > 0) {
-      // Draw PNG Mascot Sprite anchored at bottom-center: (-renderW / 2, -renderH)
+      // Draw PNG Mascot Sprite anchored firmly at bottom-center: (-renderW / 2, -renderH)
       ctx.drawImage(sprite, -renderW / 2, -renderH, renderW, renderH);
     } else {
       ctx.beginPath();
-      ctx.arc(0, -renderH / 2, 20, 0, Math.PI * 2);
+      ctx.arc(0, -renderH / 2, 18, 0, Math.PI * 2);
       ctx.fillStyle = '#FF77B0';
       ctx.fill();
       ctx.strokeStyle = '#FFFFFF';
