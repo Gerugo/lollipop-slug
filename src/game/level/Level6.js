@@ -121,7 +121,7 @@ export class Level6 {
   }
 
   drawContinuousGround(ctx, camera) {
-    const groundPlatforms = this.platforms.filter((p) => p.type === 'ground');
+    const groundPlatforms = this.platforms.filter((p) => p.y >= 440);
 
     for (const plat of groundPlatforms) {
       const startX = plat.x;
@@ -155,11 +155,17 @@ export class Level6 {
       ctx.closePath();
 
       const groundGrad = ctx.createLinearGradient(0, topY, 0, bottomY);
-      const cols = biome.groundGradient;
-      groundGrad.addColorStop(0, cols[0]);
-      groundGrad.addColorStop(0.2, cols[1]);
-      groundGrad.addColorStop(0.5, cols[2]);
-      groundGrad.addColorStop(1, cols[3]);
+      if (plat.type === 'ice') {
+        groundGrad.addColorStop(0, '#BAE6FD');
+        groundGrad.addColorStop(0.3, '#38BDF8');
+        groundGrad.addColorStop(1, '#0369A1');
+      } else {
+        const cols = biome.groundGradient;
+        groundGrad.addColorStop(0, cols[0]);
+        groundGrad.addColorStop(0.2, cols[1]);
+        groundGrad.addColorStop(0.5, cols[2]);
+        groundGrad.addColorStop(1, cols[3]);
+      }
       ctx.fillStyle = groundGrad;
       ctx.fill();
 
@@ -186,7 +192,7 @@ export class Level6 {
         const wave = Math.sin(midX * 0.025) * 2.5;
         ctx.quadraticCurveTo(midX, topY + wave + 4, nextX, topY + 4);
       }
-      ctx.strokeStyle = biome.frostingColor || '#FFFFFF';
+      ctx.strokeStyle = plat.type === 'ice' ? '#FFFFFF' : (biome.frostingColor || '#FFFFFF');
       ctx.lineWidth = 4;
       ctx.stroke();
 
@@ -197,7 +203,7 @@ export class Level6 {
   drawFloatingPlatforms(ctx, camera) {
     const barquilloImg = imageLoader.getImage('barquillo');
     const bastonImg = imageLoader.getImage('baston');
-    const floating = this.platforms.filter((p) => p.type !== 'ground');
+    const floating = this.platforms.filter((p) => p.y < 440);
 
     for (const plat of floating) {
       if (!camera.isVisible(plat.x, plat.y - 20, plat.width, plat.height + 40)) continue;

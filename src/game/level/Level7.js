@@ -121,7 +121,7 @@ export class Level7 {
   }
 
   drawContinuousGround(ctx, camera) {
-    const groundPlatforms = this.platforms.filter((p) => p.type === 'ground');
+    const groundPlatforms = this.platforms.filter((p) => p.y >= 440);
 
     for (const plat of groundPlatforms) {
       const startX = plat.x;
@@ -197,7 +197,7 @@ export class Level7 {
   drawFloatingPlatforms(ctx, camera) {
     const barquilloImg = imageLoader.getImage('barquillo');
     const bastonImg = imageLoader.getImage('baston');
-    const floating = this.platforms.filter((p) => p.type !== 'ground');
+    const floating = this.platforms.filter((p) => p.y < 440);
 
     for (const plat of floating) {
       if (!camera.isVisible(plat.x, plat.y - 20, plat.width, plat.height + 40)) continue;

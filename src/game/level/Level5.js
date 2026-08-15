@@ -117,7 +117,7 @@ export class Level5 {
   }
 
   drawContinuousGround(ctx, camera) {
-    const groundPlatforms = this.platforms.filter((p) => p.type === 'ground');
+    const groundPlatforms = this.platforms.filter((p) => p.y >= 440);
 
     for (const plat of groundPlatforms) {
       const startX = plat.x;
@@ -130,6 +130,28 @@ export class Level5 {
       const biome = this.getCurrentBiome(startX + plat.width / 2);
 
       ctx.save();
+
+      // SODA TIDE HAZARD POOL AT FLOOR LEVEL
+      if (plat.type === 'soda_tide') {
+        const poolGrad = ctx.createLinearGradient(0, topY, 0, bottomY);
+        poolGrad.addColorStop(0, '#06B6D4');
+        poolGrad.addColorStop(0.4, '#0D9488');
+        poolGrad.addColorStop(1, '#042F2E');
+        ctx.fillStyle = poolGrad;
+        ctx.fillRect(startX, topY + this.tideLevel * 0.5, plat.width, plat.height);
+
+        ctx.strokeStyle = '#A5F3FC';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        for (let x = startX; x <= endX; x += 16) {
+          const waveY = topY + this.tideLevel * 0.5 + Math.sin((x + this.animTime * 80) * 0.05) * 4;
+          if (x === startX) ctx.moveTo(x, waveY);
+          else ctx.lineTo(x, waveY);
+        }
+        ctx.stroke();
+        ctx.restore();
+        continue;
+      }
 
       // Organic Bezier Ground Path
       ctx.beginPath();
@@ -193,7 +215,7 @@ export class Level5 {
   drawFloatingPlatforms(ctx, camera) {
     const barquilloImg = imageLoader.getImage('barquillo');
     const bastonImg = imageLoader.getImage('baston');
-    const floating = this.platforms.filter((p) => p.type !== 'ground');
+    const floating = this.platforms.filter((p) => p.y < 440);
 
     for (const plat of floating) {
       if (!camera.isVisible(plat.x, plat.y - 20, plat.width, plat.height + 40)) continue;
