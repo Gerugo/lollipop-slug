@@ -60,7 +60,7 @@ export class Level2 {
     this.animTime += dt;
   }
 
-  // --- 3-LAYER CINEMATIC PARALLAX & BIOME SYSTEM ---
+  // --- 3-LAYER HIGH PERFORMANCE PARALLAX & BIOME SYSTEM ---
   drawBackground(ctx, camera) {
     const viewX = camera.x;
     const viewW = camera.viewportWidth;
@@ -77,15 +77,15 @@ export class Level2 {
     ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, viewW, viewH);
 
-    // LAYER 1 (Distant Parallax 0.05): Sky with crystals
-    const skyImg = imageLoader.getImage('cielo2'); // New cave sky
+    // LAYER 1 (Distant Parallax 0.08): Cavern Sky with glowing crystals
+    const skyImg = imageLoader.getImage('cielo2');
     if (skyImg && skyImg.complete && skyImg.naturalWidth > 0) {
       const skyAspect = skyImg.naturalWidth / skyImg.naturalHeight;
-      const skyRenderW = viewH * skyAspect;
-      const skyOffsetX = (viewX * 0.05) % skyRenderW;
+      const skyRenderW = Math.round(viewH * skyAspect);
+      const skyOffsetX = Math.round((viewX * 0.08) % skyRenderW);
 
       ctx.save();
-      ctx.globalAlpha = 0.85;
+      ctx.globalAlpha = 0.9;
       let startX = -skyOffsetX;
       while (startX < viewW) {
         ctx.drawImage(skyImg, startX, 0, skyRenderW + 1, viewH);
@@ -94,52 +94,40 @@ export class Level2 {
       ctx.restore();
     }
 
-    // LAYER 2 (Mid Parallax 0.30): Rolling Cavern Formations
-    const hillsImg = imageLoader.getImage('caverna'); // New crystal cave formations
+    // LAYER 2 (Mid Parallax 0.28): Rolling Chocolate Hills & Crystals
+    const hillsImg = imageLoader.getImage('caverna');
     if (hillsImg && hillsImg.complete && hillsImg.naturalWidth > 0) {
       const hillsAspect = hillsImg.naturalWidth / hillsImg.naturalHeight;
-      const hillsH = viewH * 0.72;
-      const hillsRenderW = hillsH * hillsAspect;
-      const hillsOffsetX = (viewX * 0.30) % hillsRenderW;
+      const hillsH = Math.round(viewH * 0.75);
+      const hillsRenderW = Math.round(hillsH * hillsAspect);
+      const hillsOffsetX = Math.round((viewX * 0.28) % hillsRenderW);
 
+      ctx.save();
+      ctx.globalAlpha = 0.95;
       let startX = -hillsOffsetX;
       while (startX < viewW) {
         ctx.drawImage(hillsImg, startX, viewH - hillsH, hillsRenderW + 1, hillsH);
         startX += hillsRenderW;
       }
-    }
-
-    // Biome A: Ice Cavern Stalactites
-    if (viewX < 2200) {
-      ctx.save();
-      ctx.fillStyle = 'rgba(186, 230, 253, 0.4)'; // Frosty ice
-      for (let i = 0; i < 5; i++) {
-        const sx = ((viewX * 0.4 + i * 400) % 2400) - 200;
-        ctx.beginPath();
-        ctx.moveTo(sx, 0);
-        ctx.lineTo(sx + 30, 150 + Math.sin(i * 123) * 50);
-        ctx.lineTo(sx + 60, 0);
-        ctx.fill();
-      }
       ctx.restore();
     }
 
-    // Biome B: Chocolate Falls
+    // Biome B: Flowing Chocolate Falls (Ultra lightweight)
     if (viewX + viewW > 2200 && viewX < 4200) {
       ctx.save();
-      const fallX = (3200 - viewX * 0.40);
-      const fallGrad = ctx.createLinearGradient(fallX, 160, fallX + 80, 460);
-      fallGrad.addColorStop(0, 'rgba(120, 53, 15, 0.6)');
-      fallGrad.addColorStop(0.5, 'rgba(146, 64, 14, 0.8)');
-      fallGrad.addColorStop(1, 'rgba(69, 26, 3, 0.9)');
+      const fallX = Math.round(3200 - viewX * 0.35);
+      const fallGrad = ctx.createLinearGradient(fallX, 160, fallX + 70, 460);
+      fallGrad.addColorStop(0, 'rgba(120, 53, 15, 0.55)');
+      fallGrad.addColorStop(0.5, 'rgba(146, 64, 14, 0.75)');
+      fallGrad.addColorStop(1, 'rgba(69, 26, 3, 0.85)');
       ctx.fillStyle = fallGrad;
-      ctx.fillRect(fallX, 100, 80, 360);
+      ctx.fillRect(fallX, 120, 70, 340);
 
-      // Cocoa steam
-      ctx.fillStyle = 'rgba(217, 119, 6, 0.35)';
-      for (let i = 0; i < 6; i++) {
-        const by = 180 + ((this.animTime * 80 + i * 40) % 280);
-        ctx.fillRect(fallX + 15 + i * 10, by, 8, 18);
+      // Sweet cocoa bubbles
+      ctx.fillStyle = 'rgba(245, 158, 11, 0.4)';
+      for (let i = 0; i < 4; i++) {
+        const by = 160 + ((this.animTime * 70 + i * 65) % 260);
+        ctx.fillRect(fallX + 10 + i * 14, by, 6, 14);
       }
       ctx.restore();
     }
@@ -168,13 +156,13 @@ export class Level2 {
 
       ctx.save();
 
-      // 1. Single Continuous Organic Bezier Ground Path
+      // 1. Continuous Organic Ground Path
       ctx.beginPath();
       ctx.moveTo(startX, bottomY);
       ctx.lineTo(startX, topY + 18);
       ctx.quadraticCurveTo(startX, topY, startX + 18, topY);
 
-      const step = 40;
+      const step = 45;
       for (let curX = startX + 18; curX < endX - 18; curX += step) {
         const nextX = Math.min(endX - 18, curX + step);
         const midX = (curX + nextX) / 2;
@@ -187,7 +175,7 @@ export class Level2 {
       ctx.lineTo(endX, bottomY);
       ctx.closePath();
 
-      // 2. Biome-Specific Pastel Clay Gradient & Texture
+      // 2. Biome-Specific Smooth Ground Gradient (Fast & GPU Accelerated)
       const groundGrad = ctx.createLinearGradient(0, topY, 0, bottomY);
       const cols = biome.groundGradient;
       groundGrad.addColorStop(0, cols[0]);
@@ -197,18 +185,12 @@ export class Level2 {
       ctx.fillStyle = groundGrad;
       ctx.fill();
 
-      // Real Clay Texture Layer clipped inside the organic curve
+      // 3. Optional Clay Texture Overlay without expensive filters
       const sueloImg = imageLoader.getImage('suelo');
       if (sueloImg && sueloImg.complete && sueloImg.naturalWidth > 0) {
         ctx.save();
         ctx.clip();
-        ctx.globalAlpha = 0.65;
-        // Apply color tint filter based on biome
-        if (biome.id === 'BIOME_A') ctx.filter = 'hue-rotate(-120deg) saturate(1.5)';
-        else if (biome.id === 'BIOME_B') ctx.filter = 'hue-rotate(-40deg) saturate(1.2) brightness(0.6)';
-        else if (biome.id === 'BIOME_C') ctx.filter = 'hue-rotate(60deg) saturate(1.4)';
-        else if (biome.id === 'BIOME_ARENA') ctx.filter = 'hue-rotate(150deg) saturate(1.8) brightness(0.8)';
-
+        ctx.globalAlpha = 0.25;
         const tileW = 140;
         const tileH = 80;
         for (let tx = startX; tx < endX; tx += tileW) {
@@ -217,7 +199,7 @@ export class Level2 {
         ctx.restore();
       }
 
-      // 3. Marshmallow Frosting Glaze Highlight on Top
+      // 4. Marshmallow / Frosting Highlight on Top
       ctx.beginPath();
       ctx.moveTo(startX + 6, topY + 4);
       for (let curX = startX + 18; curX < endX - 18; curX += step) {
@@ -230,22 +212,21 @@ export class Level2 {
       ctx.lineWidth = 4;
       ctx.stroke();
 
-      // 4. Wildflowers & Sugar Sprinkles across the surface
+      // 5. Sugar Sprinkles / Crystals
       const flowerColors = ['#FFF', '#38BDF8', '#C084FC', '#FBBF24', '#F472B6'];
-      for (let fx = startX + 24; fx < endX - 24; fx += 34) {
+      for (let fx = startX + 24; fx < endX - 24; fx += 38) {
         if (fx < camera.x - 30 || fx > camera.x + camera.viewportWidth + 30) continue;
 
         const wave = Math.sin(fx * 0.025) * 2.5;
         const fy = topY + wave + 6;
-        const fColor = flowerColors[Math.floor(fx / 34) % flowerColors.length];
+        const fColor = flowerColors[Math.floor(fx / 38) % flowerColors.length];
 
         ctx.fillStyle = fColor;
         ctx.beginPath();
-        // Draw crystal shard shapes instead of round flowers for level 2
-        ctx.moveTo(fx, fy - 4);
-        ctx.lineTo(fx + 3, fy);
-        ctx.lineTo(fx, fy + 4);
-        ctx.lineTo(fx - 3, fy);
+        ctx.moveTo(fx, fy - 3.5);
+        ctx.lineTo(fx + 2.5, fy);
+        ctx.lineTo(fx, fy + 3.5);
+        ctx.lineTo(fx - 2.5, fy);
         ctx.fill();
       }
 
@@ -265,8 +246,6 @@ export class Level2 {
       const drawY = plat.y + (plat.sinkY || 0);
 
       ctx.save();
-      // Add slight blue tint to all floating platforms in level 2 to fit the cold/dark theme
-      ctx.filter = 'hue-rotate(20deg) saturate(0.9)';
 
       if (plat.type === 'sinking') {
         // Sinking Wafer Platform
@@ -274,8 +253,8 @@ export class Level2 {
         ctx.translate(plat.x + shake, drawY);
 
         const waferGrad = ctx.createLinearGradient(0, 0, 0, plat.height);
-        waferGrad.addColorStop(0, '#A78BFA');
-        waferGrad.addColorStop(1, '#6D28D9');
+        waferGrad.addColorStop(0, '#C4B5FD');
+        waferGrad.addColorStop(1, '#7C3AED');
         ctx.beginPath();
         ctx.roundRect(0, 0, plat.width, plat.height, 8);
         ctx.fillStyle = waferGrad;
@@ -284,7 +263,6 @@ export class Level2 {
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        // Warning crumb crack lines if sinking
         if (plat.sinkY > 10) {
           ctx.strokeStyle = '#4C1D95';
           ctx.beginPath();
@@ -315,7 +293,7 @@ export class Level2 {
         ctx.textAlign = 'center';
         ctx.fillText('▲ BOING ▲', plat.width / 2, plat.height - 7);
       } else if (plat.type === 'moving') {
-        // Hovering Wafer with dynamic thrusters
+        // Hovering Wafer with thrusters
         ctx.translate(plat.x, drawY);
 
         if (barquilloImg && barquilloImg.complete && barquilloImg.naturalWidth > 0) {
@@ -330,7 +308,7 @@ export class Level2 {
           ctx.fill();
         }
 
-        // Sweet Thruster Bubbles underneath
+        // Thruster Bubbles underneath
         ctx.fillStyle = '#C084FC';
         ctx.beginPath();
         ctx.arc(20, plat.height + 4, 4 + Math.sin(this.animTime * 12) * 2, 0, Math.PI * 2);
