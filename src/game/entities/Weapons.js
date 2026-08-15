@@ -45,6 +45,15 @@ export const WEAPON_TYPES = {
     fireRate: 0.24,
     iconColor: '#A3E635',
     description: 'Onda cortante de regaliz dulce con arco amplio y daño penetrante.'
+  },
+  CANON_BURBUJAS: {
+    id: 'CANON_BURBUJAS',
+    name: 'Cañón de Burbujas',
+    shortName: 'BUBBLE GUM',
+    ammo: 45,
+    fireRate: 0.32,
+    iconColor: '#06B6D4',
+    description: 'Burbujas gigantes efervescentes que rebotan en superficies y atrapan enemigos.'
   }
 };
 
@@ -252,6 +261,30 @@ export class Projectile {
       ctx.fillStyle = '#84CC16';
       ctx.fill();
       ctx.strokeStyle = '#ECFCCB';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    } else if (this.type === 'BUBBLE') {
+      // Bouncing soda bubble projectile
+      ctx.beginPath();
+      ctx.arc(0, 0, 14, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(6, 182, 212, 0.45)';
+      ctx.fill();
+      ctx.strokeStyle = '#A5F3FC';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // Shiny highlight
+      ctx.beginPath();
+      ctx.arc(-4, -5, 4, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+      ctx.fill();
+    } else if (this.type === 'EEL_BOLT') {
+      // Electric zigzag spark
+      ctx.beginPath();
+      ctx.arc(0, 0, 9, 0, Math.PI * 2);
+      ctx.fillStyle = '#FBBF24';
+      ctx.fill();
+      ctx.strokeStyle = '#FFFFFF';
       ctx.lineWidth = 2;
       ctx.stroke();
     }

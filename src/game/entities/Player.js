@@ -380,6 +380,26 @@ export class Player {
       );
       if (particles) particles.emitSparkles(bulletX + this.facing * 14, bulletY, 8, '#A3E635');
       this.ammo--;
+    } else if (this.currentWeapon.id === 'CANON_BURBUJAS') {
+      soundManager.playSodaGrenadeFizz();
+      projectiles.push(
+        new Projectile({
+          x: bulletX + this.facing * 10,
+          y: bulletY,
+          vx: bulletVx * 0.85,
+          vy: bulletVy * 0.85,
+          type: 'BUBBLE',
+          damage: 42,
+          width: 28,
+          height: 28,
+          life: 1.8,
+          penetrate: false,
+          isPlayer: true,
+          rotation: shotAngle
+        })
+      );
+      if (particles) particles.emitSodaBubbles(bulletX + this.facing * 12, bulletY, 6);
+      this.ammo--;
     }
 
     if (this.ammo <= 0 && this.currentWeapon.id !== 'PISTOL') {
@@ -501,6 +521,10 @@ export class Player {
       gunSpriteKey = 'arma_latigo';
       gunW = 22;
       gunH = 15;
+    } else if (this.currentWeapon.id === 'CANON_BURBUJAS') {
+      gunSpriteKey = 'arma_burbujas';
+      gunW = 25;
+      gunH = 16;
     }
 
     const gunSprite = imageLoader.getImage(gunSpriteKey);

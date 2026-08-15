@@ -116,6 +116,24 @@ export class Enemy {
       this.waveSpeed = 3.5;
       this.waveAmp = 32;
       this.spitInterval = 2.4;
+    } else if (this.type === 'RANA') {
+      this.gravity = 950;
+      this.width = 46;
+      this.height = 44;
+      this.hp = 32;
+      this.scoreValue = 420;
+      this.speed = 60;
+      this.frogState = 'CROUCH'; // 'CROUCH', 'JUMPING', 'LAND'
+      this.frogTimer = 0.7;
+    } else if (this.type === 'ANGUILA') {
+      this.gravity = 500;
+      this.width = 54;
+      this.height = 40;
+      this.hp = 34;
+      this.scoreValue = 460;
+      this.eelState = 'SUBMERGED'; // 'SUBMERGED', 'SURGE', 'DISCHARGE', 'DIVE'
+      this.eelTimer = 1.0;
+      this.baseY = this.y;
     } else {
       this.type = 'GUMMY';
     }
@@ -537,6 +555,93 @@ export class Enemy {
       return;
     }
 
+    // 7. RANA (Gummy Frog)
+    if (this.type === 'RANA') {
+      this.facing = dirToPlayer;
+      if (this.frogState === 'CROUCH') {
+        this.vx = 0;
+        this.frogTimer -= dt;
+        if (this.frogTimer <= 0) {
+          this.frogState = 'JUMPING';
+          this.vy = -460;
+          this.vx = dirToPlayer * 160;
+          if (soundManager && soundManager.playEnemyJump) soundManager.playEnemyJump();
+          if (particles) particles.emitSodaBubbles(this.x + this.width / 2, this.y + this.height, 4);
+        }
+      } else if (this.frogState === 'JUMPING') {
+        if (this.isGrounded && this.vy >= 0) {
+          this.frogState = 'CROUCH';
+          this.frogTimer = 0.9;
+          this.vx = 0;
+          if (particles) particles.emitSyrupSplash(this.x + this.width / 2, this.y + this.height, 8, '#10B981');
+
+          // Spits soda bubble on landing if player is in sight
+          if (distToPlayer < 450) {
+            enemyProjectiles.push(
+              new Projectile({
+                x: this.x + (this.facing === 1 ? this.width : 0),
+                y: this.y + 16,
+                vx: dirToPlayer * 210,
+                vy: -80,
+                type: 'BUBBLE',
+                damage: 1,
+                isPlayer: false
+              })
+            );
+          }
+        }
+      }
+      return;
+    }
+
+    // 8. ANGUILA (Electric Eel)
+    if (this.type === 'ANGUILA') {
+      this.facing = dirToPlayer;
+      if (this.eelState === 'SUBMERGED') {
+        this.vx = 0;
+        this.vy = 0;
+        this.gravity = 0;
+        this.y = this.baseY + 25; // hidden under tide
+        if (distToPlayer < 220) {
+          this.eelState = 'SURGE';
+          this.vy = -320;
+          this.gravity = 600;
+          if (soundManager && soundManager.playSodaGrenadeFizz) soundManager.playSodaGrenadeFizz();
+          if (particles) particles.emitSodaBubbles(this.x + this.width / 2, this.baseY, 12);
+        }
+      } else if (this.eelState === 'SURGE') {
+        if (this.vy >= 0) {
+          this.eelState = 'DISCHARGE';
+          this.eelTimer = 0.5;
+          // Fire electric bolts diagonally
+          [-1, 1].forEach(d => {
+            enemyProjectiles.push(
+              new Projectile({
+                x: this.x + this.width / 2,
+                y: this.y + this.height / 2,
+                vx: d * 180,
+                vy: 90,
+                type: 'EEL_BOLT',
+                damage: 1,
+                isPlayer: false
+              })
+            );
+          });
+          if (particles) particles.emitSparkles(this.x + this.width / 2, this.y + this.height / 2, 10, '#FDE047');
+        }
+      } else if (this.eelState === 'DISCHARGE') {
+        this.eelTimer -= dt;
+        if (this.eelTimer <= 0) {
+          this.eelState = 'DIVE';
+        }
+      } else if (this.eelState === 'DIVE') {
+        if (this.y >= this.baseY + 20) {
+          this.eelState = 'SUBMERGED';
+        }
+      }
+      return;
+    }
+
     // 8. DEFAULT GUMMY SOLDIER
     const inSight = distToPlayer < 420;
 
@@ -807,6 +912,74 @@ export class Enemy {
         ctx.ellipse(0, 0, 20, 15, 0, 0, Math.PI * 2);
         ctx.fillStyle = '#84CC16';
         ctx.fill();
+      }
+
+      ctx.restore();
+      return;
+    }
+
+    // --- 9. RANA SPRITE ---
+    if (this.type === 'RANA') {
+      let scaleX = this.frogState === 'CROUCH' ? 1.15 : 0.9;
+      let scaleY = this.frogState === 'CROUCH' ? 0.85 : 1.12;
+
+      ctx.translate(cx, bottomY + 1);
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      ctx.scale(this.facing * scaleX, scaleY);
+
+      const ranaSprite = imageLoader.getImage('rana');
+      const renderW = 46;
+      const renderH = 44;
+
+      if (ranaSprite && ranaSprite.complete && ranaSprite.naturalWidth > 0) {
+        ctx.drawImage(ranaSprite, -renderW / 2, -renderH, renderW, renderH);
+      } else {
+        ctx.beginPath();
+        ctx.ellipse(0, -renderH / 2, 20, 16, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#10B981';
+        ctx.fill();
+      }
+
+      ctx.restore();
+      return;
+    }
+
+    // --- 10. ANGUILA SPRITE ---
+    if (this.type === 'ANGUILA') {
+      if (this.eelState === 'SUBMERGED') {
+        // Sparkling bubbles when submerged
+        ctx.beginPath();
+        ctx.ellipse(cx, this.baseY, 18, 6, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(6, 182, 212, 0.4)';
+        ctx.fill();
+        ctx.restore();
+        return;
+      }
+
+      ctx.translate(cx, this.y + this.height / 2);
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      ctx.scale(this.facing, 1);
+
+      const angSprite = imageLoader.getImage('anguila');
+      const renderW = 54;
+      const renderH = 40;
+
+      if (angSprite && angSprite.complete && angSprite.naturalWidth > 0) {
+        ctx.drawImage(angSprite, -renderW / 2, -renderH / 2, renderW, renderH);
+      } else {
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 24, 12, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#06B6D4';
+        ctx.fill();
+      }
+
+      // Electric spark corona in discharge state
+      if (this.eelState === 'DISCHARGE') {
+        ctx.beginPath();
+        ctx.arc(0, 0, 30, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(250, 204, 21, 0.8)';
+        ctx.lineWidth = 3;
+        ctx.stroke();
       }
 
       ctx.restore();

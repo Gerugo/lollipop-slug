@@ -81,14 +81,16 @@ export class Physics {
       const overlapX = (entity.x + entity.width * 0.85 > plat.x) && (entity.x + entity.width * 0.15 < plat.x + plat.width);
       if (!overlapX) continue;
 
-      // Acid Pool Hazard: burns player on contact
-      if (plat.type === 'acid_pool') {
+      // Acid Pool & Soda Tide Hazards: burns player on contact
+      if (plat.type === 'acid_pool' || plat.type === 'soda_tide') {
         if (entity.vy >= 0 && prevBottom <= platY + 18 && entityBottom >= platY) {
           if (entity.takeDamage) {
             entity.takeDamage(1, particles, sound);
           }
           if (particles) {
-            particles.emitSparkles(entity.x + entity.width / 2, platY, 6, '#84CC16');
+            const sparkCol = plat.type === 'soda_tide' ? '#06B6D4' : '#84CC16';
+            particles.emitSparkles(entity.x + entity.width / 2, platY, 6, sparkCol);
+            if (plat.type === 'soda_tide') particles.emitSodaBubbles(entity.x + entity.width / 2, platY, 4);
           }
         }
         continue;

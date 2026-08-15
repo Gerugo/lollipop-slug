@@ -2,6 +2,7 @@ import { Level1 } from './Level1.js';
 import { Level2 } from './Level2.js';
 import { Level3 } from './Level3.js';
 import { Level4 } from './Level4.js';
+import { Level5 } from './Level5.js';
 
 export const LEVEL_REGISTRY = [
   {
@@ -55,6 +56,19 @@ export const LEVEL_REGISTRY = [
     activeBorder: 'border-lime-300 ring-2 ring-lime-400/60 shadow-lime-500/30',
     badge: 'bg-lime-500 text-lime-950',
     previewKey: 'regaliz'
+  },
+  {
+    id: 5,
+    LevelClass: Level5,
+    title: 'Nivel 5',
+    name: 'Pantano de Gaseosa',
+    emoji: '🐸',
+    desc: 'Marea corrosiva, ranas saltarinas & Medusa Efervescente',
+    color: 'from-cyan-800/40 to-teal-950/60',
+    borderColor: 'border-cyan-400/50',
+    activeBorder: 'border-cyan-300 ring-2 ring-cyan-400/60 shadow-cyan-500/30',
+    badge: 'bg-cyan-500 text-cyan-950',
+    previewKey: 'cielo5'
   }
 ];
 
