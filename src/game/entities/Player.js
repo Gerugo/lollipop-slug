@@ -440,6 +440,26 @@ export class Player {
       );
       if (particles) particles.emitSparkles(bulletX + this.facing * 16, bulletY, 10, '#FB7185');
       this.ammo--;
+    } else if (this.currentWeapon.id === 'LANZALLAMAS') {
+      soundManager.playSodaGrenadeFizz();
+      projectiles.push(
+        new Projectile({
+          x: bulletX + this.facing * 10,
+          y: bulletY,
+          vx: bulletVx * 0.95,
+          vy: bulletVy * 0.95,
+          type: 'FLAME_BLAST',
+          damage: 60,
+          width: 36,
+          height: 36,
+          life: 0.55,
+          penetrate: true,
+          isPlayer: true,
+          rotation: shotAngle
+        })
+      );
+      if (particles) particles.emitSugarSmoke(bulletX + this.facing * 12, bulletY, 3, '#EA580C');
+      this.ammo--;
     }
 
     if (this.ammo <= 0 && this.currentWeapon.id !== 'PISTOL') {
@@ -573,6 +593,10 @@ export class Player {
       gunSpriteKey = 'arma_laser';
       gunW = 26;
       gunH = 15;
+    } else if (this.currentWeapon.id === 'LANZALLAMAS') {
+      gunSpriteKey = 'arma_flamethrower';
+      gunW = 27;
+      gunH = 16;
     }
 
     const gunSprite = imageLoader.getImage(gunSpriteKey);

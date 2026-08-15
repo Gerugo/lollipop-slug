@@ -72,6 +72,15 @@ export const WEAPON_TYPES = {
     fireRate: 0.14,
     iconColor: '#E11D48',
     description: 'Haz de energía concentrada de sirope rubí con penetración y daño continuo.'
+  },
+  LANZALLAMAS: {
+    id: 'LANZALLAMAS',
+    name: 'Lanzallamas',
+    shortName: 'FLAMETHROWER',
+    ammo: 90,
+    fireRate: 0.10,
+    iconColor: '#EA580C',
+    description: 'Torrente continuo de llamaradas de caramelo hirviente que calcina enemigos en área.'
   }
 };
 
@@ -364,6 +373,41 @@ export class Projectile {
       ctx.fill();
       ctx.strokeStyle = '#ECFCCB';
       ctx.lineWidth = 2;
+      ctx.stroke();
+    } else if (this.type === 'FLAME_BLAST') {
+      // Swirling flame of molten caramel
+      ctx.beginPath();
+      ctx.arc(0, 0, 18, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(234, 88, 12, 0.65)';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(-2, 0, 12, 0, Math.PI * 2);
+      ctx.fillStyle = '#FBBF24';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(-4, 0, 6, 0, Math.PI * 2);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fill();
+    } else if (this.type === 'FIRE_BALL') {
+      // Round fireball
+      ctx.beginPath();
+      ctx.arc(0, 0, 14, 0, Math.PI * 2);
+      ctx.fillStyle = '#EF4444';
+      ctx.fill();
+      ctx.strokeStyle = '#FDE047';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    } else if (this.type === 'FIRE_STINGER') {
+      // Blazing stinger spike
+      ctx.beginPath();
+      ctx.moveTo(12, 0);
+      ctx.lineTo(-8, -6);
+      ctx.lineTo(-8, 6);
+      ctx.closePath();
+      ctx.fillStyle = '#F59E0B';
+      ctx.fill();
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 1.5;
       ctx.stroke();
     }
 

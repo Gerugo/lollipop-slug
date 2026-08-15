@@ -5,6 +5,7 @@ import { Level4 } from './Level4.js';
 import { Level5 } from './Level5.js';
 import { Level6 } from './Level6.js';
 import { Level7 } from './Level7.js';
+import { Level8 } from './Level8.js';
 
 export const LEVEL_REGISTRY = [
   {
@@ -97,6 +98,19 @@ export const LEVEL_REGISTRY = [
     activeBorder: 'border-rose-300 ring-2 ring-rose-400/60 shadow-rose-500/30',
     badge: 'bg-rose-500 text-rose-950',
     previewKey: 'cielo7'
+  },
+  {
+    id: 8,
+    LevelClass: Level8,
+    title: 'Nivel 8',
+    name: 'Río Lava Caramelo Líquido',
+    emoji: '🌋',
+    desc: 'Lava ardiente, plataformas móviles, salamandras & Dragón Ígneo',
+    color: 'from-orange-800/40 to-stone-950/60',
+    borderColor: 'border-orange-500/50',
+    activeBorder: 'border-orange-400 ring-2 ring-orange-500/60 shadow-orange-500/30',
+    badge: 'bg-orange-500 text-orange-950',
+    previewKey: 'cielo8'
   }
 ];
 

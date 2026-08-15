@@ -170,6 +170,23 @@ export class Enemy {
       this.scoreValue = 380;
       this.speed = 45;
       this.spitTimer = 0;
+    } else if (this.type === 'SALAMANDRA') {
+      this.gravity = 950;
+      this.width = 54;
+      this.height = 36;
+      this.hp = 42;
+      this.scoreValue = 450;
+      this.speed = 85;
+      this.fireTimer = 0;
+    } else if (this.type === 'AVISPA_FUEGO') {
+      this.gravity = 0;
+      this.width = 46;
+      this.height = 40;
+      this.hp = 30;
+      this.scoreValue = 420;
+      this.speed = 90;
+      this.hoverY = this.y;
+      this.shootTimer = 0;
     } else {
       this.type = 'GUMMY';
     }
@@ -811,6 +828,58 @@ export class Enemy {
       return;
     }
 
+    // 13. SALAMANDRA (Fiery Caramel Salamander)
+    if (this.type === 'SALAMANDRA') {
+      this.facing = dirToPlayer;
+      this.vx = dirToPlayer * this.speed;
+
+      this.fireTimer += dt;
+      if (this.fireTimer >= 1.9 && distToPlayer < 400) {
+        this.fireTimer = 0;
+        enemyProjectiles.push(
+          new Projectile({
+            x: this.x + this.width / 2 + this.facing * 18,
+            y: this.y + 12,
+            vx: dirToPlayer * 220,
+            vy: -100,
+            type: 'FIRE_BALL',
+            damage: 1,
+            isPlayer: false
+          })
+        );
+        if (particles) particles.emitSugarSmoke(this.x + this.width / 2, this.y + 12, 4, '#EA580C');
+      }
+      return;
+    }
+
+    // 14. AVISPA_FUEGO (Burnt Sugar Fire Wasp)
+    if (this.type === 'AVISPA_FUEGO') {
+      this.facing = dirToPlayer;
+      this.x += dirToPlayer * 60 * dt;
+      this.y = this.hoverY + Math.sin(this.animTime * 4) * 45;
+
+      this.shootTimer += dt;
+      if (this.shootTimer >= 2.0 && distToPlayer < 440) {
+        this.shootTimer = 0;
+        [-0.2, 0, 0.2].forEach(offset => {
+          const angle = Math.atan2(pCenterY - (this.y + 20), pCenterX - (this.x + 20)) + offset;
+          enemyProjectiles.push(
+            new Projectile({
+              x: this.x + this.width / 2,
+              y: this.y + this.height / 2,
+              vx: Math.cos(angle) * 230,
+              vy: Math.sin(angle) * 230,
+              type: 'FIRE_STINGER',
+              damage: 1,
+              isPlayer: false
+            })
+          );
+        });
+        if (particles) particles.emitSparkles(this.x + this.width / 2, this.y + this.height / 2, 6, '#F59E0B');
+      }
+      return;
+    }
+
     // 8. DEFAULT GUMMY SOLDIER
     const inSight = distToPlayer < 420;
 
@@ -1247,6 +1316,52 @@ export class Enemy {
         ctx.beginPath();
         ctx.ellipse(0, -renderH / 2, 22, 14, 0, 0, Math.PI * 2);
         ctx.fillStyle = '#84CC16';
+        ctx.fill();
+      }
+
+      ctx.restore();
+      return;
+    }
+
+    // --- 15. SALAMANDRA SPRITE ---
+    if (this.type === 'SALAMANDRA') {
+      ctx.translate(cx, bottomY + 1);
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      ctx.scale(this.facing, 1);
+
+      const salSprite = imageLoader.getImage('salamandra');
+      const renderW = 54;
+      const renderH = 36;
+
+      if (salSprite && salSprite.complete && salSprite.naturalWidth > 0) {
+        ctx.drawImage(salSprite, -renderW / 2, -renderH, renderW, renderH);
+      } else {
+        ctx.beginPath();
+        ctx.ellipse(0, -renderH / 2, 26, 14, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#EA580C';
+        ctx.fill();
+      }
+
+      ctx.restore();
+      return;
+    }
+
+    // --- 16. AVISPA_FUEGO SPRITE ---
+    if (this.type === 'AVISPA_FUEGO') {
+      ctx.translate(cx, this.y + this.height / 2);
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      ctx.scale(this.facing, 1);
+
+      const waspSprite = imageLoader.getImage('avispa');
+      const renderW = 46;
+      const renderH = 40;
+
+      if (waspSprite && waspSprite.complete && waspSprite.naturalWidth > 0) {
+        ctx.drawImage(waspSprite, -renderW / 2, -renderH / 2, renderW, renderH);
+      } else {
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 20, 16, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#F59E0B';
         ctx.fill();
       }
 
