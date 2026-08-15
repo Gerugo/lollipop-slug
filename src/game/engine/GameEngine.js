@@ -4,9 +4,7 @@ import { soundManager } from '../audio/SoundManager.js';
 import { InputManager } from './InputManager.js';
 import { Camera } from './Camera.js';
 import { Physics } from './Physics.js';
-import { Level1 } from '../level/Level1.js';
-import { Level2 } from '../level/Level2.js';
-import { Level3 } from '../level/Level3.js';
+import { LEVEL_REGISTRY, getLevelEntry } from '../level/LevelRegistry.js';
 import { WEAPON_TYPES } from '../entities/Weapons.js';
 import { imageLoader } from './ImageLoader.js';
 
@@ -192,16 +190,8 @@ export class GameEngine {
   }
 
   loadLevel(index) {
-    if (index === 1) {
-      this.level = new Level1();
-    } else if (index === 2) {
-      this.level = new Level2();
-    } else if (index === 3) {
-      this.level = new Level3();
-    } else {
-      // Default fallback
-      this.level = new Level1();
-    }
+    const levelEntry = getLevelEntry(index);
+    this.level = new levelEntry.LevelClass();
 
     this.camera.setBounds(this.level.width, this.level.height);
     this.camera.x = 0;
@@ -546,7 +536,7 @@ export class GameEngine {
         if (this.boss.dead && this.state !== 'VICTORY' && this.state !== 'LEVEL_COMPLETE') {
           this.addScore(10000);
           this.saveHighScore();
-          if (this.currentLevelIndex < 3) {
+          if (this.currentLevelIndex < LEVEL_REGISTRY.length) {
             this.setState('LEVEL_COMPLETE');
           } else {
             this.setState('VICTORY');

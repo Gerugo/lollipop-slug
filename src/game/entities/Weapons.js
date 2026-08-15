@@ -36,6 +36,15 @@ export const WEAPON_TYPES = {
     fireRate: 0.45,
     iconColor: '#FFDF6D',
     description: 'Misiles en forma de polo con explosión de sirope pegajoso.'
+  },
+  LATIGO_DULCE: {
+    id: 'LATIGO_DULCE',
+    name: 'Látigo Dulce',
+    shortName: 'SWEET WHIP',
+    ammo: 60,
+    fireRate: 0.24,
+    iconColor: '#A3E635',
+    description: 'Onda cortante de regaliz dulce con arco amplio y daño penetrante.'
   }
 };
 
@@ -222,6 +231,29 @@ export class Projectile {
         ctx.lineWidth = 4;
         ctx.stroke();
       }
+    } else if (this.type === 'LATIGO_DULCE') {
+      // Sweet Licorice Whip Slash Arc
+      ctx.beginPath();
+      ctx.arc(0, 0, 20, -Math.PI / 3, Math.PI / 3);
+      ctx.strokeStyle = '#A3E635';
+      ctx.lineWidth = 6;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(2, 0, 16, -Math.PI / 4, Math.PI / 4);
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+    } else if (this.type === 'ACID_DROP') {
+      // Glowing toxic acid drop
+      ctx.beginPath();
+      ctx.arc(0, 0, 8, 0, Math.PI * 2);
+      ctx.fillStyle = '#84CC16';
+      ctx.fill();
+      ctx.strokeStyle = '#ECFCCB';
+      ctx.lineWidth = 2;
+      ctx.stroke();
     }
 
     ctx.restore();

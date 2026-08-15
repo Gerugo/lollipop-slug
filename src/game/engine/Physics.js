@@ -29,7 +29,7 @@ export class Physics {
     return dx * dx + dy * dy < r * r;
   }
 
-  // Update dynamic platforms (moving & sinking platforms)
+  // Update dynamic platforms (moving, sinking, acid animation)
   static updatePlatforms(platforms, dt, particles, sound) {
     for (const plat of platforms) {
       if (plat.type === 'moving') {
@@ -61,11 +61,14 @@ export class Physics {
         }
 
         plat.isStandingOn = false; // Reset each frame
+      } else if (plat.type === 'acid_pool' && particles && Math.random() < 0.08) {
+        // Ambient toxic green bubbles
+        particles.emitSugarSmoke(plat.x + Math.random() * plat.width, plat.y + 4, 1, '#84CC16');
       }
     }
   }
 
-  // Robust One-Way, Solid, Bounce & Dynamic Platform Collision Detection
+  // Robust One-Way, Solid, Bounce, Sticky & Hazard Platform Collision Detection
   static resolvePlatforms(entity, platforms, isDroppingDown = false, sound = null, particles = null) {
     const dropping = isDroppingDown || entity.isDropping;
     const entityBottom = entity.y + entity.height;
@@ -78,16 +81,29 @@ export class Physics {
       const overlapX = (entity.x + entity.width * 0.85 > plat.x) && (entity.x + entity.width * 0.15 < plat.x + plat.width);
       if (!overlapX) continue;
 
-      // Bounce / Trampoline platform
-      if (plat.type === 'bounce') {
+      // Acid Pool Hazard: burns player on contact
+      if (plat.type === 'acid_pool') {
+        if (entity.vy >= 0 && prevBottom <= platY + 18 && entityBottom >= platY) {
+          if (entity.takeDamage) {
+            entity.takeDamage(1, particles, sound);
+          }
+          if (particles) {
+            particles.emitSparkles(entity.x + entity.width / 2, platY, 6, '#84CC16');
+          }
+        }
+        continue;
+      }
+
+      // Bounce / Elastic Trampoline platform
+      if (plat.type === 'bounce' || plat.type === 'elastic') {
         if (entity.vy >= 0 && prevBottom <= platY + 20 && entityBottom >= platY - 2) {
           entity.y = platY - entity.height;
-          entity.vy = -740; // Super bounce launch!
+          entity.vy = plat.type === 'elastic' ? -780 : -740; // Super bounce launch!
           entity.isGrounded = false;
           if (sound && sound.playJump) sound.playJump();
           if (particles) {
-            particles.emitSparkles(plat.x + plat.width / 2, platY, 16, '#F43F5E');
-            particles.emitShockwave(plat.x + plat.width / 2, platY + 10, 50, '#FF77B0');
+            particles.emitSparkles(plat.x + plat.width / 2, platY, 16, '#84CC16');
+            particles.emitShockwave(plat.x + plat.width / 2, platY + 10, 50, '#A3E635');
           }
           return plat;
         }
@@ -105,6 +121,12 @@ export class Physics {
 
           if (plat.type === 'sinking') {
             plat.isStandingOn = true;
+          } else if (plat.type === 'sticky') {
+            // Slow down horizontal movement on sticky licorice roots
+            entity.vx *= 0.62;
+            if (particles && Math.random() < 0.2) {
+              particles.emitSugarSmoke(entity.x + entity.width / 2, entityBottom, 1, '#15803D');
+            }
           } else if (plat.type === 'moving' && plat.speedX) {
             // Carry entity along with moving platform
             entity.x += plat.speedX * 0.016;
@@ -117,6 +139,10 @@ export class Physics {
           entity.y = platY - entity.height;
           entity.vy = 0;
           entity.isGrounded = true;
+
+          if (plat.type === 'sticky') {
+            entity.vx *= 0.62;
+          }
           return plat;
         }
       }

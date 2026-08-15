@@ -37,7 +37,12 @@ class ImageLoader {
       sniper: new URL('../../assets/sniper.png', import.meta.url).href,
       moth: new URL('../../assets/moth.png', import.meta.url).href,
       knight: new URL('../../assets/knight.png', import.meta.url).href,
-      boss3: new URL('../../assets/boss3.png', import.meta.url).href
+      boss3: new URL('../../assets/boss3.png', import.meta.url).href,
+      cielo4: new URL('../../assets/fondo-regaliz.jpg', import.meta.url).href,
+      regaliz: new URL('../../assets/fondo-raices.png', import.meta.url).href,
+      latigo: new URL('../../assets/latigo.png', import.meta.url).href,
+      acido: new URL('../../assets/acido.png', import.meta.url).href,
+      boss4: new URL('../../assets/boss4.png', import.meta.url).href
     };
 
     // Immediately start preloading in constructor

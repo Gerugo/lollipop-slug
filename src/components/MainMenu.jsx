@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Play, HelpCircle, Trophy, Sparkles, Volume2, VolumeX, Maximize2, MapPin } from 'lucide-react';
+import { LEVEL_REGISTRY } from '../game/level/LevelRegistry.js';
 
 export const MainMenu = ({
   onStartGame,
@@ -13,42 +14,7 @@ export const MainMenu = ({
   onPreviewLevel
 }) => {
   const [selectedLevel, setSelectedLevel] = useState(1);
-
-  const levels = [
-    {
-      id: 1,
-      title: 'Nivel 1',
-      name: 'Bosque de Piruletas',
-      emoji: '🌳',
-      desc: 'Colinas de azúcar & Gumball Mech',
-      color: 'from-emerald-600/40 to-green-900/60',
-      borderColor: 'border-emerald-400/50',
-      activeBorder: 'border-emerald-300 ring-2 ring-emerald-400/60 shadow-emerald-500/30',
-      badge: 'bg-emerald-500 text-emerald-950'
-    },
-    {
-      id: 2,
-      title: 'Nivel 2',
-      name: 'Profundidades Chocolate',
-      emoji: '🍫',
-      desc: 'Caverna helada & Volcán Titan',
-      color: 'from-amber-700/40 to-orange-950/60',
-      borderColor: 'border-amber-400/50',
-      activeBorder: 'border-amber-300 ring-2 ring-amber-400/60 shadow-amber-500/30',
-      badge: 'bg-amber-500 text-amber-950'
-    },
-    {
-      id: 3,
-      title: 'Nivel 3',
-      name: 'Fábrica de los Sueños',
-      emoji: '🏭',
-      desc: 'Espacio, 4 nuevos enemigos & Reina',
-      color: 'from-fuchsia-700/40 to-purple-950/60',
-      borderColor: 'border-fuchsia-400/50',
-      activeBorder: 'border-fuchsia-300 ring-2 ring-fuchsia-400/60 shadow-fuchsia-500/30',
-      badge: 'bg-fuchsia-500 text-fuchsia-950'
-    }
-  ];
+  const levels = LEVEL_REGISTRY;
 
   const handleLevelClick = (lvlId) => {
     setSelectedLevel(lvlId);
@@ -113,7 +79,7 @@ export const MainMenu = ({
         </p>
 
         {/* --- LEVEL SELECTOR SECTION --- */}
-        <div className="w-full max-w-2xl mb-3 sm:mb-4">
+        <div className="w-full max-w-3xl mb-3 sm:mb-4">
           <div className="flex items-center justify-center gap-1.5 mb-1.5">
             <MapPin size={14} className="text-candy-pink" />
             <span className="font-arcade text-[10px] sm:text-xs text-slate-200 tracking-wider">
@@ -121,7 +87,7 @@ export const MainMenu = ({
             </span>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
             {levels.map((lvl) => {
               const isSelected = selectedLevel === lvl.id;
               return (

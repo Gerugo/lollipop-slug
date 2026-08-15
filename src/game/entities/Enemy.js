@@ -97,6 +97,25 @@ export class Enemy {
       this.shieldUp = true;
       this.stabTimer = 0;
       this.isStabbing = false;
+    } else if (this.type === 'LATIGO') {
+      this.gravity = 950;
+      this.width = 46;
+      this.height = 54;
+      this.hp = 38;
+      this.scoreValue = 480;
+      this.speed = 48;
+      this.whipState = 'PATROL'; // 'PATROL', 'TELEGRAPH', 'WHIP', 'RECOVER'
+      this.whipTimer = 0;
+    } else if (this.type === 'ACIDO') {
+      this.gravity = 0;
+      this.width = 48;
+      this.height = 42;
+      this.hp = 26;
+      this.scoreValue = 360;
+      this.spitTimer = 0;
+      this.waveSpeed = 3.5;
+      this.waveAmp = 32;
+      this.spitInterval = 2.4;
     } else {
       this.type = 'GUMMY';
     }
@@ -435,6 +454,89 @@ export class Enemy {
       return;
     }
 
+    // 8. LATIGO (Licorice Whip Soldier)
+    if (this.type === 'LATIGO') {
+      this.facing = dirToPlayer;
+      const inWhipRange = distToPlayer < 160 && Math.abs(player.y - this.y) < 70;
+
+      if (this.whipState === 'PATROL') {
+        this.vx = (distToPlayer < 380 ? dirToPlayer : this.patrolDir) * this.speed;
+        if (inWhipRange) {
+          this.whipState = 'TELEGRAPH';
+          this.whipTimer = 0.42; // 0.42s winding whip back
+          this.vx = 0;
+        }
+      } else if (this.whipState === 'TELEGRAPH') {
+        this.vx = 0;
+        this.whipTimer -= dt;
+        if (this.whipTimer <= 0) {
+          this.whipState = 'WHIP';
+          this.whipTimer = 0.22;
+          // Whip strike check
+          if (distToPlayer < 160 && player && !player.isDead) {
+            player.takeDamage(1, particles, soundManager);
+          }
+          if (particles) {
+            particles.emitSparkles(this.x + (this.facing === -1 ? -40 : this.width + 40), this.y + 24, 8, '#A3E635');
+          }
+        }
+      } else if (this.whipState === 'WHIP') {
+        this.whipTimer -= dt;
+        if (this.whipTimer <= 0) {
+          this.whipState = 'RECOVER';
+          this.whipTimer = 0.85; // 0.85s recovery cooldown
+        }
+      } else if (this.whipState === 'RECOVER') {
+        this.vx = 0;
+        this.whipTimer -= dt;
+        if (this.whipTimer <= 0) {
+          this.whipState = 'PATROL';
+        }
+      }
+
+      this.vy += this.gravity * dt;
+      this.x += this.vx * dt;
+      this.y += this.vy * dt;
+
+      this.isGrounded = false;
+      Physics.resolvePlatforms(this, platforms);
+      return;
+    }
+
+    // 9. ACIDO (Flying Acid Fish with Syrup Bombs)
+    if (this.type === 'ACIDO') {
+      this.facing = dirToPlayer;
+      this.x -= 55 * dt;
+      this.y = this.hoverY + Math.sin(this.animTime * this.waveSpeed) * this.waveAmp;
+      this.rotation = Math.sin(this.animTime * 4) * 0.12;
+
+      this.spitTimer += dt;
+      if (this.spitTimer >= this.spitInterval) {
+        this.spitTimer = 0;
+        if (distToPlayer < 500) {
+          const muzzleX = this.x + this.width / 2;
+          const muzzleY = this.y + this.height / 2;
+          const angle = Math.atan2(player.y - muzzleY, player.x - muzzleX);
+
+          enemyProjectiles.push(
+            new Projectile({
+              x: muzzleX,
+              y: muzzleY,
+              vx: Math.cos(angle) * 260,
+              vy: Math.sin(angle) * 260,
+              type: 'ACID_DROP',
+              damage: 1,
+              isPlayer: false
+            })
+          );
+          if (particles) {
+            particles.emitSugarSmoke(muzzleX, muzzleY, 4, '#84CC16');
+          }
+        }
+      }
+      return;
+    }
+
     // 8. DEFAULT GUMMY SOLDIER
     const inSight = distToPlayer < 420;
 
@@ -655,7 +757,63 @@ export class Enemy {
       return;
     }
 
-    // --- 7. TURRET SPRITE ---
+    // --- 7. LATIGO SPRITE ---
+    if (this.type === 'LATIGO') {
+      ctx.translate(cx, bottomY + 1);
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      ctx.scale(this.facing, 1);
+
+      const latigoSprite = imageLoader.getImage('latigo');
+      const renderW = 46;
+      const renderH = 54;
+
+      if (latigoSprite && latigoSprite.complete && latigoSprite.naturalWidth > 0) {
+        ctx.drawImage(latigoSprite, -renderW / 2, -renderH, renderW, renderH);
+      } else {
+        ctx.beginPath();
+        ctx.roundRect(-16, -renderH, 32, 48, 8);
+        ctx.fillStyle = '#1E1B4B';
+        ctx.fill();
+      }
+
+      // Whip lash visual arc effect during WHIP state
+      if (this.whipState === 'WHIP') {
+        ctx.beginPath();
+        ctx.arc(renderW / 2 + 10, -renderH / 2, 45, -Math.PI / 4, Math.PI / 4);
+        ctx.strokeStyle = '#A3E635';
+        ctx.lineWidth = 5;
+        ctx.stroke();
+      }
+
+      ctx.restore();
+      return;
+    }
+
+    // --- 8. ACIDO SPRITE ---
+    if (this.type === 'ACIDO') {
+      ctx.translate(cx, this.y + this.height / 2);
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      ctx.rotate(this.rotation);
+      ctx.scale(this.facing, 1);
+
+      const acidoSprite = imageLoader.getImage('acido');
+      const renderW = 48;
+      const renderH = 42;
+
+      if (acidoSprite && acidoSprite.complete && acidoSprite.naturalWidth > 0) {
+        ctx.drawImage(acidoSprite, -renderW / 2, -renderH / 2, renderW, renderH);
+      } else {
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 20, 15, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#84CC16';
+        ctx.fill();
+      }
+
+      ctx.restore();
+      return;
+    }
+
+    // --- 9. TURRET SPRITE ---
     if (this.type === 'TURRET') {
       ctx.translate(cx, this.y + this.height / 2);
       ctx.beginPath();

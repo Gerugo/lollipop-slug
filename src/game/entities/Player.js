@@ -360,6 +360,26 @@ export class Player {
         })
       );
       this.ammo--;
+    } else if (this.currentWeapon.id === 'LATIGO_DULCE') {
+      soundManager.playEnemyPop();
+      projectiles.push(
+        new Projectile({
+          x: bulletX + this.facing * 12,
+          y: bulletY,
+          vx: bulletVx * 0.75,
+          vy: bulletVy * 0.75,
+          type: 'LATIGO_DULCE',
+          damage: 35,
+          width: 32,
+          height: 26,
+          life: 0.38,
+          penetrate: true,
+          isPlayer: true,
+          rotation: shotAngle
+        })
+      );
+      if (particles) particles.emitSparkles(bulletX + this.facing * 14, bulletY, 8, '#A3E635');
+      this.ammo--;
     }
 
     if (this.ammo <= 0 && this.currentWeapon.id !== 'PISTOL') {
