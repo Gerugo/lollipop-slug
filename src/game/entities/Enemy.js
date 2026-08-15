@@ -58,13 +58,15 @@ export class Enemy {
       this.waveAmp = 35;
     } else if (this.type === 'ROLLER') {
       this.gravity = 950;
-      this.width = 48;
-      this.height = 48;
-      this.hp = 35;
-      this.scoreValue = 400;
-      this.speed = 90;
-      this.chargeSpeed = 175;
-      this.isCharging = false;
+      this.width = 44;
+      this.height = 44;
+      this.hp = 22;
+      this.scoreValue = 350;
+      this.speed = 50;
+      this.chargeSpeed = 125;
+      this.rollerState = 'PATROL'; // 'PATROL', 'TELEGRAPH', 'CHARGING', 'TIRED'
+      this.rollerTimer = 0;
+      this.rollerChargeDir = -1;
     } else if (this.type === 'SNIPER') {
       this.gravity = 0;
       this.width = 46;
@@ -251,24 +253,63 @@ export class Enemy {
       return;
     }
 
-    // 4. ROLLER (Green Gummy Wheel - Charges & Rolls)
+    // 4. ROLLER (Green Gummy Wheel - Patrols, Telegraphs, Charges with Momentum, Rests)
     if (this.type === 'ROLLER') {
-      const inSight = distToPlayer < 350 && Math.abs(player.y - this.y) < 120;
-      if (inSight) {
-        this.isCharging = true;
-        this.facing = dirToPlayer;
-        this.vx = this.facing * this.chargeSpeed;
-      } else {
-        this.isCharging = false;
+      const inFrontOfRoller = (this.patrolDir === -1 && player && player.x < this.x) ||
+                              (this.patrolDir === 1 && player && player.x > this.x);
+      const inSight = distToPlayer < 260 && Math.abs(player.y - this.y) < 90 && inFrontOfRoller;
+
+      if (this.rollerState === 'PATROL') {
         this.vx = this.patrolDir * this.speed;
         this.facing = this.patrolDir;
+
+        if (inSight) {
+          this.rollerState = 'TELEGRAPH';
+          this.rollerTimer = 0.45; // 0.45s revving up before charging (warning window for player!)
+          this.rollerChargeDir = dirToPlayer;
+          this.facing = dirToPlayer;
+          this.vx = 0;
+        }
+      } else if (this.rollerState === 'TELEGRAPH') {
+        this.vx = 0;
+        this.rollerTimer -= dt;
+        // Rev up shake & sweet smoke
+        if (particles && Math.random() < 0.4) {
+          particles.emitSugarSmoke(this.x + this.width / 2, this.y + this.height - 4, 1, '#86EFAC');
+        }
+        if (this.rollerTimer <= 0) {
+          this.rollerState = 'CHARGING';
+          this.rollerTimer = 1.0; // 1.0s charge dash duration
+          this.facing = this.rollerChargeDir;
+        }
+      } else if (this.rollerState === 'CHARGING') {
+        // Locked momentum direction! Does NOT follow player if player jumps over!
+        this.vx = this.rollerChargeDir * this.chargeSpeed;
+        this.rollerTimer -= dt;
+
+        if (particles && Math.random() < 0.35) {
+          particles.emitSugarSmoke(this.x + this.width / 2, this.y + this.height - 4, 2, '#86EFAC');
+        }
+
+        if (this.rollerTimer <= 0) {
+          this.rollerState = 'TIRED';
+          this.rollerTimer = 1.2; // 1.2s dizzy recovery cooldown (vulnerable window!)
+        }
+      } else if (this.rollerState === 'TIRED') {
+        // Exhausted / resting after charge
+        this.vx = 0;
+        this.rollerTimer -= dt;
+        this.rotation = Math.sin(this.animTime * 8) * 0.12;
+
+        if (this.rollerTimer <= 0) {
+          this.rollerState = 'PATROL';
+          this.patrolDir = dirToPlayer;
+        }
       }
 
-      // Continuous rolling rotation
-      this.rotation += (this.vx * dt * 0.08);
-
-      if (this.isCharging && particles && Math.random() < 0.3) {
-        particles.emitSugarSmoke(this.x + this.width / 2, this.y + this.height - 4, 2, '#86EFAC');
+      // Rolling rotation proportional to speed
+      if (this.rollerState !== 'TIRED') {
+        this.rotation += (this.vx * dt * 0.08);
       }
 
       this.vy += this.gravity * dt;
