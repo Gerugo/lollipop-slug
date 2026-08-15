@@ -1,5 +1,11 @@
 import React from 'react';
 import { Volume2, VolumeX, Pause, Maximize2 } from 'lucide-react';
+import armaPistolUrl from '../assets/arma_pistol.png';
+import armaHmgUrl from '../assets/arma_hmg.png';
+import armaShotgunUrl from '../assets/arma_shotgun.png';
+import armaRocketUrl from '../assets/arma_rocket.png';
+import armaLatigoUrl from '../assets/arma_latigo.png';
+import armaGrenadeUrl from '../assets/arma_grenade.png';
 
 export const HUD = ({ hudData, onTogglePause, onToggleMute, isMuted = false, onToggleFullscreen }) => {
   if (!hudData) return null;
@@ -35,6 +41,16 @@ export const HUD = ({ hudData, onTogglePause, onToggleMute, isMuted = false, onT
 
   const safeWeaponName = weapon?.shortName || 'PISTOL';
   const weaponId = weapon?.id || '';
+
+  const getWeaponImg = () => {
+    switch (weaponId) {
+      case 'HMG': return armaHmgUrl;
+      case 'SHOTGUN': return armaShotgunUrl;
+      case 'ROCKET': return armaRocketUrl;
+      case 'LATIGO_DULCE': return armaLatigoUrl;
+      default: return armaPistolUrl;
+    }
+  };
 
   return (
     <div className="fixed inset-0 pointer-events-none p-3 sm:p-5 flex flex-col justify-between select-none z-10">
@@ -144,14 +160,18 @@ export const HUD = ({ hudData, onTogglePause, onToggleMute, isMuted = false, onT
                   {safeAmmoStr}
                 </div>
               </div>
-              <div className="w-7 h-7 rounded-2xl bg-white/20 border border-white/40 flex items-center justify-center text-xs shadow-inner">
-                {weaponId === 'HMG' ? '☁️' : weaponId === 'SHOTGUN' ? '🍌' : weaponId === 'ROCKET' ? '🚀' : '🍬'}
+              <div className="w-8 h-8 rounded-2xl bg-white/20 border border-white/40 flex items-center justify-center p-0.5 shadow-inner overflow-hidden">
+                <img
+                  src={getWeaponImg()}
+                  alt={safeWeaponName}
+                  className="w-full h-full object-contain drop-shadow"
+                />
               </div>
             </div>
 
             {/* Grenade Counter */}
             <div className="bg-slate-900/40 backdrop-blur-[6px] px-2 py-0.5 rounded-2xl border border-white/30 flex items-center gap-1 font-arcade text-[10px] text-cyan-200 shadow-sm">
-              <span>💣</span>
+              <img src={armaGrenadeUrl} alt="Soda Grenade" className="w-4 h-4 object-contain" />
               <span>x{Number(grenades ?? 10)}</span>
             </div>
           </div>

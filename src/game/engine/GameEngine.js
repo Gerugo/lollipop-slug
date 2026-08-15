@@ -756,39 +756,79 @@ export class GameEngine {
         ctx.fillStyle = '#F59E0B';
         ctx.fill();
       }
-    } else {
-      const cajaSprite = imageLoader.getImage('caja');
-      if (cajaSprite && cajaSprite.complete && cajaSprite.naturalWidth > 0) {
-        ctx.drawImage(cajaSprite, -15, -15, 30, 30);
+    } else if (drop.type === 'MANZANA') {
+      const appleSprite = imageLoader.getImage('manzana');
+      if (appleSprite && appleSprite.complete && appleSprite.naturalWidth > 0) {
+        ctx.drawImage(appleSprite, -14, -14, 28, 28);
       } else {
-        ctx.beginPath();
-        ctx.roundRect(-14, -14, 28, 28, 6);
-        ctx.fillStyle = '#D97706';
-        ctx.fill();
-        ctx.strokeStyle = '#FFFFFF';
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        ctx.beginPath(); ctx.arc(0, 0, 12, 0, Math.PI * 2); ctx.fillStyle = '#EF4444'; ctx.fill();
       }
-
+    } else if (drop.type === 'PLATANO') {
+      const bananaSprite = imageLoader.getImage('platano');
+      if (bananaSprite && bananaSprite.complete && bananaSprite.naturalWidth > 0) {
+        ctx.drawImage(bananaSprite, -15, -15, 30, 30);
+      } else {
+        ctx.beginPath(); ctx.arc(0, 0, 12, 0, Math.PI * 2); ctx.fillStyle = '#FBBF24'; ctx.fill();
+      }
+    } else {
+      // WEAPON PICKUP (Glowing Sugar Bubble with HD Weapon Sprite)
+      let weaponKey = 'arma_hmg';
       let label = 'H';
-      let jellyColor = 'rgba(236, 72, 153, 0.9)';
+      let jellyColor = '#EC4899';
+
       if (drop.type === 'SHOTGUN') {
+        weaponKey = 'arma_shotgun';
         label = 'S';
-        jellyColor = 'rgba(14, 165, 233, 0.9)';
+        jellyColor = '#0EA5E9';
       } else if (drop.type === 'ROCKET') {
+        weaponKey = 'arma_rocket';
         label = 'R';
-        jellyColor = 'rgba(245, 158, 11, 0.9)';
+        jellyColor = '#F59E0B';
+      } else if (drop.type === 'LATIGO_DULCE') {
+        weaponKey = 'arma_latigo';
+        label = 'W';
+        jellyColor = '#84CC16';
       } else if (drop.type === 'GRENADE' || drop.type === 'G') {
+        weaponKey = 'arma_grenade';
         label = 'G';
-        jellyColor = 'rgba(16, 185, 129, 0.9)';
+        jellyColor = '#10B981';
       }
 
+      // 1. Glowing Sugar Bubble
+      ctx.beginPath();
+      ctx.arc(0, 0, 22, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+      ctx.fill();
+      ctx.strokeStyle = jellyColor;
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // Bubble shine highlight
+      ctx.beginPath();
+      ctx.arc(-7, -8, 5, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+      ctx.fill();
+
+      // 2. Weapon Sprite inside Bubble
+      const wSprite = imageLoader.getImage(weaponKey);
+      if (wSprite && wSprite.complete && wSprite.naturalWidth > 0) {
+        const wsW = 32;
+        const wsH = (wSprite.naturalHeight / wSprite.naturalWidth) * wsW;
+        ctx.drawImage(wSprite, -wsW / 2, -wsH / 2, wsW, wsH);
+      } else {
+        const cajaSprite = imageLoader.getImage('caja');
+        if (cajaSprite && cajaSprite.complete && cajaSprite.naturalWidth > 0) {
+          ctx.drawImage(cajaSprite, -14, -14, 28, 28);
+        }
+      }
+
+      // 3. Classic Metal Slug Style Jelly Badge
       const letterBob = Math.sin(drop.timer * 8) * 2;
       ctx.save();
-      ctx.translate(0, -18 + letterBob);
+      ctx.translate(14, -14 + letterBob);
 
       ctx.beginPath();
-      ctx.roundRect(-10, -10, 20, 20, 5);
+      ctx.roundRect(-9, -9, 18, 18, 5);
       ctx.fillStyle = jellyColor;
       ctx.fill();
       ctx.strokeStyle = '#FFFFFF';
@@ -796,7 +836,7 @@ export class GameEngine {
       ctx.stroke();
 
       ctx.fillStyle = '#FFFFFF';
-      ctx.font = 'bold 12px Fredoka, sans-serif';
+      ctx.font = 'bold 11px Fredoka, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(label, 0, 1);

@@ -42,7 +42,13 @@ class ImageLoader {
       regaliz: new URL('../../assets/fondo-raices.png', import.meta.url).href,
       latigo: new URL('../../assets/latigo.png', import.meta.url).href,
       acido: new URL('../../assets/acido.png', import.meta.url).href,
-      boss4: new URL('../../assets/boss4.png', import.meta.url).href
+      boss4: new URL('../../assets/boss4.png', import.meta.url).href,
+      arma_pistol: new URL('../../assets/arma_pistol.png', import.meta.url).href,
+      arma_hmg: new URL('../../assets/arma_hmg.png', import.meta.url).href,
+      arma_shotgun: new URL('../../assets/arma_shotgun.png', import.meta.url).href,
+      arma_rocket: new URL('../../assets/arma_rocket.png', import.meta.url).href,
+      arma_latigo: new URL('../../assets/arma_latigo.png', import.meta.url).href,
+      arma_grenade: new URL('../../assets/arma_grenade.png', import.meta.url).href
     };
 
     // Immediately start preloading in constructor

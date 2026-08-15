@@ -474,29 +474,41 @@ export class Player {
     }
 
     // Draw Gun Overlay in Hand (aligned with facing direction)
-    const gunX = this.aimUp ? 6 : 14;
-    const gunY = this.aimUp ? -renderH + 14 : (this.isCrouching ? -renderH + 34 : -renderH + 26);
+    const gunX = this.aimUp ? 8 : 14;
+    const gunY = this.aimUp ? -renderH + 16 : (this.isCrouching ? -renderH + 34 : -renderH + 28);
 
     ctx.save();
     ctx.translate(gunX, gunY);
     if (this.aimUp) ctx.rotate(-Math.PI / 2);
 
-    if (this.currentWeapon.id === 'PISTOL') {
-      ctx.fillStyle = '#FF5A9E';
-      ctx.fillRect(-2, -3, 12, 6);
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(10, -2, 4, 4);
-    } else if (this.currentWeapon.id === 'HMG') {
-      ctx.fillStyle = '#E2E8F0';
-      ctx.fillRect(-4, -5, 18, 9);
-      ctx.fillStyle = '#94A3B8';
-      ctx.fillRect(14, -4, 6, 3);
+    let gunSpriteKey = 'arma_pistol';
+    let gunW = 20;
+    let gunH = 13;
+
+    if (this.currentWeapon.id === 'HMG') {
+      gunSpriteKey = 'arma_hmg';
+      gunW = 26;
+      gunH = 13;
     } else if (this.currentWeapon.id === 'SHOTGUN') {
-      ctx.fillStyle = '#0284C7';
-      ctx.fillRect(-4, -4, 16, 8);
+      gunSpriteKey = 'arma_shotgun';
+      gunW = 26;
+      gunH = 11;
     } else if (this.currentWeapon.id === 'ROCKET') {
-      ctx.fillStyle = '#F59E0B';
-      ctx.fillRect(-6, -6, 22, 11);
+      gunSpriteKey = 'arma_rocket';
+      gunW = 27;
+      gunH = 14;
+    } else if (this.currentWeapon.id === 'LATIGO_DULCE') {
+      gunSpriteKey = 'arma_latigo';
+      gunW = 22;
+      gunH = 15;
+    }
+
+    const gunSprite = imageLoader.getImage(gunSpriteKey);
+    if (gunSprite && gunSprite.complete && gunSprite.naturalWidth > 0) {
+      ctx.drawImage(gunSprite, -4, -gunH / 2, gunW, gunH);
+    } else {
+      ctx.fillStyle = '#FF5A9E';
+      ctx.fillRect(-2, -3, 14, 6);
     }
     ctx.restore();
 
