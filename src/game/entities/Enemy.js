@@ -134,6 +134,24 @@ export class Enemy {
       this.eelState = 'SUBMERGED'; // 'SUBMERGED', 'SURGE', 'DISCHARGE', 'DIVE'
       this.eelTimer = 1.0;
       this.baseY = this.y;
+    } else if (this.type === 'PINGUINO') {
+      this.gravity = 950;
+      this.width = 50;
+      this.height = 36;
+      this.hp = 34;
+      this.scoreValue = 440;
+      this.speed = 190;
+      this.slideTimer = 0;
+      this.shootTimer = 0;
+    } else if (this.type === 'YETI') {
+      this.gravity = 950;
+      this.width = 64;
+      this.height = 66;
+      this.hp = 58;
+      this.scoreValue = 580;
+      this.speed = 40;
+      this.slamState = 'WALK'; // 'WALK', 'PREPARE', 'SLAM', 'RECOVER'
+      this.slamTimer = 2.0;
     } else {
       this.type = 'GUMMY';
     }
@@ -642,6 +660,81 @@ export class Enemy {
       return;
     }
 
+    // 9. PINGUINO (Sliding Penguin)
+    if (this.type === 'PINGUINO') {
+      this.facing = dirToPlayer;
+      this.vx = dirToPlayer * this.speed;
+
+      if (particles && Math.random() < 0.3) {
+        particles.emitSparkles(this.x + this.width / 2, this.y + this.height, 2, '#38BDF8');
+      }
+
+      this.shootTimer += dt;
+      if (this.shootTimer >= 1.8 && distToPlayer < 450) {
+        this.shootTimer = 0;
+        enemyProjectiles.push(
+          new Projectile({
+            x: this.x + (this.facing === 1 ? this.width : 0),
+            y: this.y + this.height / 2,
+            vx: dirToPlayer * 280,
+            vy: -40,
+            type: 'ICE_SHARD',
+            damage: 1,
+            isPlayer: false
+          })
+        );
+      }
+      return;
+    }
+
+    // 10. YETI (Sugar Cotton Yeti)
+    if (this.type === 'YETI') {
+      this.facing = dirToPlayer;
+
+      if (this.slamState === 'WALK') {
+        this.vx = dirToPlayer * this.speed;
+        this.slamTimer -= dt;
+        if (this.slamTimer <= 0 && distToPlayer < 350) {
+          this.slamState = 'PREPARE';
+          this.slamTimer = 0.5;
+          this.vx = 0;
+          this.vy = -260;
+        }
+      } else if (this.slamState === 'PREPARE') {
+        if (this.isGrounded && this.vy >= 0) {
+          this.slamState = 'SLAM';
+          this.slamTimer = 0.6;
+          if (soundManager && soundManager.playExplosion) soundManager.playExplosion();
+          if (particles) {
+            particles.emitShockwave(this.x + this.width / 2, this.y + this.height, 60, '#38BDF8');
+            particles.emitSugarSmoke(this.x + this.width / 2, this.y + this.height, 8, '#BAE6FD');
+          }
+
+          // Launch snowballs in both directions
+          [-1, 1].forEach(dir => {
+            enemyProjectiles.push(
+              new Projectile({
+                x: this.x + this.width / 2,
+                y: this.y + this.height - 10,
+                vx: dir * 220,
+                vy: -80,
+                type: 'SNOWBALL',
+                damage: 1,
+                isPlayer: false
+              })
+            );
+          });
+        }
+      } else if (this.slamState === 'SLAM') {
+        this.slamTimer -= dt;
+        if (this.slamTimer <= 0) {
+          this.slamState = 'WALK';
+          this.slamTimer = 2.4;
+        }
+      }
+      return;
+    }
+
     // 8. DEFAULT GUMMY SOLDIER
     const inSight = distToPlayer < 420;
 
@@ -980,6 +1073,55 @@ export class Enemy {
         ctx.strokeStyle = 'rgba(250, 204, 21, 0.8)';
         ctx.lineWidth = 3;
         ctx.stroke();
+      }
+
+      ctx.restore();
+      return;
+    }
+
+    // --- 11. PINGUINO SPRITE ---
+    if (this.type === 'PINGUINO') {
+      ctx.translate(cx, bottomY + 1);
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      ctx.scale(this.facing, 1);
+
+      const pingSprite = imageLoader.getImage('pinguino');
+      const renderW = 50;
+      const renderH = 36;
+
+      if (pingSprite && pingSprite.complete && pingSprite.naturalWidth > 0) {
+        ctx.drawImage(pingSprite, -renderW / 2, -renderH, renderW, renderH);
+      } else {
+        ctx.beginPath();
+        ctx.ellipse(0, -renderH / 2, 22, 14, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#0F172A';
+        ctx.fill();
+      }
+
+      ctx.restore();
+      return;
+    }
+
+    // --- 12. YETI SPRITE ---
+    if (this.type === 'YETI') {
+      let scaleX = this.slamState === 'PREPARE' ? 0.85 : 1;
+      let scaleY = this.slamState === 'PREPARE' ? 1.2 : 1;
+
+      ctx.translate(cx, bottomY + 1);
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      ctx.scale(this.facing * scaleX, scaleY);
+
+      const yetiSprite = imageLoader.getImage('yeti');
+      const renderW = 64;
+      const renderH = 66;
+
+      if (yetiSprite && yetiSprite.complete && yetiSprite.naturalWidth > 0) {
+        ctx.drawImage(yetiSprite, -renderW / 2, -renderH, renderW, renderH);
+      } else {
+        ctx.beginPath();
+        ctx.ellipse(0, -renderH / 2, 28, 28, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#E0F2FE';
+        ctx.fill();
       }
 
       ctx.restore();

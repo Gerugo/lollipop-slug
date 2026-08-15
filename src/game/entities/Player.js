@@ -400,6 +400,26 @@ export class Player {
       );
       if (particles) particles.emitSodaBubbles(bulletX + this.facing * 12, bulletY, 6);
       this.ammo--;
+    } else if (this.currentWeapon.id === 'LANZAHIELOS') {
+      soundManager.playEnemyPop();
+      projectiles.push(
+        new Projectile({
+          x: bulletX + this.facing * 12,
+          y: bulletY,
+          vx: bulletVx * 1.15,
+          vy: bulletVy * 1.15,
+          type: 'ICE_SHARD',
+          damage: 48,
+          width: 24,
+          height: 18,
+          life: 1.2,
+          penetrate: false,
+          isPlayer: true,
+          rotation: shotAngle
+        })
+      );
+      if (particles) particles.emitSparkles(bulletX + this.facing * 14, bulletY, 8, '#38BDF8');
+      this.ammo--;
     }
 
     if (this.ammo <= 0 && this.currentWeapon.id !== 'PISTOL') {
@@ -525,6 +545,10 @@ export class Player {
       gunSpriteKey = 'arma_burbujas';
       gunW = 25;
       gunH = 16;
+    } else if (this.currentWeapon.id === 'LANZAHIELOS') {
+      gunSpriteKey = 'arma_hielo';
+      gunW = 26;
+      gunH = 15;
     }
 
     const gunSprite = imageLoader.getImage(gunSpriteKey);

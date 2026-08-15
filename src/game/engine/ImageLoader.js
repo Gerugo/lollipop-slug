@@ -55,7 +55,13 @@ class ImageLoader {
       rana: new URL('../../assets/rana.png', import.meta.url).href,
       anguila: new URL('../../assets/anguila.png', import.meta.url).href,
       boss5: new URL('../../assets/boss5.png', import.meta.url).href,
-      arma_burbujas: new URL('../../assets/arma_burbujas.png', import.meta.url).href
+      arma_burbujas: new URL('../../assets/arma_burbujas.png', import.meta.url).href,
+      cielo6: new URL('../../assets/fondo-cumbres.jpg', import.meta.url).href,
+      glaciar: new URL('../../assets/fondo-glaciar.png', import.meta.url).href,
+      pinguino: new URL('../../assets/pinguino.png', import.meta.url).href,
+      yeti: new URL('../../assets/yeti.png', import.meta.url).href,
+      boss6: new URL('../../assets/boss6.png', import.meta.url).href,
+      arma_hielo: new URL('../../assets/arma_hielo.png', import.meta.url).href
     };
 
     // Immediately start preloading in constructor

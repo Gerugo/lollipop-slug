@@ -54,6 +54,15 @@ export const WEAPON_TYPES = {
     fireRate: 0.32,
     iconColor: '#06B6D4',
     description: 'Burbujas gigantes efervescentes que rebotan en superficies y atrapan enemigos.'
+  },
+  LANZAHIELOS: {
+    id: 'LANZAHIELOS',
+    name: 'Lanzahielos',
+    shortName: 'ICE SHARD',
+    ammo: 50,
+    fireRate: 0.22,
+    iconColor: '#38BDF8',
+    description: 'Dispara esquirlas de hielo dulce cristalizado con estallido helado en área.'
   }
 };
 
@@ -286,6 +295,41 @@ export class Projectile {
       ctx.fill();
       ctx.strokeStyle = '#FFFFFF';
       ctx.lineWidth = 2;
+      ctx.stroke();
+    } else if (this.type === 'ICE_SHARD') {
+      // Pointed ice crystal shard
+      ctx.beginPath();
+      ctx.polygon = [(0, -14), (8, 0), (0, 14), (-8, 0)];
+      ctx.moveTo(0, -14);
+      ctx.lineTo(8, 0);
+      ctx.lineTo(0, 14);
+      ctx.lineTo(-8, 0);
+      ctx.closePath();
+      ctx.fillStyle = '#BAE6FD';
+      ctx.fill();
+      ctx.strokeStyle = '#38BDF8';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    } else if (this.type === 'SNOWBALL') {
+      // Puffy sugar snowball
+      ctx.beginPath();
+      ctx.arc(0, 0, 12, 0, Math.PI * 2);
+      ctx.fillStyle = '#F0F9FF';
+      ctx.fill();
+      ctx.strokeStyle = '#BAE6FD';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    } else if (this.type === 'ICICLE') {
+      // Sharp hanging icicle spike
+      ctx.beginPath();
+      ctx.moveTo(0, 16);
+      ctx.lineTo(-6, -14);
+      ctx.lineTo(6, -14);
+      ctx.closePath();
+      ctx.fillStyle = '#E0F2FE';
+      ctx.fill();
+      ctx.strokeStyle = '#0284C7';
+      ctx.lineWidth = 1.5;
       ctx.stroke();
     }
 

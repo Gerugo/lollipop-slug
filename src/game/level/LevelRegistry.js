@@ -3,6 +3,7 @@ import { Level2 } from './Level2.js';
 import { Level3 } from './Level3.js';
 import { Level4 } from './Level4.js';
 import { Level5 } from './Level5.js';
+import { Level6 } from './Level6.js';
 
 export const LEVEL_REGISTRY = [
   {
@@ -69,6 +70,19 @@ export const LEVEL_REGISTRY = [
     activeBorder: 'border-cyan-300 ring-2 ring-cyan-400/60 shadow-cyan-500/30',
     badge: 'bg-cyan-500 text-cyan-950',
     previewKey: 'cielo5'
+  },
+  {
+    id: 6,
+    LevelClass: Level6,
+    title: 'Nivel 6',
+    name: 'Cumbres Caramelo Helado',
+    emoji: '❄️',
+    desc: 'Hielo resbaladizo, pingüinos, yetis & Gólem de Hielo',
+    color: 'from-sky-800/40 to-slate-950/60',
+    borderColor: 'border-sky-400/50',
+    activeBorder: 'border-sky-300 ring-2 ring-sky-400/60 shadow-sky-500/30',
+    badge: 'bg-sky-500 text-sky-950',
+    previewKey: 'cielo6'
   }
 ];
 

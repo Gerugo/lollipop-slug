@@ -129,6 +129,12 @@ export class Physics {
             if (particles && Math.random() < 0.2) {
               particles.emitSugarSmoke(entity.x + entity.width / 2, entityBottom, 1, '#15803D');
             }
+          } else if (plat.type === 'ice') {
+            // Low friction slippery ice slide
+            entity.vx *= 0.985;
+            if (particles && Math.abs(entity.vx) > 30 && Math.random() < 0.3) {
+              particles.emitSparkles(entity.x + entity.width / 2, entityBottom, 1, '#BAE6FD');
+            }
           } else if (plat.type === 'moving' && plat.speedX) {
             // Carry entity along with moving platform
             entity.x += plat.speedX * 0.016;
@@ -144,6 +150,11 @@ export class Physics {
 
           if (plat.type === 'sticky') {
             entity.vx *= 0.62;
+          } else if (plat.type === 'ice') {
+            entity.vx *= 0.985;
+            if (particles && Math.abs(entity.vx) > 30 && Math.random() < 0.3) {
+              particles.emitSparkles(entity.x + entity.width / 2, entityBottom, 1, '#BAE6FD');
+            }
           }
           return plat;
         }

@@ -792,6 +792,10 @@ export class GameEngine {
         weaponKey = 'arma_burbujas';
         label = 'B';
         jellyColor = '#06B6D4';
+      } else if (drop.type === 'LANZAHIELOS') {
+        weaponKey = 'arma_hielo';
+        label = 'I';
+        jellyColor = '#38BDF8';
       } else if (drop.type === 'GRENADE' || drop.type === 'G') {
         weaponKey = 'arma_grenade';
         label = 'G';
