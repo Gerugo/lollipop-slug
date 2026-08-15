@@ -101,10 +101,16 @@ export function App() {
     }
   };
 
-  const handleStartGame = () => {
+  const handleStartGame = (startingLevel = 1) => {
     if (engineRef.current) {
       engineRef.current.setDifficulty(difficulty);
-      engineRef.current.startNewGame();
+      engineRef.current.startNewGame(startingLevel);
+    }
+  };
+
+  const handlePreviewLevel = (levelIndex) => {
+    if (engineRef.current) {
+      engineRef.current.previewLevel(levelIndex);
     }
   };
 
@@ -198,6 +204,7 @@ export function App() {
           isMuted={isGameMuted}
           onToggleMute={handleToggleMute}
           onToggleFullscreen={handleToggleFullscreen}
+          onPreviewLevel={handlePreviewLevel}
         />
       )}
 

@@ -81,7 +81,7 @@ export class GameEngine {
     }
   }
 
-  startNewGame() {
+  startNewGame(startingLevel = 1) {
     this.transitioning = true;
     try {
       // Ensure AudioContext is initialized before any SFX are triggered
@@ -90,7 +90,7 @@ export class GameEngine {
       }
 
       this.score = 0;
-      this.currentLevelIndex = 1;
+      this.currentLevelIndex = startingLevel || 1;
       this.rescuedHostages = 0;
       this.gameTime = 0;
       
@@ -122,6 +122,13 @@ export class GameEngine {
     } catch (err) {
       this.transitioning = false;
       console.error('[GameEngine] Error in startNewGame:', err);
+    }
+  }
+
+  previewLevel(levelIndex) {
+    if (this.state === 'MENU') {
+      this.currentLevelIndex = levelIndex;
+      this.loadLevel(levelIndex);
     }
   }
 
