@@ -7,7 +7,7 @@ export class Enemy {
     this.x = options.x || 0;
     this.y = options.y || 0;
     this.prevY = this.y;
-    this.type = options.type || 'GUMMY'; // 'GUMMY', 'TURRET', 'DRONE', 'GLOBO', 'PEZ'
+    this.type = options.type || 'GUMMY'; // 'GUMMY', 'TURRET', 'DRONE', 'GLOBO', 'PEZ', 'ROLLER', 'SNIPER', 'MOTH', 'KNIGHT'
     this.width = options.width || 40;
     this.height = options.height || 48;
     this.vx = 0;
@@ -34,6 +34,7 @@ export class Enemy {
     this.speed = options.speed || 60;
     this.patrolDir = -1;
 
+    // Specific enemy type configurations
     if (this.type === 'TURRET') {
       this.gravity = 0;
       this.width = 46;
@@ -55,15 +56,72 @@ export class Enemy {
       this.scoreValue = 280;
       this.waveSpeed = 4;
       this.waveAmp = 35;
+    } else if (this.type === 'ROLLER') {
+      this.gravity = 950;
+      this.width = 48;
+      this.height = 48;
+      this.hp = 35;
+      this.scoreValue = 400;
+      this.speed = 90;
+      this.chargeSpeed = 175;
+      this.isCharging = false;
+    } else if (this.type === 'SNIPER') {
+      this.gravity = 0;
+      this.width = 46;
+      this.height = 54;
+      this.hp = 28;
+      this.scoreValue = 450;
+      this.aimCycleTimer = 0;
+      this.isAimingLaser = false;
+      this.laserTargetX = 0;
+      this.laserTargetY = 0;
+    } else if (this.type === 'MOTH') {
+      this.gravity = 0;
+      this.width = 50;
+      this.height = 44;
+      this.hp = 20;
+      this.scoreValue = 320;
+      this.isDiving = false;
+      this.diveCooldown = 0;
+      this.waveSpeed = 4.5;
+      this.waveAmp = 38;
+    } else if (this.type === 'KNIGHT') {
+      this.gravity = 950;
+      this.width = 50;
+      this.height = 56;
+      this.hp = 55;
+      this.scoreValue = 500;
+      this.speed = 45;
+      this.shieldUp = true;
+      this.stabTimer = 0;
+      this.isStabbing = false;
     } else {
       this.type = 'GUMMY';
     }
   }
 
   takeDamage(amount, particles, soundManager, attackerX = 0) {
+    // Knight shield mechanic: blocks frontal projectile damage
+    if (this.type === 'KNIGHT' && this.shieldUp && attackerX) {
+      const attackingFromFront = (this.facing === -1 && attackerX < this.x + this.width / 2) ||
+                                 (this.facing === 1 && attackerX > this.x + this.width / 2);
+      if (attackingFromFront) {
+        // Shield absorbs most damage and clinks
+        soundManager.playEnemyPop();
+        if (particles) {
+          particles.emitSparkles(this.x + (this.facing === -1 ? 8 : this.width - 8), this.y + 24, 6, '#FBBF24');
+          particles.emitCandyShards(this.x + (this.facing === -1 ? 8 : this.width - 8), this.y + 24, 4);
+        }
+        this.hp -= Math.max(1, Math.floor(amount * 0.2));
+        this.hurtTimer = 0.05;
+        if (this.hp <= 0) this.die(particles, soundManager);
+        return;
+      }
+    }
+
     this.hp -= amount;
     this.hurtTimer = 0.08;
-    this.hitWobble = 0.18; // Flan wobble on hit
+    this.hitWobble = 0.18;
     this.wobblePhase = 0;
     soundManager.playEnemyPop();
 
@@ -114,7 +172,7 @@ export class Enemy {
     const distToPlayer = player ? Math.hypot(player.x - this.x, player.y - this.y) : 999;
     const dirToPlayer = player && player.x < this.x ? -1 : 1;
 
-    // 1. PEZ (Sinusoidal wavy flight with banking angle)
+    // 1. PEZ
     if (this.type === 'PEZ') {
       this.facing = dirToPlayer;
       this.x -= 85 * dt;
@@ -140,7 +198,7 @@ export class Enemy {
       return;
     }
 
-    // 2. GLOBO (High altitude balloon bomber with floating bobbing & bank tilt)
+    // 2. GLOBO / DRONE
     if (this.type === 'DRONE' || this.type === 'GLOBO') {
       this.y = this.hoverY + Math.sin(this.animTime * 3) * 12;
       this.x += Math.sin(this.animTime * 1.2) * 50 * dt;
@@ -193,7 +251,150 @@ export class Enemy {
       return;
     }
 
-    // 4. GUMMY SOLDIER (Metal Slug AI with 2-shot bursts)
+    // 4. ROLLER (Green Gummy Wheel - Charges & Rolls)
+    if (this.type === 'ROLLER') {
+      const inSight = distToPlayer < 350 && Math.abs(player.y - this.y) < 120;
+      if (inSight) {
+        this.isCharging = true;
+        this.facing = dirToPlayer;
+        this.vx = this.facing * this.chargeSpeed;
+      } else {
+        this.isCharging = false;
+        this.vx = this.patrolDir * this.speed;
+        this.facing = this.patrolDir;
+      }
+
+      // Continuous rolling rotation
+      this.rotation += (this.vx * dt * 0.08);
+
+      if (this.isCharging && particles && Math.random() < 0.3) {
+        particles.emitSugarSmoke(this.x + this.width / 2, this.y + this.height - 4, 2, '#86EFAC');
+      }
+
+      this.vy += this.gravity * dt;
+      this.x += this.vx * dt;
+      this.y += this.vy * dt;
+
+      this.isGrounded = false;
+      Physics.resolvePlatforms(this, platforms);
+      return;
+    }
+
+    // 5. SNIPER (Piruleta Marksman with Red Laser Sight)
+    if (this.type === 'SNIPER') {
+      this.facing = dirToPlayer;
+      this.aimCycleTimer += dt;
+
+      if (player) {
+        this.laserTargetX = player.x + player.width / 2;
+        this.laserTargetY = player.y + player.height / 2;
+      }
+
+      // 0.0 - 1.6s: Idle / Watch
+      // 1.6 - 2.5s: Aiming laser
+      // 2.5s: Fire high-speed sniper projectile!
+      if (this.aimCycleTimer >= 1.6 && this.aimCycleTimer < 2.5) {
+        this.isAimingLaser = true;
+      } else if (this.aimCycleTimer >= 2.5) {
+        this.isAimingLaser = false;
+        this.aimCycleTimer = 0;
+
+        if (distToPlayer < 650) {
+          const muzzleX = this.x + (this.facing === -1 ? 2 : this.width - 2);
+          const muzzleY = this.y + 24;
+          const angle = Math.atan2(this.laserTargetY - muzzleY, this.laserTargetX - muzzleX);
+
+          enemyProjectiles.push(
+            new Projectile({
+              x: muzzleX,
+              y: muzzleY,
+              vx: Math.cos(angle) * 440,
+              vy: Math.sin(angle) * 440,
+              type: 'ENEMY_BULLET',
+              damage: 2,
+              isPlayer: false,
+              color: '#EF4444'
+            })
+          );
+          if (particles) {
+            particles.emitSugarSmoke(muzzleX, muzzleY, 5, '#FCA5A5');
+            particles.emitSparkles(muzzleX, muzzleY, 6, '#EF4444');
+          }
+          soundManager.playEnemyPop();
+        }
+      }
+      return;
+    }
+
+    // 6. MOTH (Sugar Moth with Dive Bomber Attack)
+    if (this.type === 'MOTH') {
+      this.facing = dirToPlayer;
+      if (this.diveCooldown > 0) this.diveCooldown -= dt;
+
+      if (!this.isDiving) {
+        this.x -= 65 * dt;
+        this.y = this.hoverY + Math.sin(this.animTime * this.waveSpeed) * this.waveAmp;
+        this.rotation = Math.sin(this.animTime * 3) * 0.15;
+
+        // Check if player is below for a dive bomb
+        if (player && Math.abs(player.x - this.x) < 180 && player.y > this.y && this.diveCooldown <= 0) {
+          this.isDiving = true;
+          this.vy = 280;
+          this.vx = this.facing * 120;
+        }
+      } else {
+        // In dive mode
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+        this.rotation = this.facing * 0.45;
+
+        if (particles && Math.random() < 0.4) {
+          particles.emitSparkles(this.x + this.width / 2, this.y + this.height / 2, 2, '#F472B6');
+        }
+
+        // Pull out of dive when low enough or after hitting ground level
+        if (this.y >= 430) {
+          this.isDiving = false;
+          this.diveCooldown = 3.5;
+          this.vy = -180;
+        }
+      }
+      return;
+    }
+
+    // 7. KNIGHT (Shielded Lollipop Soldier)
+    if (this.type === 'KNIGHT') {
+      this.facing = dirToPlayer;
+      this.stabTimer += dt;
+
+      if (distToPlayer < 140 && this.stabTimer >= 3.2) {
+        this.isStabbing = true;
+        this.stabTimer = 0;
+        this.vx = this.facing * 160;
+      } else if (this.isStabbing) {
+        if (this.stabTimer > 0.45) {
+          this.isStabbing = false;
+          this.vx = 0;
+        }
+      } else {
+        const inSight = distToPlayer < 400;
+        if (inSight) {
+          this.vx = this.facing * this.speed;
+        } else {
+          this.vx = this.patrolDir * this.speed;
+        }
+      }
+
+      this.vy += this.gravity * dt;
+      this.x += this.vx * dt;
+      this.y += this.vy * dt;
+
+      this.isGrounded = false;
+      Physics.resolvePlatforms(this, platforms);
+      return;
+    }
+
+    // 8. DEFAULT GUMMY SOLDIER
     const inSight = distToPlayer < 420;
 
     if (inSight) {
@@ -260,7 +461,7 @@ export class Enemy {
     const bottomY = this.y + this.height;
 
     // Ground Shadow for non-flying enemies
-    if (this.type !== 'PEZ' && this.type !== 'DRONE' && this.type !== 'GLOBO') {
+    if (this.type !== 'PEZ' && this.type !== 'DRONE' && this.type !== 'GLOBO' && this.type !== 'MOTH' && this.type !== 'SNIPER') {
       ctx.save();
       ctx.beginPath();
       ctx.ellipse(cx, bottomY + 2, 16, 5, 0, 0, Math.PI * 2);
@@ -269,7 +470,7 @@ export class Enemy {
       ctx.restore();
     }
 
-    // --- PEZ PNG SPRITE (Center Pivot) ---
+    // --- 1. PEZ SPRITE ---
     if (this.type === 'PEZ') {
       ctx.translate(cx, this.y + this.height / 2);
       if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
@@ -289,7 +490,7 @@ export class Enemy {
       return;
     }
 
-    // --- GLOBO PNG SPRITE (Center Pivot) ---
+    // --- 2. GLOBO / DRONE SPRITE ---
     if (this.type === 'DRONE' || this.type === 'GLOBO') {
       ctx.translate(cx, this.y + this.height / 2);
       if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
@@ -308,7 +509,112 @@ export class Enemy {
       return;
     }
 
-    // --- TURRET ---
+    // --- 3. ROLLER SPRITE ---
+    if (this.type === 'ROLLER') {
+      ctx.translate(cx, this.y + this.height / 2);
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      ctx.rotate(this.rotation);
+
+      const rollerSprite = imageLoader.getImage('roller');
+      if (rollerSprite && rollerSprite.complete && rollerSprite.naturalWidth > 0) {
+        ctx.drawImage(rollerSprite, -24, -24, 48, 48);
+      } else {
+        ctx.beginPath();
+        ctx.arc(0, 0, 22, 0, Math.PI * 2);
+        ctx.fillStyle = '#22C55E';
+        ctx.fill();
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
+      ctx.restore();
+      return;
+    }
+
+    // --- 4. SNIPER SPRITE ---
+    if (this.type === 'SNIPER') {
+      // Draw Laser Aiming Sight
+      if (this.isAimingLaser) {
+        ctx.save();
+        ctx.beginPath();
+        const startLaserX = cx + (this.facing === -1 ? -12 : 12);
+        const startLaserY = this.y + 24;
+        ctx.moveTo(startLaserX, startLaserY);
+        ctx.lineTo(this.laserTargetX, this.laserTargetY);
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.75)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([6, 4]);
+        ctx.stroke();
+
+        // Laser dot at target
+        ctx.beginPath();
+        ctx.arc(this.laserTargetX, this.laserTargetY, 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#EF4444';
+        ctx.fill();
+        ctx.restore();
+      }
+
+      ctx.translate(cx, bottomY);
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      ctx.scale(this.facing, 1);
+
+      const sniperSprite = imageLoader.getImage('sniper');
+      if (sniperSprite && sniperSprite.complete && sniperSprite.naturalWidth > 0) {
+        ctx.drawImage(sniperSprite, -24, -54, 48, 54);
+      } else {
+        ctx.beginPath();
+        ctx.roundRect(-16, -50, 32, 50, 8);
+        ctx.fillStyle = '#38BDF8';
+        ctx.fill();
+      }
+      ctx.restore();
+      return;
+    }
+
+    // --- 5. MOTH SPRITE ---
+    if (this.type === 'MOTH') {
+      ctx.translate(cx, this.y + this.height / 2);
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      ctx.rotate(this.rotation);
+      ctx.scale(this.facing, 1 + Math.sin(this.animTime * 14) * 0.12);
+
+      const mothSprite = imageLoader.getImage('moth');
+      if (mothSprite && mothSprite.complete && mothSprite.naturalWidth > 0) {
+        ctx.drawImage(mothSprite, -26, -22, 52, 44);
+      } else {
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 20, 14, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#F472B6';
+        ctx.fill();
+      }
+      ctx.restore();
+      return;
+    }
+
+    // --- 6. KNIGHT SPRITE ---
+    if (this.type === 'KNIGHT') {
+      ctx.translate(cx, bottomY);
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      const stabOffset = this.isStabbing ? this.facing * 8 : 0;
+      ctx.scale(this.facing, 1);
+
+      const knightSprite = imageLoader.getImage('knight');
+      if (knightSprite && knightSprite.complete && knightSprite.naturalWidth > 0) {
+        ctx.drawImage(knightSprite, -26 + stabOffset, -56, 52, 56);
+      } else {
+        ctx.beginPath();
+        ctx.roundRect(-18, -54, 36, 54, 8);
+        ctx.fillStyle = '#F59E0B';
+        ctx.fill();
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+      ctx.restore();
+      return;
+    }
+
+    // --- 7. TURRET SPRITE ---
     if (this.type === 'TURRET') {
       ctx.translate(cx, this.y + this.height / 2);
       ctx.beginPath();
@@ -346,14 +652,13 @@ export class Enemy {
       return;
     }
 
-    // --- GUMMY BEAR SOLDIER (Bottom-Center Pivot with Flan Wobble) ---
+    // --- 8. GUMMY BEAR SOLDIER ---
     const isWalking = Math.abs(this.vx) > 5;
     const bounceY = (isWalking && this.isGrounded) ? Math.abs(Math.sin(this.animTime * 12)) * 4 : Math.sin(this.animTime * 3) * 1.5;
 
     let scaleX = isWalking ? (1 + Math.sin(this.animTime * 12) * 0.08) : (1 - Math.sin(this.animTime * 3) * 0.03);
     let scaleY = isWalking ? (1 - Math.sin(this.animTime * 12) * 0.08) : (1 + Math.sin(this.animTime * 3) * 0.03);
 
-    // Impact Spring Oscillation (Flan effect)
     if (this.hitWobble > 0) {
       const wobble = Math.sin(this.wobblePhase) * this.hitWobble;
       scaleX += wobble;
@@ -373,7 +678,6 @@ export class Enemy {
     const renderH = 52;
 
     if (gummySprite && gummySprite.complete && gummySprite.naturalWidth > 0) {
-      // Anchored at bottom-center: (-renderW / 2, -renderH)
       ctx.drawImage(gummySprite, -renderW / 2, -renderH, renderW, renderH);
     } else {
       ctx.beginPath();

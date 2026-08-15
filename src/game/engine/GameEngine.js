@@ -6,6 +6,7 @@ import { Camera } from './Camera.js';
 import { Physics } from './Physics.js';
 import { Level1 } from '../level/Level1.js';
 import { Level2 } from '../level/Level2.js';
+import { Level3 } from '../level/Level3.js';
 import { WEAPON_TYPES } from '../entities/Weapons.js';
 import { imageLoader } from './ImageLoader.js';
 
@@ -188,6 +189,8 @@ export class GameEngine {
       this.level = new Level1();
     } else if (index === 2) {
       this.level = new Level2();
+    } else if (index === 3) {
+      this.level = new Level3();
     } else {
       // Default fallback
       this.level = new Level1();
@@ -535,7 +538,7 @@ export class GameEngine {
         if (this.boss.dead && this.state !== 'VICTORY' && this.state !== 'LEVEL_COMPLETE') {
           this.addScore(10000);
           this.saveHighScore();
-          if (this.currentLevelIndex < 2) {
+          if (this.currentLevelIndex < 3) {
             this.setState('LEVEL_COMPLETE');
           } else {
             this.setState('VICTORY');
@@ -720,7 +723,8 @@ export class GameEngine {
       ctx.fillStyle = '#FFFFFF';
       ctx.font = '900 24px "Bungee", cursive, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('⚠️ ALERTA: THE GUMBALL MECH TITAN ⚠️', this.viewportWidth / 2, 130);
+      const bossTitle = this.boss?.name ? this.boss.name : 'THE GUMBALL MECH TITAN';
+      ctx.fillText(`⚠️ ALERTA: ${bossTitle} ⚠️`, this.viewportWidth / 2, 130);
 
       ctx.fillStyle = '#FDE047';
       ctx.font = 'bold 12px "Press Start 2P", monospace';
