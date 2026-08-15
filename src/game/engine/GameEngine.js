@@ -36,7 +36,8 @@ export class GameEngine {
     this.animFrameId = null;
 
     // Entities (Safely initialized for MENU preview & background rendering)
-    this.level = new Level1();
+    const initialLevelEntry = getLevelEntry(1);
+    this.level = new initialLevelEntry.LevelClass();
     this.player = new Player(100, 350);
     this.vehicle = null;
     this.enemies = [];
