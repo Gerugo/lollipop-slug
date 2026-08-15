@@ -5,9 +5,9 @@ export class Destructible {
   constructor(options) {
     this.x = options.x || 0;
     this.y = options.y || 0;
-    this.width = options.width || 54;
-    this.height = options.height || 64;
-    this.hp = options.hp || 50;
+    this.width = options.width || 46;
+    this.height = options.height || 58;
+    this.hp = options.hp || 45;
     this.maxHp = this.hp;
     this.dead = false;
     this.hurtTimer = 0;
@@ -35,10 +35,10 @@ export class Destructible {
     soundManager.playExplosion();
 
     if (particles) {
-      particles.emitExplosionSprite(this.x + this.width / 2, this.y + this.height / 2, 1.0);
-      particles.emitSyrupSplash(this.x + this.width / 2, this.y + this.height / 2, 15, '#EF4444');
-      particles.emitCandyShards(this.x + this.width / 2, this.y + this.height / 2, 18);
-      particles.emitSugarSmoke(this.x + this.width / 2, this.y + this.height / 2, 6, '#FDE68A');
+      particles.emitExplosionSprite(this.x + this.width / 2, this.y + this.height / 2, 1.1);
+      particles.emitSyrupSplash(this.x + this.width / 2, this.y + this.height / 2, 20, '#451A03');
+      particles.emitCandyShards(this.x + this.width / 2, this.y + this.height / 2, 20);
+      particles.emitSugarSmoke(this.x + this.width / 2, this.y + this.height / 2, 8, '#78350F');
     }
 
     // Drop reward
@@ -68,23 +68,23 @@ export class Destructible {
     const cx = this.x + this.width / 2;
     const bottomY = this.y + this.height;
 
-    // Ground Shadow
+    // Ground Shadow right under barrel base
     ctx.save();
     ctx.beginPath();
-    ctx.ellipse(cx, bottomY + 2, this.width * 0.45, 6, 0, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+    ctx.ellipse(cx, bottomY + 1, 20, 5, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.26)';
     ctx.fill();
     ctx.restore();
 
-    ctx.translate(cx, bottomY);
+    ctx.translate(cx, bottomY + 1);
 
     if (this.hurtTimer > 0) {
       ctx.filter = 'brightness(2.2)';
     }
 
-    const obsSprite = imageLoader.getImage('obstaculo') || imageLoader.getImage('barricada');
-    const renderW = this.width + 8;
-    const renderH = this.height + 6;
+    const obsSprite = imageLoader.getImage('bidon') || imageLoader.getImage('barricada');
+    const renderW = 46;
+    const renderH = 58;
 
     if (obsSprite && obsSprite.complete && obsSprite.naturalWidth > 0) {
       ctx.drawImage(obsSprite, -renderW / 2, -renderH, renderW, renderH);
@@ -92,7 +92,7 @@ export class Destructible {
       // Fallback
       ctx.beginPath();
       ctx.roundRect(-renderW / 2, -renderH, renderW, renderH, 8);
-      ctx.fillStyle = '#78350F';
+      ctx.fillStyle = '#451A03';
       ctx.fill();
       ctx.strokeStyle = '#FBBF24';
       ctx.lineWidth = 2;
