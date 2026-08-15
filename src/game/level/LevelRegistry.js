@@ -6,6 +6,7 @@ import { Level5 } from './Level5.js';
 import { Level6 } from './Level6.js';
 import { Level7 } from './Level7.js';
 import { Level8 } from './Level8.js';
+import { Level9 } from './Level9.js';
 
 export const LEVEL_REGISTRY = [
   {
@@ -111,6 +112,19 @@ export const LEVEL_REGISTRY = [
     activeBorder: 'border-orange-400 ring-2 ring-orange-500/60 shadow-orange-500/30',
     badge: 'bg-orange-500 text-orange-950',
     previewKey: 'cielo8'
+  },
+  {
+    id: 9,
+    LevelClass: Level9,
+    title: 'Nivel 9',
+    name: 'Ciudadela Caramelo Prohibido',
+    emoji: '🏰',
+    desc: 'Trampas de picos, gárgolas, guardias reales & Caballero Negro',
+    color: 'from-purple-900/40 to-zinc-950/60',
+    borderColor: 'border-purple-500/50',
+    activeBorder: 'border-purple-400 ring-2 ring-purple-500/60 shadow-purple-500/30',
+    badge: 'bg-purple-500 text-purple-950',
+    previewKey: 'cielo9'
   }
 ];
 

@@ -81,6 +81,15 @@ export const WEAPON_TYPES = {
     fireRate: 0.10,
     iconColor: '#EA580C',
     description: 'Torrente continuo de llamaradas de caramelo hirviente que calcina enemigos en área.'
+  },
+  CANON_PLASMA: {
+    id: 'CANON_PLASMA',
+    name: 'Cañón de Plasma',
+    shortName: 'DARK PLASMA',
+    ammo: 40,
+    fireRate: 0.35,
+    iconColor: '#9333EA',
+    description: 'Orbes de plasma oscuro de regaliz que crean implosiones de vacío y daño masivo.'
   }
 };
 
@@ -408,6 +417,39 @@ export class Projectile {
       ctx.fill();
       ctx.strokeStyle = '#FFFFFF';
       ctx.lineWidth = 1.5;
+      ctx.stroke();
+    } else if (this.type === 'PLASMA_ORB') {
+      // Dark energy plasma sphere
+      ctx.beginPath();
+      ctx.arc(0, 0, 16, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(147, 51, 234, 0.7)';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(0, 0, 10, 0, Math.PI * 2);
+      ctx.fillStyle = '#E11D48';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(0, 0, 5, 0, Math.PI * 2);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fill();
+    } else if (this.type === 'DARK_SLASH') {
+      // Crescent dark sword wave
+      ctx.beginPath();
+      ctx.arc(0, 0, 24, -Math.PI / 2, Math.PI / 2);
+      ctx.strokeStyle = '#E11D48';
+      ctx.lineWidth = 6;
+      ctx.stroke();
+    } else if (this.type === 'LANCE_THRUST') {
+      // Thrusting ruby spear tip
+      ctx.beginPath();
+      ctx.moveTo(16, 0);
+      ctx.lineTo(-12, -8);
+      ctx.lineTo(-12, 8);
+      ctx.closePath();
+      ctx.fillStyle = '#E11D48';
+      ctx.fill();
+      ctx.strokeStyle = '#FBBF24';
+      ctx.lineWidth = 2;
       ctx.stroke();
     }
 

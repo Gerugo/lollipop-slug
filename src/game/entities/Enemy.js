@@ -187,14 +187,32 @@ export class Enemy {
       this.speed = 90;
       this.hoverY = this.y;
       this.shootTimer = 0;
+    } else if (this.type === 'GARGOYLA') {
+      this.gravity = 0;
+      this.width = 52;
+      this.height = 48;
+      this.hp = 44;
+      this.scoreValue = 480;
+      this.speed = 80;
+      this.hoverY = this.y;
+      this.shootTimer = 0;
+    } else if (this.type === 'GUARDIA_REAL') {
+      this.gravity = 950;
+      this.width = 54;
+      this.height = 62;
+      this.hp = 60;
+      this.scoreValue = 600;
+      this.speed = 40;
+      this.shieldUp = true;
+      this.thrustTimer = 0;
     } else {
       this.type = 'GUMMY';
     }
   }
 
   takeDamage(amount, particles, soundManager, attackerX = 0) {
-    // Knight shield mechanic: blocks frontal projectile damage
-    if (this.type === 'KNIGHT' && this.shieldUp && attackerX) {
+    // Knight & Royal Guard shield mechanic: blocks frontal projectile damage
+    if ((this.type === 'KNIGHT' || this.type === 'GUARDIA_REAL') && this.shieldUp && attackerX) {
       const attackingFromFront = (this.facing === -1 && attackerX < this.x + this.width / 2) ||
                                  (this.facing === 1 && attackerX > this.x + this.width / 2);
       if (attackingFromFront) {
@@ -880,6 +898,55 @@ export class Enemy {
       return;
     }
 
+    // 15. GARGOYLA (Dark Chocolate Gargoyle)
+    if (this.type === 'GARGOYLA') {
+      this.facing = dirToPlayer;
+      this.x += dirToPlayer * 50 * dt;
+      this.y = this.hoverY + Math.sin(this.animTime * 3) * 50;
+
+      this.shootTimer += dt;
+      if (this.shootTimer >= 2.2 && distToPlayer < 450) {
+        this.shootTimer = 0;
+        enemyProjectiles.push(
+          new Projectile({
+            x: this.x + this.width / 2,
+            y: this.y + this.height / 2,
+            vx: dirToPlayer * 240,
+            vy: 0,
+            type: 'PLASMA_ORB',
+            damage: 1,
+            isPlayer: false
+          })
+        );
+        if (particles) particles.emitSparkles(this.x + this.width / 2, this.y + this.height / 2, 8, '#9333EA');
+      }
+      return;
+    }
+
+    // 16. GUARDIA_REAL (Royal Candy Guard with Lance & Shield)
+    if (this.type === 'GUARDIA_REAL') {
+      this.facing = dirToPlayer;
+      this.vx = dirToPlayer * this.speed;
+
+      this.thrustTimer += dt;
+      if (this.thrustTimer >= 2.4 && distToPlayer < 380) {
+        this.thrustTimer = 0;
+        enemyProjectiles.push(
+          new Projectile({
+            x: this.x + this.width / 2 + this.facing * 20,
+            y: this.y + 24,
+            vx: this.facing * 280,
+            vy: 0,
+            type: 'LANCE_THRUST',
+            damage: 1,
+            isPlayer: false
+          })
+        );
+        if (particles) particles.emitSparkles(this.x + this.width / 2, this.y + 24, 6, '#E11D48');
+      }
+      return;
+    }
+
     // 8. DEFAULT GUMMY SOLDIER
     const inSight = distToPlayer < 420;
 
@@ -1362,6 +1429,52 @@ export class Enemy {
         ctx.beginPath();
         ctx.ellipse(0, 0, 20, 16, 0, 0, Math.PI * 2);
         ctx.fillStyle = '#F59E0B';
+        ctx.fill();
+      }
+
+      ctx.restore();
+      return;
+    }
+
+    // --- 17. GARGOYLA SPRITE ---
+    if (this.type === 'GARGOYLA') {
+      ctx.translate(cx, this.y + this.height / 2);
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      ctx.scale(this.facing, 1);
+
+      const garSprite = imageLoader.getImage('gargola');
+      const renderW = 52;
+      const renderH = 48;
+
+      if (garSprite && garSprite.complete && garSprite.naturalWidth > 0) {
+        ctx.drawImage(garSprite, -renderW / 2, -renderH / 2, renderW, renderH);
+      } else {
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 22, 18, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#27272A';
+        ctx.fill();
+      }
+
+      ctx.restore();
+      return;
+    }
+
+    // --- 18. GUARDIA_REAL SPRITE ---
+    if (this.type === 'GUARDIA_REAL') {
+      ctx.translate(cx, bottomY + 1);
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      ctx.scale(this.facing, 1);
+
+      const guardSprite = imageLoader.getImage('guardia_real');
+      const renderW = 54;
+      const renderH = 62;
+
+      if (guardSprite && guardSprite.complete && guardSprite.naturalWidth > 0) {
+        ctx.drawImage(guardSprite, -renderW / 2, -renderH, renderW, renderH);
+      } else {
+        ctx.beginPath();
+        ctx.ellipse(0, -renderH / 2, 24, 28, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#27272A';
         ctx.fill();
       }
 

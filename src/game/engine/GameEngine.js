@@ -804,6 +804,10 @@ export class GameEngine {
         weaponKey = 'arma_flamethrower';
         label = 'F';
         jellyColor = '#EA580C';
+      } else if (drop.type === 'CANON_PLASMA') {
+        weaponKey = 'arma_plasma';
+        label = 'P';
+        jellyColor = '#9333EA';
       } else if (drop.type === 'GRENADE' || drop.type === 'G') {
         weaponKey = 'arma_grenade';
         label = 'G';

@@ -10,6 +10,7 @@ import armaBurbujasUrl from '../assets/arma_burbujas.png';
 import armaHieloUrl from '../assets/arma_hielo.png';
 import armaLaserUrl from '../assets/arma_laser.png';
 import armaFlamethrowerUrl from '../assets/arma_flamethrower.png';
+import armaPlasmaUrl from '../assets/arma_plasma.png';
 
 export const HUD = ({ hudData, onTogglePause, onToggleMute, isMuted = false, onToggleFullscreen }) => {
   if (!hudData) return null;
@@ -56,6 +57,7 @@ export const HUD = ({ hudData, onTogglePause, onToggleMute, isMuted = false, onT
       case 'LANZAHIELOS': return armaHieloUrl;
       case 'RAYO_LASER': return armaLaserUrl;
       case 'LANZALLAMAS': return armaFlamethrowerUrl;
+      case 'CANON_PLASMA': return armaPlasmaUrl;
       default: return armaPistolUrl;
     }
   };

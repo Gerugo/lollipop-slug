@@ -460,6 +460,29 @@ export class Player {
       );
       if (particles) particles.emitSugarSmoke(bulletX + this.facing * 12, bulletY, 3, '#EA580C');
       this.ammo--;
+    } else if (this.currentWeapon.id === 'CANON_PLASMA') {
+      soundManager.playLaserShoot();
+      projectiles.push(
+        new Projectile({
+          x: bulletX + this.facing * 12,
+          y: bulletY,
+          vx: bulletVx * 1.15,
+          vy: bulletVy * 1.15,
+          type: 'PLASMA_ORB',
+          damage: 75,
+          width: 32,
+          height: 32,
+          life: 1.1,
+          penetrate: true,
+          isPlayer: true,
+          rotation: shotAngle
+        })
+      );
+      if (particles) {
+        particles.emitSparkles(bulletX + this.facing * 14, bulletY, 8, '#9333EA');
+        particles.emitShockwave(bulletX + this.facing * 14, bulletY, 25, '#E11D48');
+      }
+      this.ammo--;
     }
 
     if (this.ammo <= 0 && this.currentWeapon.id !== 'PISTOL') {
@@ -596,6 +619,10 @@ export class Player {
     } else if (this.currentWeapon.id === 'LANZALLAMAS') {
       gunSpriteKey = 'arma_flamethrower';
       gunW = 27;
+      gunH = 16;
+    } else if (this.currentWeapon.id === 'CANON_PLASMA') {
+      gunSpriteKey = 'arma_plasma';
+      gunW = 28;
       gunH = 16;
     }
 

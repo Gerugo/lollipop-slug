@@ -73,7 +73,13 @@ class ImageLoader {
       salamandra: new URL('../../assets/salamandra.png', import.meta.url).href,
       avispa: new URL('../../assets/avispa.png', import.meta.url).href,
       boss8: new URL('../../assets/boss8.png', import.meta.url).href,
-      arma_flamethrower: new URL('../../assets/arma_flamethrower.png', import.meta.url).href
+      arma_flamethrower: new URL('../../assets/arma_flamethrower.png', import.meta.url).href,
+      cielo9: new URL('../../assets/fondo-ciudadela.jpg', import.meta.url).href,
+      murallas: new URL('../../assets/fondo-murallas.png', import.meta.url).href,
+      gargola: new URL('../../assets/gargola.png', import.meta.url).href,
+      guardia_real: new URL('../../assets/guardia_real.png', import.meta.url).href,
+      boss9: new URL('../../assets/boss9.png', import.meta.url).href,
+      arma_plasma: new URL('../../assets/arma_plasma.png', import.meta.url).href
     };
 
     // Immediately start preloading in constructor
