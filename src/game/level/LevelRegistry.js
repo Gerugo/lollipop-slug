@@ -4,6 +4,7 @@ import { Level3 } from './Level3.js';
 import { Level4 } from './Level4.js';
 import { Level5 } from './Level5.js';
 import { Level6 } from './Level6.js';
+import { Level7 } from './Level7.js';
 
 export const LEVEL_REGISTRY = [
   {
@@ -83,6 +84,19 @@ export const LEVEL_REGISTRY = [
     activeBorder: 'border-sky-300 ring-2 ring-sky-400/60 shadow-sky-500/30',
     badge: 'bg-sky-500 text-sky-950',
     previewKey: 'cielo6'
+  },
+  {
+    id: 7,
+    LevelClass: Level7,
+    title: 'Nivel 7',
+    name: 'Laberinto Gominola Elástica',
+    emoji: '🐛',
+    desc: 'Trampolines ultra elásticos, murciélagos, slimes & Ciempiés Gigante',
+    color: 'from-rose-800/40 to-purple-950/60',
+    borderColor: 'border-rose-400/50',
+    activeBorder: 'border-rose-300 ring-2 ring-rose-400/60 shadow-rose-500/30',
+    badge: 'bg-rose-500 text-rose-950',
+    previewKey: 'cielo7'
   }
 ];
 

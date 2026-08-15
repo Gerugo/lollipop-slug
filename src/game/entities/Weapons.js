@@ -63,6 +63,15 @@ export const WEAPON_TYPES = {
     fireRate: 0.22,
     iconColor: '#38BDF8',
     description: 'Dispara esquirlas de hielo dulce cristalizado con estallido helado en área.'
+  },
+  RAYO_LASER: {
+    id: 'RAYO_LASER',
+    name: 'Rayo Láser',
+    shortName: 'LASER BEAM',
+    ammo: 75,
+    fireRate: 0.14,
+    iconColor: '#E11D48',
+    description: 'Haz de energía concentrada de sirope rubí con penetración y daño continuo.'
   }
 };
 
@@ -330,6 +339,31 @@ export class Projectile {
       ctx.fill();
       ctx.strokeStyle = '#0284C7';
       ctx.lineWidth = 1.5;
+      ctx.stroke();
+    } else if (this.type === 'LASER_BEAM') {
+      // High-tech ruby candy laser beam
+      ctx.beginPath();
+      ctx.roundRect(-24, -5, 48, 10, 4);
+      ctx.fillStyle = '#FB7185';
+      ctx.fill();
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    } else if (this.type === 'SONIC_WAVE') {
+      // Purple sonic ring
+      ctx.beginPath();
+      ctx.arc(0, 0, 16, -Math.PI / 3, Math.PI / 3);
+      ctx.strokeStyle = '#C084FC';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+    } else if (this.type === 'JELLY_SPLASH') {
+      // Translucent green slime blob
+      ctx.beginPath();
+      ctx.arc(0, 0, 10, 0, Math.PI * 2);
+      ctx.fillStyle = '#84CC16';
+      ctx.fill();
+      ctx.strokeStyle = '#ECFCCB';
+      ctx.lineWidth = 2;
       ctx.stroke();
     }
 

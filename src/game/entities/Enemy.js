@@ -152,6 +152,24 @@ export class Enemy {
       this.speed = 40;
       this.slamState = 'WALK'; // 'WALK', 'PREPARE', 'SLAM', 'RECOVER'
       this.slamTimer = 2.0;
+    } else if (this.type === 'MURCIELAGO') {
+      this.gravity = 0;
+      this.width = 46;
+      this.height = 40;
+      this.hp = 28;
+      this.scoreValue = 400;
+      this.speed = 80;
+      this.batState = 'ROOST'; // 'ROOST', 'SWOOP'
+      this.batTimer = 0;
+      this.hoverY = this.y;
+    } else if (this.type === 'SLIME') {
+      this.gravity = 950;
+      this.width = 48;
+      this.height = 36;
+      this.hp = 36;
+      this.scoreValue = 380;
+      this.speed = 45;
+      this.spitTimer = 0;
     } else {
       this.type = 'GUMMY';
     }
@@ -735,6 +753,64 @@ export class Enemy {
       return;
     }
 
+    // 11. MURCIELAGO (Gummy Bat)
+    if (this.type === 'MURCIELAGO') {
+      this.facing = dirToPlayer;
+      if (this.batState === 'ROOST') {
+        this.vx = 0;
+        this.vy = 0;
+        if (distToPlayer < 320) {
+          this.batState = 'SWOOP';
+          this.batTimer = 0;
+        }
+      } else if (this.batState === 'SWOOP') {
+        this.batTimer += dt;
+        this.x += dirToPlayer * 140 * dt;
+        this.y = this.hoverY + Math.sin(this.batTimer * 5) * 65;
+
+        this.shootTimer += dt;
+        if (this.shootTimer >= 1.8 && distToPlayer < 400) {
+          this.shootTimer = 0;
+          enemyProjectiles.push(
+            new Projectile({
+              x: this.x + this.width / 2,
+              y: this.y + this.height / 2,
+              vx: dirToPlayer * 240,
+              vy: 0,
+              type: 'SONIC_WAVE',
+              damage: 1,
+              isPlayer: false
+            })
+          );
+        }
+      }
+      return;
+    }
+
+    // 12. SLIME (Acid Gummy Slime)
+    if (this.type === 'SLIME') {
+      this.facing = dirToPlayer;
+      this.vx = dirToPlayer * this.speed;
+
+      this.spitTimer += dt;
+      if (this.spitTimer >= 2.2 && distToPlayer < 420) {
+        this.spitTimer = 0;
+        enemyProjectiles.push(
+          new Projectile({
+            x: this.x + this.width / 2,
+            y: this.y + 10,
+            vx: dirToPlayer * 160,
+            vy: -220,
+            type: 'JELLY_SPLASH',
+            damage: 1,
+            isPlayer: false
+          })
+        );
+        if (particles) particles.emitSodaBubbles(this.x + this.width / 2, this.y, 5);
+      }
+      return;
+    }
+
     // 8. DEFAULT GUMMY SOLDIER
     const inSight = distToPlayer < 420;
 
@@ -1121,6 +1197,56 @@ export class Enemy {
         ctx.beginPath();
         ctx.ellipse(0, -renderH / 2, 28, 28, 0, 0, Math.PI * 2);
         ctx.fillStyle = '#E0F2FE';
+        ctx.fill();
+      }
+
+      ctx.restore();
+      return;
+    }
+
+    // --- 13. MURCIELAGO SPRITE ---
+    if (this.type === 'MURCIELAGO') {
+      ctx.translate(cx, this.y + this.height / 2);
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      ctx.scale(this.facing, 1);
+
+      const batSprite = imageLoader.getImage('murcielago');
+      const renderW = 46;
+      const renderH = 40;
+
+      if (batSprite && batSprite.complete && batSprite.naturalWidth > 0) {
+        ctx.drawImage(batSprite, -renderW / 2, -renderH / 2, renderW, renderH);
+      } else {
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 20, 16, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#9333EA';
+        ctx.fill();
+      }
+
+      ctx.restore();
+      return;
+    }
+
+    // --- 14. SLIME SPRITE ---
+    if (this.type === 'SLIME') {
+      const isWalking = Math.abs(this.vx) > 5;
+      let scaleX = isWalking ? (1 + Math.sin(this.animTime * 8) * 0.12) : 1;
+      let scaleY = isWalking ? (1 - Math.sin(this.animTime * 8) * 0.12) : 1;
+
+      ctx.translate(cx, bottomY + 1);
+      if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5)';
+      ctx.scale(this.facing * scaleX, scaleY);
+
+      const slimeSprite = imageLoader.getImage('slime');
+      const renderW = 48;
+      const renderH = 36;
+
+      if (slimeSprite && slimeSprite.complete && slimeSprite.naturalWidth > 0) {
+        ctx.drawImage(slimeSprite, -renderW / 2, -renderH, renderW, renderH);
+      } else {
+        ctx.beginPath();
+        ctx.ellipse(0, -renderH / 2, 22, 14, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#84CC16';
         ctx.fill();
       }
 

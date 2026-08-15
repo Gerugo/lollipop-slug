@@ -8,6 +8,7 @@ import armaLatigoUrl from '../assets/arma_latigo.png';
 import armaGrenadeUrl from '../assets/arma_grenade.png';
 import armaBurbujasUrl from '../assets/arma_burbujas.png';
 import armaHieloUrl from '../assets/arma_hielo.png';
+import armaLaserUrl from '../assets/arma_laser.png';
 
 export const HUD = ({ hudData, onTogglePause, onToggleMute, isMuted = false, onToggleFullscreen }) => {
   if (!hudData) return null;
@@ -52,6 +53,7 @@ export const HUD = ({ hudData, onTogglePause, onToggleMute, isMuted = false, onT
       case 'LATIGO_DULCE': return armaLatigoUrl;
       case 'CANON_BURBUJAS': return armaBurbujasUrl;
       case 'LANZAHIELOS': return armaHieloUrl;
+      case 'RAYO_LASER': return armaLaserUrl;
       default: return armaPistolUrl;
     }
   };

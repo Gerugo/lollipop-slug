@@ -796,6 +796,10 @@ export class GameEngine {
         weaponKey = 'arma_hielo';
         label = 'I';
         jellyColor = '#38BDF8';
+      } else if (drop.type === 'RAYO_LASER') {
+        weaponKey = 'arma_laser';
+        label = 'L';
+        jellyColor = '#E11D48';
       } else if (drop.type === 'GRENADE' || drop.type === 'G') {
         weaponKey = 'arma_grenade';
         label = 'G';

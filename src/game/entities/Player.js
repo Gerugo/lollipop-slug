@@ -420,6 +420,26 @@ export class Player {
       );
       if (particles) particles.emitSparkles(bulletX + this.facing * 14, bulletY, 8, '#38BDF8');
       this.ammo--;
+    } else if (this.currentWeapon.id === 'RAYO_LASER') {
+      soundManager.playLaserShoot();
+      projectiles.push(
+        new Projectile({
+          x: bulletX + this.facing * 14,
+          y: bulletY,
+          vx: bulletVx * 1.35,
+          vy: bulletVy * 1.35,
+          type: 'LASER_BEAM',
+          damage: 55,
+          width: 48,
+          height: 12,
+          life: 0.9,
+          penetrate: true,
+          isPlayer: true,
+          rotation: shotAngle
+        })
+      );
+      if (particles) particles.emitSparkles(bulletX + this.facing * 16, bulletY, 10, '#FB7185');
+      this.ammo--;
     }
 
     if (this.ammo <= 0 && this.currentWeapon.id !== 'PISTOL') {
@@ -547,6 +567,10 @@ export class Player {
       gunH = 16;
     } else if (this.currentWeapon.id === 'LANZAHIELOS') {
       gunSpriteKey = 'arma_hielo';
+      gunW = 26;
+      gunH = 15;
+    } else if (this.currentWeapon.id === 'RAYO_LASER') {
+      gunSpriteKey = 'arma_laser';
       gunW = 26;
       gunH = 15;
     }

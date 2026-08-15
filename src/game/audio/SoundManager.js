@@ -181,6 +181,28 @@ class SoundManager {
     } catch (e) {}
   }
 
+  playLaserShoot() {
+    if (this.isMuted || !this.ctx) return;
+    this.init();
+    try {
+      const t = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(1400, t);
+      osc.frequency.exponentialRampToValueAtTime(300, t + 0.12);
+
+      gain.gain.setValueAtTime(0.25 * this.sfxVolume * this.masterVolume, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.12);
+    } catch (e) {}
+  }
+
   playJump() {
     if (this.isMuted || !this.ctx) return;
     this.init();
