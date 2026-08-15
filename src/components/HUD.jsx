@@ -37,7 +37,7 @@ export const HUD = ({ hudData, onTogglePause, onToggleMute, isMuted = false, onT
   const weaponId = weapon?.id || '';
 
   return (
-    <div className="absolute inset-0 pointer-events-none p-3 sm:p-5 flex flex-col justify-between select-none z-10">
+    <div className="fixed inset-0 pointer-events-none p-3 sm:p-5 flex flex-col justify-between select-none z-10">
       {/* Top Status Bar */}
       <div className="flex items-start justify-between gap-2 w-full">
         {/* Top Left: Player Lives, Health Bar & Slug Armor */}

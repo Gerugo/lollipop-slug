@@ -3,7 +3,7 @@ import { X, Keyboard, Smartphone, Sparkles, Zap, Bomb, HelpCircle, Shield } from
 
 export const HowToPlayModal = ({ onClose }) => {
   return (
-    <div className="absolute inset-0 z-40 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 select-none overflow-y-auto">
+    <div className="fixed inset-0 z-40 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 select-none overflow-y-auto">
       <div className="candy-card rounded-3xl p-6 max-w-2xl w-full flex flex-col shadow-2xl border-2 border-candy-blue/50 my-auto max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between pb-3 mb-4 border-b border-white/20">

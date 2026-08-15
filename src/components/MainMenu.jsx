@@ -22,7 +22,7 @@ export const MainMenu = ({
     : '000000';
 
   return (
-    <div className="absolute inset-0 z-30 flex flex-col items-center justify-between p-4 sm:p-6 bg-gradient-to-b from-slate-950/90 via-slate-900/80 to-slate-950/95 backdrop-blur-md select-none overflow-y-auto">
+    <div className="fixed inset-0 z-30 flex flex-col items-center justify-between p-4 sm:p-6 bg-gradient-to-b from-slate-950/90 via-slate-900/80 to-slate-950/95 backdrop-blur-md select-none overflow-y-auto">
       {/* Top Bar: High Score, Fullscreen & Sound Toggle */}
       <div className="w-full max-w-4xl flex items-center justify-between">
         <div className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md shadow-lg">

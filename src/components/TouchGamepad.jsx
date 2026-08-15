@@ -10,7 +10,7 @@ export const TouchGamepad = ({ onTouchInput }) => {
   };
 
   return (
-    <div className="absolute inset-0 pointer-events-none z-20 flex justify-between items-end p-6 md:p-8 select-none">
+    <div className="fixed inset-0 pointer-events-none z-20 flex justify-between items-end p-6 md:p-8 select-none">
       {/* 1. Left: Ergonomic Pastel Glassmorphism D-Pad */}
       <div className="pointer-events-auto relative w-40 h-40 sm:w-44 sm:h-44 bg-pink-500/20 backdrop-blur-[6px] rounded-full border-2 border-white/40 shadow-[0_8px_32px_rgba(255,119,176,0.25),inset_0_2px_4px_rgba(255,255,255,0.4)] p-2 flex items-center justify-center">
         <div className="relative w-full h-full">

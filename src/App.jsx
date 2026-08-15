@@ -153,14 +153,18 @@ export function App() {
   };
 
   return (
-    <div className="fixed inset-0 w-full h-full bg-slate-950 flex items-center justify-center overflow-hidden">
-      {/* 1. Main 16:9 Canvas Viewport */}
-      <GameCanvas onEngineReady={handleEngineReady} />
+    <>
+      {/* Root canvas layer — overflow-hidden only clips game graphics, not UI overlays */}
+      <div className="fixed inset-0 w-full h-full bg-slate-950 flex items-center justify-center overflow-hidden">
+        <GameCanvas onEngineReady={handleEngineReady} />
+      </div>
 
-      {/* 2. Orientation warning overlay for portrait mode */}
+      {/* All UI overlays sit OUTSIDE the clipped canvas wrapper, as fixed siblings */}
+
+      {/* 1. Orientation warning */}
       <OrientationOverlay onForceFullscreen={handleToggleFullscreen} />
 
-      {/* 3. In-Game HUD overlay (Visible when playing or paused) */}
+      {/* 2. In-Game HUD (playing / paused) */}
       {(gameState === 'PLAYING' || gameState === 'PAUSED') && (
         <HUD
           hudData={hudData}
@@ -171,12 +175,12 @@ export function App() {
         />
       )}
 
-      {/* 4. Touch Virtual Gamepad (Visible during gameplay on touch screens) */}
+      {/* 3. Touch Virtual Gamepad */}
       {gameState === 'PLAYING' && isTouchDevice && (
         <TouchGamepad onTouchInput={handleTouchInput} />
       )}
 
-      {/* 5. Main Menu */}
+      {/* 4. Main Menu */}
       {gameState === 'MENU' && (
         <MainMenu
           onStartGame={handleStartGame}
@@ -190,7 +194,7 @@ export function App() {
         />
       )}
 
-      {/* 6. Pause Modal */}
+      {/* 5. Pause Modal */}
       {gameState === 'PAUSED' && (
         <PauseModal
           onResume={handleTogglePause}
@@ -201,7 +205,7 @@ export function App() {
         />
       )}
 
-      {/* 7. Game Over Modal */}
+      {/* 6. Game Over Modal */}
       {gameState === 'GAME_OVER' && (
         <GameOverModal
           score={hudData?.score}
@@ -239,7 +243,7 @@ export function App() {
       {showHowToPlay && (
         <HowToPlayModal onClose={() => setShowHowToPlay(false)} />
       )}
-    </div>
+    </>
   );
 }
 
