@@ -485,16 +485,7 @@ export class GameEngine {
       }
 
       if (this.boss) {
-        if (!this.boss.dead && !this.isBossIntroActive) {
-          this.boss.update(
-            dt,
-            this.player,
-            this.enemyProjectiles,
-            this.particles,
-            this.sound,
-            this.enemies
-          );
-        } else if (this.isBossIntroActive) {
+        if (this.isBossIntroActive) {
           this.bossIntroTimer -= dt;
           this.boss.y += this.boss.vy * dt;
           this.boss.vy += 800 * dt;

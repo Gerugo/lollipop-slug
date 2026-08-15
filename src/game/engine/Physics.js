@@ -85,7 +85,7 @@ export class Physics {
       if (plat.type === 'acid_pool' || plat.type === 'soda_tide' || plat.type === 'lava_caramel' || plat.type === 'spikes') {
         if (entity.vy >= 0 && prevBottom <= platY + 18 && entityBottom >= platY) {
           if (entity.takeDamage) {
-            entity.takeDamage(1, particles, sound);
+            entity.takeDamage(1, entity.x + entity.width / 2, particles, sound);
           }
           if (particles) {
             let sparkCol = '#84CC16';

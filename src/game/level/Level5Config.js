@@ -13,7 +13,7 @@ export const LEVEL_5_CONFIG = {
       startX: 0,
       endX: 2400,
       skyGradient: ['#042F2E', '#064E3B', '#0D9488'],
-      groundGradient: ['#0F766E', '#115E59', '#134E4A'],
+      groundGradient: ['#0F766E', '#115E59', '#134E4A', '#042F2E'],
       frostingColor: '#5EEAD4'
     },
     {
@@ -21,7 +21,7 @@ export const LEVEL_5_CONFIG = {
       startX: 2400,
       endX: 4800,
       skyGradient: ['#042F2E', '#1E1B4B', '#065F46'],
-      groundGradient: ['#134E4A', '#064E3B', '#022C22'],
+      groundGradient: ['#134E4A', '#064E3B', '#022C22', '#011714'],
       frostingColor: '#34D399'
     },
     {
@@ -29,7 +29,7 @@ export const LEVEL_5_CONFIG = {
       startX: 4800,
       endX: 7200,
       skyGradient: ['#0F172A', '#0369A1', '#064E3B'],
-      groundGradient: ['#0C4A6E', '#075985', '#022C22'],
+      groundGradient: ['#0C4A6E', '#075985', '#022C22', '#010F18'],
       frostingColor: '#38BDF8'
     }
   ],
