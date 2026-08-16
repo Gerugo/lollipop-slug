@@ -159,11 +159,11 @@ export function App() {
     }
   };
 
-  const handleTouchInput = (action, active) => {
-    if (engineRef.current) {
+  const handleTouchInput = useCallback((action, active) => {
+    if (engineRef.current && engineRef.current.input) {
       engineRef.current.input.setTouchInput(action, active);
     }
-  };
+  }, []);
 
   return (
     <>
