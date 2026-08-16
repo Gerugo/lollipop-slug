@@ -290,6 +290,8 @@ export class Enemy {
 
     const distToPlayer = player ? Math.hypot(player.x - this.x, player.y - this.y) : 999;
     const dirToPlayer = player && player.x < this.x ? -1 : 1;
+    const pCenterX = player ? player.x + player.width / 2 : this.x;
+    const pCenterY = player ? player.y + player.height / 2 : this.y;
 
     // 1. PEZ
     if (this.type === 'PEZ') {
@@ -643,25 +645,26 @@ export class Enemy {
         this.frogTimer -= dt;
         if (this.frogTimer <= 0) {
           this.frogState = 'JUMPING';
-          this.vy = -460;
-          this.vx = dirToPlayer * 160;
+          this.vy = -480;
+          this.vx = dirToPlayer * 170;
+          this.isGrounded = false;
           if (soundManager && soundManager.playEnemyJump) soundManager.playEnemyJump();
           if (particles) particles.emitSodaBubbles(this.x + this.width / 2, this.y + this.height, 4);
         }
       } else if (this.frogState === 'JUMPING') {
         if (this.isGrounded && this.vy >= 0) {
           this.frogState = 'CROUCH';
-          this.frogTimer = 0.9;
+          this.frogTimer = 0.85;
           this.vx = 0;
           if (particles) particles.emitSyrupSplash(this.x + this.width / 2, this.y + this.height, 8, '#10B981');
 
           // Spits soda bubble on landing if player is in sight
-          if (distToPlayer < 450) {
+          if (distToPlayer < 480) {
             enemyProjectiles.push(
               new Projectile({
                 x: this.x + (this.facing === 1 ? this.width : 0),
                 y: this.y + 16,
-                vx: dirToPlayer * 210,
+                vx: dirToPlayer * 220,
                 vy: -80,
                 type: 'BUBBLE',
                 damage: 1,
@@ -671,6 +674,13 @@ export class Enemy {
           }
         }
       }
+
+      this.vy += this.gravity * dt;
+      this.x += this.vx * dt;
+      this.y += this.vy * dt;
+
+      this.isGrounded = false;
+      Physics.resolvePlatforms(this, platforms);
       return;
     }
 
@@ -682,43 +692,53 @@ export class Enemy {
         this.vy = 0;
         this.gravity = 0;
         this.y = this.baseY + 25; // hidden under tide
-        if (distToPlayer < 220) {
+        if (distToPlayer < 300) {
           this.eelState = 'SURGE';
-          this.vy = -320;
-          this.gravity = 600;
+          this.vy = -340;
+          this.gravity = 500;
           if (soundManager && soundManager.playSodaGrenadeFizz) soundManager.playSodaGrenadeFizz();
           if (particles) particles.emitSodaBubbles(this.x + this.width / 2, this.baseY, 12);
         }
       } else if (this.eelState === 'SURGE') {
         if (this.vy >= 0) {
           this.eelState = 'DISCHARGE';
-          this.eelTimer = 0.5;
+          this.eelTimer = 0.6;
+          this.vy = 0;
+          this.gravity = 0;
           // Fire electric bolts diagonally
           [-1, 1].forEach(d => {
             enemyProjectiles.push(
               new Projectile({
                 x: this.x + this.width / 2,
                 y: this.y + this.height / 2,
-                vx: d * 180,
-                vy: 90,
+                vx: d * 200,
+                vy: 60,
                 type: 'EEL_BOLT',
                 damage: 1,
                 isPlayer: false
               })
             );
           });
-          if (particles) particles.emitSparkles(this.x + this.width / 2, this.y + this.height / 2, 10, '#FDE047');
+          if (particles) particles.emitSparkles(this.x + this.width / 2, this.y + this.height / 2, 12, '#FDE047');
         }
       } else if (this.eelState === 'DISCHARGE') {
         this.eelTimer -= dt;
         if (this.eelTimer <= 0) {
           this.eelState = 'DIVE';
+          this.vy = 220;
+          this.gravity = 400;
         }
       } else if (this.eelState === 'DIVE') {
         if (this.y >= this.baseY + 20) {
           this.eelState = 'SUBMERGED';
+          this.y = this.baseY + 25;
+          this.vy = 0;
+          this.gravity = 0;
         }
       }
+
+      this.vy += this.gravity * dt;
+      this.y += this.vy * dt;
       return;
     }
 
@@ -746,6 +766,13 @@ export class Enemy {
           })
         );
       }
+
+      this.vy += this.gravity * dt;
+      this.x += this.vx * dt;
+      this.y += this.vy * dt;
+
+      this.isGrounded = false;
+      Physics.resolvePlatforms(this, platforms);
       return;
     }
 
@@ -761,6 +788,7 @@ export class Enemy {
           this.slamTimer = 0.5;
           this.vx = 0;
           this.vy = -260;
+          this.isGrounded = false;
         }
       } else if (this.slamState === 'PREPARE') {
         if (this.isGrounded && this.vy >= 0) {
@@ -788,12 +816,20 @@ export class Enemy {
           });
         }
       } else if (this.slamState === 'SLAM') {
+        this.vx = 0;
         this.slamTimer -= dt;
         if (this.slamTimer <= 0) {
           this.slamState = 'WALK';
           this.slamTimer = 2.4;
         }
       }
+
+      this.vy += this.gravity * dt;
+      this.x += this.vx * dt;
+      this.y += this.vy * dt;
+
+      this.isGrounded = false;
+      Physics.resolvePlatforms(this, platforms);
       return;
     }
 
@@ -852,6 +888,13 @@ export class Enemy {
         );
         if (particles) particles.emitSodaBubbles(this.x + this.width / 2, this.y, 5);
       }
+
+      this.vy += this.gravity * dt;
+      this.x += this.vx * dt;
+      this.y += this.vy * dt;
+
+      this.isGrounded = false;
+      Physics.resolvePlatforms(this, platforms);
       return;
     }
 
@@ -876,6 +919,13 @@ export class Enemy {
         );
         if (particles) particles.emitSugarSmoke(this.x + this.width / 2, this.y + 12, 4, '#EA580C');
       }
+
+      this.vy += this.gravity * dt;
+      this.x += this.vx * dt;
+      this.y += this.vy * dt;
+
+      this.isGrounded = false;
+      Physics.resolvePlatforms(this, platforms);
       return;
     }
 
@@ -953,6 +1003,13 @@ export class Enemy {
         );
         if (particles) particles.emitSparkles(this.x + this.width / 2, this.y + 24, 6, '#E11D48');
       }
+
+      this.vy += this.gravity * dt;
+      this.x += this.vx * dt;
+      this.y += this.vy * dt;
+
+      this.isGrounded = false;
+      Physics.resolvePlatforms(this, platforms);
       return;
     }
 
