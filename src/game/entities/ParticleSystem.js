@@ -216,29 +216,67 @@ export class ParticleSystem {
     }
   }
 
-  // --- BULLET CASINGS EJECTION (Popping & Bouncing Brass Shells) ---
-  emitBulletCasing(x, y, facing = 1) {
-    const angle = (Math.random() - 0.5) * 0.4;
-    const speedX = -facing * (70 + Math.random() * 80);
-    const speedY = -140 - Math.random() * 90;
+  // --- CANDY WRAPPER & BULLET CASINGS EJECTION (Twisted Wrappers & Popping Shells) ---
+  emitCandyWrapperCasing(x, y, facing = 1) {
+    const speedX = -facing * (85 + Math.random() * 95);
+    const speedY = -160 - Math.random() * 110;
+    const colors = ['#F43F5E', '#38BDF8', '#8B5CF6', '#10B981', '#F59E0B'];
+    const chosenColor = colors[Math.floor(Math.random() * colors.length)];
+
     this.particles.push({
-      type: 'casing',
-      x: x - facing * 8,
+      type: 'candy_wrapper',
+      x: x - facing * 10,
       y: y - 4,
       vx: speedX,
       vy: speedY,
-      gravity: 620,
-      rebound: 0.52,
-      drag: 0.98,
-      width: 5,
-      height: 2.5,
+      gravity: 640,
+      rebound: 0.58,
+      drag: 0.97,
+      width: 7,
+      height: 3.5,
       rot: Math.random() * Math.PI,
-      rotSpeed: (Math.random() - 0.5) * 26,
-      color: '#FBBF24',
+      rotSpeed: (Math.random() - 0.5) * 28,
+      color: chosenColor,
       bounces: 0,
-      life: 1.1,
-      maxLife: 1.1
+      life: 1.3,
+      maxLife: 1.3
     });
+  }
+
+  emitBulletCasing(x, y, facing = 1) {
+    this.emitCandyWrapperCasing(x, y, facing);
+  }
+
+  // --- DENSE VOLUMETRIC MUZZLE SMOKE (Cotton-Candy Puffs) ---
+  emitDenseMuzzleSmoke(x, y, facing = 1, count = 7) {
+    const smokeColors = [
+      'rgba(255, 255, 255, 0.95)',
+      'rgba(254, 205, 211, 0.92)',
+      'rgba(253, 230, 138, 0.88)',
+      'rgba(244, 114, 182, 0.82)'
+    ];
+
+    for (let i = 0; i < count; i++) {
+      const angle = (Math.random() - 0.5) * 0.8;
+      const speed = 40 + Math.random() * 90;
+      const forwardVx = facing * Math.cos(angle) * speed;
+      const upwardVy = Math.sin(angle) * speed - 35 - Math.random() * 40;
+
+      this.particles.push({
+        type: 'dense_smoke',
+        x: x + facing * (4 + i * 2) + (Math.random() - 0.5) * 6,
+        y: y + (Math.random() - 0.5) * 6,
+        vx: forwardVx,
+        vy: upwardVy,
+        gravity: -35, // Rises gently like sweet steam
+        drag: 0.90,
+        radius: 6 + Math.random() * 6,
+        growth: 24, // Expands rapidly
+        color: smokeColors[Math.floor(Math.random() * smokeColors.length)],
+        life: 0.45 + Math.random() * 0.35,
+        maxLife: 0.8
+      });
+    }
   }
 
   // --- SKID DUST ON DIRECTION REVERSAL ---
@@ -364,13 +402,13 @@ export class ParticleSystem {
       p.x += p.vx * dt;
       p.y += p.vy * dt;
 
-      // Ground rebound collision for bouncy shards, casings, and gummy debris
-      if ((p.type === 'bouncy_shard' || p.type === 'gummy_debris' || p.type === 'casing') && p.y >= 455 && p.vy > 0) {
+      // Ground rebound collision for bouncy shards, casings, candy wrappers, and gummy debris
+      if ((p.type === 'bouncy_shard' || p.type === 'gummy_debris' || p.type === 'casing' || p.type === 'candy_wrapper') && p.y >= 455 && p.vy > 0) {
         p.y = 455;
         p.vy = -p.vy * p.rebound;
         p.vx *= 0.65;
         p.bounces = (p.bounces || 0) + 1;
-        if (p.bounces > 3) {
+        if (p.bounces > 4) {
           p.vy = 0;
           p.vx = 0;
           p.rotSpeed = 0;
@@ -424,14 +462,41 @@ export class ParticleSystem {
           ctx.fillStyle = '#EF4444';
           ctx.fill();
         }
-      } else if (p.type === 'casing') {
-        // Brass/Golden Bullet Casing
+      } else if (p.type === 'candy_wrapper' || p.type === 'casing') {
+        // 3D Sweet Candy Wrapper & Cylindrical Shell
         ctx.translate(p.x, p.y);
         ctx.rotate(p.rot);
+
+        // Twisted Wrapper Flaps / Cellophane Wings on Ends
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+        ctx.beginPath();
+        // Left twisted wing
+        ctx.moveTo(-p.width / 2, 0);
+        ctx.lineTo(-p.width / 2 - 3.5, -p.height * 0.9);
+        ctx.lineTo(-p.width / 2 - 3.5, p.height * 0.9);
+        ctx.closePath();
+        ctx.fill();
+        // Right twisted wing
+        ctx.beginPath();
+        ctx.moveTo(p.width / 2, 0);
+        ctx.lineTo(p.width / 2 + 3.5, -p.height * 0.9);
+        ctx.lineTo(p.width / 2 + 3.5, p.height * 0.9);
+        ctx.closePath();
+        ctx.fill();
+
+        // Candy Roll Body
         ctx.fillStyle = p.color;
-        ctx.fillRect(-p.width / 2, -p.height / 2, p.width, p.height);
-        ctx.fillStyle = '#FEF08A';
-        ctx.fillRect(-p.width / 2 + 1, -p.height / 2, p.width - 2, 1);
+        ctx.beginPath();
+        ctx.roundRect(-p.width / 2, -p.height / 2, p.width, p.height, 1.5);
+        ctx.fill();
+
+        // White Diagonal Swirl Striping
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.fillRect(-p.width * 0.2, -p.height / 2, 2, p.height);
+
+        // Cylindrical Specular Glint
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(-p.width / 2 + 1, -p.height / 2, p.width - 2, 0.9);
       } else if (p.type === 'gummy_debris') {
         // Translucent Bouncy Gummy Bear Chunk with Specular Sheen
         ctx.translate(p.x, p.y);
@@ -444,6 +509,17 @@ export class ParticleSystem {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
         ctx.beginPath();
         ctx.arc(-p.size * 0.2, -p.size * 0.2, p.size * 0.25, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (p.type === 'dense_smoke') {
+        // Multi-layered Puffy Cotton-Candy Smoke Cloud
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+        // Soft white inner core
+        ctx.beginPath();
+        ctx.arc(p.x - p.radius * 0.2, p.y - p.radius * 0.2, p.radius * 0.55, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
         ctx.fill();
       } else if (p.type === 'skid_dust' || p.type === 'smoke') {
         ctx.beginPath();

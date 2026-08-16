@@ -48,6 +48,7 @@ export class Player {
     this.rotation = 0;
     this.recoilX = 0;
     this.shootShake = 0;
+    this.shootRecoilTimer = 0;
     this.landSquashTimer = 0;
     this.skidTimer = 0;
     this.prevVx = 0;
@@ -74,6 +75,7 @@ export class Player {
     this.isVictorious = false;
     this.recoilX = 0;
     this.shootShake = 0;
+    this.shootRecoilTimer = 0;
     this.landSquashTimer = 0;
     this.skidTimer = 0;
   }
@@ -149,6 +151,9 @@ export class Player {
     }
     if (this.skidTimer > 0) {
       this.skidTimer = Math.max(0, this.skidTimer - dt);
+    }
+    if (this.shootRecoilTimer > 0) {
+      this.shootRecoilTimer = Math.max(0, this.shootRecoilTimer - dt);
     }
 
     // Drop through timer
@@ -301,8 +306,9 @@ export class Player {
 
   shoot(projectiles, particles, soundManager) {
     this.fireTimer = this.currentWeapon.fireRate;
-    this.recoilX = -5 * this.facing;
-    this.shootShake = 0.08;
+    this.recoilX = -8 * this.facing;
+    this.shootShake = 0.10;
+    this.shootRecoilTimer = 0.16;
 
     const bulletSpeed = 680;
     let bulletVx = 0;
@@ -333,20 +339,24 @@ export class Player {
 
     const shotAngle = Math.atan2(bulletVy, bulletVx);
 
-    // Eject Brass Bullet Casings & Micro Camera Kick
-    if (particles && ['PISTOL', 'HMG', 'SHOTGUN'].includes(this.currentWeapon.id)) {
-      particles.emitBulletCasing(bulletX, bulletY, this.facing);
+    // Eject Sweet Candy Wrapper Casings & Dense Volumetric Muzzle Smoke
+    if (particles) {
+      if (['PISTOL', 'HMG', 'SHOTGUN'].includes(this.currentWeapon.id)) {
+        particles.emitCandyWrapperCasing(bulletX, bulletY, this.facing);
+      }
+      const smokeCount = (this.currentWeapon.id === 'SHOTGUN' || this.currentWeapon.id === 'ROCKET') ? 10 : 6;
+      particles.emitDenseMuzzleSmoke(bulletX, bulletY, this.facing, smokeCount);
     }
 
     if (this._camera) {
       if (this.currentWeapon.id === 'PISTOL') {
-        this._camera.shake(1.5, 0.05, -this.facing, 0);
+        this._camera.shake(2.0, 0.06, -this.facing, 0);
       } else if (this.currentWeapon.id === 'HMG') {
-        this._camera.shake(2.5, 0.06, -this.facing, 0);
+        this._camera.shake(3.0, 0.07, -this.facing, 0);
       } else if (this.currentWeapon.id === 'SHOTGUN') {
-        this._camera.shake(6, 0.12, -this.facing, 0);
+        this._camera.shake(7.0, 0.14, -this.facing, 0);
       } else if (this.currentWeapon.id === 'ROCKET' || this.currentWeapon.id === 'CANON_PLASMA' || this.currentWeapon.id === 'CANON_COSMICO') {
-        this._camera.shake(8, 0.15, -this.facing, 0);
+        this._camera.shake(9.0, 0.16, -this.facing, 0);
       }
     }
 
@@ -652,6 +662,22 @@ export class Player {
       scaleX = 1 + (0.20 * t);
     }
 
+    // Firing Recoil Keyframe Anticipation & Squash/Stretch (Harmonic Kickback & Rebound)
+    if (this.shootRecoilTimer > 0) {
+      const progress = 1 - (this.shootRecoilTimer / 0.16); // 0 -> 1
+      if (progress < 0.28) {
+        // Keyframe 1: Sudden impact compression & kickback
+        const k = progress / 0.28;
+        scaleX *= (1 - 0.22 * Math.sin(k * Math.PI / 2));
+        scaleY *= (1 + 0.18 * Math.sin(k * Math.PI / 2));
+      } else if (progress < 0.72) {
+        // Keyframe 2: Elastic rebound forward
+        const k = (progress - 0.28) / 0.44;
+        scaleX *= (1 + 0.12 * Math.sin(k * Math.PI));
+        scaleY *= (1 - 0.10 * Math.sin(k * Math.PI));
+      }
+    }
+
     // Flip horizontally when facing === -1 (perfect mirror with center pivot)
     ctx.scale(this.facing * scaleX, scaleY);
 
@@ -676,13 +702,27 @@ export class Player {
       ctx.stroke();
     }
 
-    // Draw Gun Overlay in Hand (aligned with facing direction)
+    // Draw Gun Overlay in Hand (aligned with facing direction with dynamic kickback)
     const gunX = this.aimUp ? 8 : 14;
     const gunY = this.aimUp ? -renderH + 16 : (this.isCrouching ? -renderH + 34 : -renderH + 28);
 
+    // Calculate dynamic gun kick translation and angular recoil
+    let gunRecoil = 0;
+    let gunKickAngle = 0;
+    if (this.shootRecoilTimer > 0) {
+      const p = this.shootRecoilTimer / 0.16;
+      const kickPower = (this.currentWeapon.id === 'SHOTGUN' || this.currentWeapon.id === 'ROCKET') ? 1.5 : 1.0;
+      gunRecoil = 7.5 * p * kickPower;
+      gunKickAngle = -0.24 * p * kickPower; // Muzzle kicks up ~14 degrees
+    }
+
     ctx.save();
-    ctx.translate(gunX, gunY);
-    if (this.aimUp) ctx.rotate(-Math.PI / 2);
+    ctx.translate(gunX - gunRecoil, gunY);
+    if (this.aimUp) {
+      ctx.rotate(-Math.PI / 2 + gunKickAngle);
+    } else {
+      ctx.rotate(gunKickAngle);
+    }
 
     let gunSpriteKey = 'arma_pistol';
     let gunW = 20;
