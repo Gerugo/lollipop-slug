@@ -97,16 +97,41 @@ export class ParticleSystem {
     }
   }
 
-  emitExplosionSprite(x, y, maxScale = 1.25) {
+  // --- INCANDESCENT MOLTEN CARAMEL SPARKS (Explosions with Volumetric Heat) ---
+  emitIncandescentCaramelSparks(x, y, count = 16) {
+    const fireColors = ['#FFFFFF', '#FEF08A', '#FDE047', '#F59E0B', '#EA580C', '#E11D48'];
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 100 + Math.random() * 260;
+      this.particles.push({
+        type: 'incandescent_spark',
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 60,
+        gravity: 420,
+        drag: 0.95,
+        size: 3.5 + Math.random() * 4,
+        color: fireColors[Math.floor(Math.random() * fireColors.length)],
+        life: 0.45 + Math.random() * 0.35,
+        maxLife: 0.8
+      });
+    }
+  }
+
+  emitExplosionSprite(x, y, maxScale = 1.35) {
     this.particles.push({
       type: 'explosion_sprite',
       x,
       y,
-      scale: 0.3,
+      scale: 0.2,
       maxScale,
-      life: 0.38,
-      maxLife: 0.38
+      life: 0.46,
+      maxLife: 0.46
     });
+    this.emitIncandescentCaramelSparks(x, y, 16);
+    this.emitSugarSmoke(x, y, 10, '#FBCFE8');
+    this.emitSugarSmoke(x, y - 10, 6, '#FFF1F2');
     this.emitBouncyShards(x, y, 14);
   }
 
@@ -623,20 +648,94 @@ export class ParticleSystem {
       ctx.globalAlpha = alpha;
 
       if (p.type === 'explosion_sprite') {
-        const expImg = imageLoader.getImage('explosion');
+        // --- VOLUMETRIC EXPANDING COTTON CANDY EXPLOSION CLOUD & INCANDESCENT CARAMEL CORE ---
+        const progress = 1 - (p.life / p.maxLife);
+        ctx.save();
         ctx.translate(p.x, p.y);
         ctx.scale(p.scale, p.scale);
 
-        if (expImg && expImg.complete && expImg.naturalWidth > 0) {
-          const w = 100;
-          const h = 100;
-          ctx.drawImage(expImg, -w / 2, -h / 2, w, h);
-        } else {
+        // 1. Expanding Soft Cotton Candy Pink Aura
+        ctx.fillStyle = 'rgba(244, 114, 182, 0.38)';
+        ctx.beginPath();
+        ctx.arc(0, 0, 58, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 2. 7 Multi-lobed Billowing Cumulus Cotton Candy Puffs
+        const lobes = 7;
+        for (let l = 0; l < lobes; l++) {
+          const lAngle = (l * Math.PI * 2) / lobes + progress * 0.6;
+          const lDist = 16 + progress * 26;
+          const lx = Math.cos(lAngle) * lDist;
+          const ly = Math.sin(lAngle) * lDist;
+          const lRadius = 18 + (l % 3) * 5;
+
+          // Outer fluffy cotton candy body
+          const cloudGrad = ctx.createRadialGradient(lx - 4, ly - 4, 2, lx, ly, lRadius);
+          cloudGrad.addColorStop(0, '#FFF1F2');
+          cloudGrad.addColorStop(0.35, '#FCE7F3');
+          cloudGrad.addColorStop(0.75, '#F472B6');
+          cloudGrad.addColorStop(1, 'rgba(244, 63, 94, 0)');
+          ctx.fillStyle = cloudGrad;
           ctx.beginPath();
-          ctx.arc(0, 0, 40, 0, Math.PI * 2);
-          ctx.fillStyle = '#EF4444';
+          ctx.arc(lx, ly, lRadius, 0, Math.PI * 2);
           ctx.fill();
         }
+
+        // 3. Incandescent Molten Sugar / Blazing Caramel Fire Core
+        if (progress < 0.75) {
+          const coreAlpha = 1 - (progress / 0.75);
+          ctx.save();
+          ctx.globalAlpha = coreAlpha;
+
+          const coreGrad = ctx.createRadialGradient(0, 0, 2, 0, 0, 36);
+          coreGrad.addColorStop(0, '#FFFFFF');
+          coreGrad.addColorStop(0.25, '#FEF08A');
+          coreGrad.addColorStop(0.55, '#F59E0B');
+          coreGrad.addColorStop(0.85, '#EA580C');
+          coreGrad.addColorStop(1, 'rgba(225, 29, 72, 0)');
+          ctx.fillStyle = coreGrad;
+          ctx.beginPath();
+          ctx.arc(0, 0, 34, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 4. Incandescent 8-pointed Caramel Starburst Glints
+          ctx.fillStyle = '#FFFFFF';
+          const starS = (1 - progress) * 28;
+          for (let st = 0; st < 2; st++) {
+            ctx.save();
+            ctx.rotate(st * Math.PI * 0.25 + progress * 2.2);
+            ctx.beginPath();
+            ctx.moveTo(0, -starS);
+            ctx.lineTo(starS * 0.22, 0);
+            ctx.lineTo(0, starS);
+            ctx.lineTo(-starS * 0.22, 0);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(-starS, 0);
+            ctx.lineTo(0, starS * 0.22);
+            ctx.lineTo(starS, 0);
+            ctx.lineTo(0, -starS * 0.22);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+          }
+          ctx.restore();
+        }
+
+        ctx.restore();
+      } else if (p.type === 'incandescent_spark') {
+        // Incandescent molten caramel spark with bright glowing core
+        ctx.translate(p.x, p.y);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(0, 0, p.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(-p.size * 0.2, -p.size * 0.2, p.size * 0.45, 0, Math.PI * 2);
+        ctx.fill();
       } else if (p.type === 'flying_helmet') {
         // 3D Flying Knight/Soldier Sugar Helmet with Visor & Plume
         ctx.translate(p.x, p.y);

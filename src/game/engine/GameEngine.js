@@ -74,6 +74,7 @@ export class GameEngine {
     // Studio Juice Toolkit
     this.timeScale = 1.0;
     this.hitStopTimer = 0;
+    this.whiteFlashTimer = 0;
     this.damageNumbers = [];
     this.comboCount = 0;
     this.comboTimer = 0;
@@ -252,6 +253,17 @@ export class GameEngine {
     this.timeScale = scale;
   }
 
+  triggerWhiteFlash(duration = 0.045) {
+    this.whiteFlashTimer = duration;
+  }
+
+  triggerExplosionImpact(shakeAmount = 14, shakeDuration = 0.35, hitStopDuration = 0.06) {
+    this.triggerWhiteFlash(0.045);
+    this.triggerHitStop(hitStopDuration, 0.04);
+    this.camera.shake(shakeAmount, shakeDuration);
+    this.triggerHaptic(50);
+  }
+
   addDamageNumber(x, y, amount, color = '#FFFFFF', isCrit = false) {
     this.damageNumbers.push(new DamageNumber(x, y, amount, color, isCrit));
     if (this.damageNumbers.length > 50) {
@@ -297,6 +309,7 @@ export class GameEngine {
     this.comboTimer = 0;
     this.timeScale = 1.0;
     this.hitStopTimer = 0;
+    this.whiteFlashTimer = 0;
 
     // Keep the same player instance if advancing, or create new if startNewGame
     if (!this.player) {
@@ -706,11 +719,9 @@ export class GameEngine {
         const g = this.grenades[i];
         g.update(dt, this.level.platforms, this.particles, this.sound);
         if (g.exploded) {
-          this.particles.emitExplosionSprite(g.x, g.y, 1.3);
-          this.camera.shake(16, 0.45);
+          this.particles.emitExplosionSprite(g.x, g.y, 1.45);
+          this.triggerExplosionImpact(16, 0.42, 0.065);
           this.camera.punchZoom(1.08, 3.5);
-          this.triggerHitStop(0.08, 0.03);
-          this.triggerHaptic(50);
           for (const d of this.destructibles) {
             if (!d.dead && Physics.checkCircleAABB(g, d)) {
               d.takeDamage(55, this.particles, this.sound, this.drops, this.enemies, this.destructibles, this.camera);
@@ -828,9 +839,9 @@ export class GameEngine {
 
   explodeRocket(x, y) {
     this.sound.playExplosion();
-    this.camera.shake(16, 0.5);
-    this.particles.emitExplosionSprite(x, y, 1.4);
-    this.particles.emitShockwave(x, y, 90, '#FF3388');
+    this.triggerExplosionImpact(18, 0.48, 0.07);
+    this.particles.emitExplosionSprite(x, y, 1.5);
+    this.particles.emitShockwave(x, y, 95, '#FF3388');
     this.particles.emitSyrupSplash(x, y, 25, '#EF4444');
     this.particles.emitSugarSmoke(x, y, 12, '#FDE68A');
 
@@ -1029,6 +1040,16 @@ export class GameEngine {
       ctx.font = 'bold 12px "Press Start 2P", monospace';
       ctx.fillText('¡PREPÁRATE PARA LA BATALLA!', this.viewportWidth / 2, 155);
       ctx.restore();
+    }
+
+    // 16. 1-Frame Impact White Flash (Hitstop Screen Bloom)
+    if (this.whiteFlashTimer > 0) {
+      ctx.save();
+      const flashAlpha = Math.min(0.75, (this.whiteFlashTimer / 0.045) * 0.75);
+      ctx.fillStyle = `rgba(255, 255, 255, ${flashAlpha})`;
+      ctx.fillRect(0, 0, this.viewportWidth, this.viewportHeight);
+      ctx.restore();
+      this.whiteFlashTimer -= 0.016;
     }
   }
 
