@@ -95,7 +95,7 @@ export class GameEngine {
     // Entities (Safely initialized for MENU preview & background rendering)
     const initialLevelEntry = getLevelEntry(1);
     this.level = new initialLevelEntry.LevelClass();
-    this.player = new Player(100, 350);
+    this.player = new Player(240, 350);
     this.vehicle = null;
     this.enemies = [];
     this.hostages = [];
@@ -300,9 +300,9 @@ export class GameEngine {
 
     // Keep the same player instance if advancing, or create new if startNewGame
     if (!this.player) {
-      this.player = new Player(100, 350);
+      this.player = new Player(240, 350);
     }
-    this.player.reset(100, 350);
+    this.player.reset(240, 350);
 
     this.vehicle = this.level.createVehicle();
     this.enemies = this.level.createEnemies();
@@ -539,7 +539,7 @@ export class GameEngine {
       this.respawnTimer += dt;
       if (this.respawnTimer >= 2.0) {
         if (this.player.lives > 0) {
-          const respawnX = Math.max(100, this.camera.x + 80);
+          const respawnX = Math.max(240, this.camera.x + 180);
           this.player.reset(respawnX, 200);
           this.respawnTimer = 0;
         } else {
