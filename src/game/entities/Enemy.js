@@ -32,6 +32,9 @@ export class Enemy {
     this.hitWobble = 0;
     this.wobblePhase = 0;
     this.rotation = 0;
+    this.isStumbling = false;
+    this.stumbleTimer = 0;
+    this.helmetPopped = false;
     this.animTime = Math.random() * 5;
     this.hoverY = this.y;
     this.speed = options.speed || 55;
@@ -223,6 +226,31 @@ export class Enemy {
   }
 
   takeDamage(amount, particles, soundManager, attackerX = 0) {
+    const enemyColorMap = {
+      GUMMY: '#EF4444',
+      ROLLER: '#22C55E',
+      SNIPER: '#0284C7',
+      MOTH: '#EC4899',
+      KNIGHT: '#F59E0B',
+      TURRET: '#D97706',
+      ACIDO: '#84CC16',
+      RANA: '#10B981',
+      ANGUILA: '#06B6D4',
+      PINGUINO: '#38BDF8',
+      YETI: '#E0F2FE',
+      MURCIELAGO: '#9333EA',
+      SLIME: '#84CC16',
+      SALAMANDRA: '#EA580C',
+      AVISPA_FUEGO: '#F59E0B',
+      GARGOYLA: '#3F3F46',
+      GUARDIA_REAL: '#475569',
+      HECHICERO_DULCE: '#581C87',
+      PEZ: '#06B6D4',
+      DRONE: '#EC4899',
+      GLOBO: '#EC4899'
+    };
+    const enemyColor = enemyColorMap[this.type] || '#EF4444';
+
     // Knight & Royal Guard shield mechanic: blocks frontal projectile damage
     if ((this.type === 'KNIGHT' || this.type === 'GUARDIA_REAL') && this.shieldUp && attackerX) {
       const attackingFromFront = (this.facing === -1 && attackerX < this.x + this.width / 2) ||
@@ -242,8 +270,8 @@ export class Enemy {
     }
 
     this.hp -= amount;
-    this.hurtTimer = 0.08;
-    this.hitWobble = 0.28;
+    this.hurtTimer = 0.10;
+    this.hitWobble = 0.38; // Volumetric gelatin deformation wave
     this.wobblePhase = 0;
     soundManager.playEnemyPop();
 
@@ -252,16 +280,40 @@ export class Enemy {
       this.vy = -120;
     }
 
+    // Micro-reaction: Flying gelatin chunk droplets & impact flash on every hit
     if (particles) {
       if (typeof particles.emitHitImpactFlash === 'function') {
         particles.emitHitImpactFlash(this.x + this.width / 2, this.y + this.height / 2);
       }
-      particles.emitCandyShards(this.x + this.width / 2, this.y + this.height / 2, 6);
-      particles.emitSyrupSplash(this.x + this.width / 2, this.y + this.height / 2, 5, '#EF4444');
+      if (typeof particles.emitGummyDebris === 'function') {
+        particles.emitGummyDebris(this.x + this.width / 2, this.y + this.height / 2, enemyColor, 4);
+      }
+      particles.emitCandyShards(this.x + this.width / 2, this.y + this.height / 2, 5);
+      particles.emitSyrupSplash(this.x + this.width / 2, this.y + this.height / 2, 5, enemyColor);
+    }
+
+    // Flying Helmet pop off on critical damage or defeat
+    if (!this.helmetPopped && (this.type === 'KNIGHT' || this.type === 'GUARDIA_REAL') && (this.hp <= 22 || this.hp <= 0)) {
+      this.helmetPopped = true;
+      if (particles && typeof particles.emitFlyingHelmet === 'function') {
+        particles.emitFlyingHelmet(this.x + this.width / 2, this.y + 10, this.facing, this.type === 'GUARDIA_REAL' ? 'guard' : 'knight');
+      }
     }
 
     if (this.hp <= 0) {
-      this.die(particles, soundManager);
+      // Comical Stumble on Defeat for bipedal ground enemies
+      const canStumble = (this.type === 'GUMMY' || this.type === 'KNIGHT' || this.type === 'GUARDIA_REAL' || this.type === 'ROLLER' || this.type === 'SNIPER' || this.type === 'RANA' || this.type === 'YETI');
+      if (canStumble && !this.isStumbling) {
+        this.isStumbling = true;
+        this.stumbleTimer = 0.42;
+        this.vx = (this.facing === 1 ? -65 : 65);
+        this.vy = -95;
+        if (particles) {
+          particles.emitSparkles(this.x + this.width / 2, this.y - 6, 8, '#FEF08A');
+        }
+      } else if (!this.isStumbling) {
+        this.die(particles, soundManager);
+      }
     }
   }
 
@@ -353,6 +405,22 @@ export class Enemy {
       if (closestY < 9999) detectedGroundY = closestY;
     }
     this.groundY = this.isGrounded ? this.y + this.height : detectedGroundY;
+
+    // Comical Stumble & Dizzy Collapse Death Sequence
+    if (this.isStumbling) {
+      this.stumbleTimer -= dt;
+      this.rotation = Math.sin(this.animTime * 28) * 0.42;
+      this.vy += this.gravity * dt;
+      this.x += this.vx * dt;
+      this.y += this.vy * dt;
+      this.isGrounded = false;
+      Physics.resolvePlatforms(this, platforms);
+
+      if (this.stumbleTimer <= 0) {
+        this.die(particles, soundManager);
+      }
+      return;
+    }
 
     const distToPlayer = player ? Math.hypot(player.x - this.x, player.y - this.y) : 999;
     const dirToPlayer = player && player.x < this.x ? -1 : 1;
@@ -1870,6 +1938,22 @@ export class Enemy {
       ctx.arc(18, -30, 3.5, 0, Math.PI * 2);
       ctx.fillStyle = '#FB7185';
       ctx.fill();
+      ctx.restore();
+    }
+
+    // Comical Dizzy Stars over head when stumbling before defeat
+    if (this.isStumbling) {
+      ctx.save();
+      const starRadius = 20;
+      for (let s = 0; s < 3; s++) {
+        const starAngle = this.animTime * 9 + (s * Math.PI * 2 / 3);
+        const starX = Math.cos(starAngle) * starRadius;
+        const starY = -renderH - 12 + Math.sin(starAngle) * 5;
+        ctx.fillStyle = '#FEF08A';
+        ctx.font = '900 13px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('✦', starX, starY);
+      }
       ctx.restore();
     }
 

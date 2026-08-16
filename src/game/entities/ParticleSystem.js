@@ -279,6 +279,31 @@ export class ParticleSystem {
     }
   }
 
+  // --- FLYING HELMET / HAT POPPING OFF ON HIT OR DEFEAT ---
+  emitFlyingHelmet(x, y, facing = 1, type = 'knight') {
+    const speedX = -facing * (70 + Math.random() * 85);
+    const speedY = -210 - Math.random() * 90;
+    this.particles.push({
+      type: 'flying_helmet',
+      x,
+      y: y - 10,
+      vx: speedX,
+      vy: speedY,
+      gravity: 620,
+      rebound: 0.52,
+      drag: 0.98,
+      width: 14,
+      height: 12,
+      rot: Math.random() * Math.PI,
+      rotSpeed: (Math.random() - 0.5) * 24,
+      helmetType: type,
+      color: type === 'guard' ? '#DC2626' : (type === 'soldier' ? '#475569' : '#F59E0B'),
+      bounces: 0,
+      life: 1.4,
+      maxLife: 1.4
+    });
+  }
+
   // --- SKID DUST ON DIRECTION REVERSAL ---
   emitSkidDust(x, y, facing = 1) {
     for (let i = 0; i < 4; i++) {
@@ -402,8 +427,8 @@ export class ParticleSystem {
       p.x += p.vx * dt;
       p.y += p.vy * dt;
 
-      // Ground rebound collision for bouncy shards, casings, candy wrappers, and gummy debris
-      if ((p.type === 'bouncy_shard' || p.type === 'gummy_debris' || p.type === 'casing' || p.type === 'candy_wrapper') && p.y >= 455 && p.vy > 0) {
+      // Ground rebound collision for bouncy shards, casings, candy wrappers, flying helmets, and gummy debris
+      if ((p.type === 'bouncy_shard' || p.type === 'gummy_debris' || p.type === 'casing' || p.type === 'candy_wrapper' || p.type === 'flying_helmet') && p.y >= 455 && p.vy > 0) {
         p.y = 455;
         p.vy = -p.vy * p.rebound;
         p.vx *= 0.65;
@@ -462,6 +487,35 @@ export class ParticleSystem {
           ctx.fillStyle = '#EF4444';
           ctx.fill();
         }
+      } else if (p.type === 'flying_helmet') {
+        // 3D Flying Knight/Soldier Sugar Helmet with Visor & Plume
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+
+        // Helmet Dome
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(0, 0, 7, Math.PI, 0, false);
+        ctx.lineTo(7, 4);
+        ctx.lineTo(-7, 4);
+        ctx.closePath();
+        ctx.fill();
+
+        // Metallic / Sugar Specular Highlight
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+        ctx.beginPath();
+        ctx.arc(-2, -3, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Visor slit
+        ctx.fillStyle = '#0F172A';
+        ctx.fillRect(-5, 0, 10, 2);
+
+        // Feather Plume on top
+        ctx.fillStyle = '#EC4899';
+        ctx.beginPath();
+        ctx.ellipse(0, -9, 3, 5.5, -0.3, 0, Math.PI * 2);
+        ctx.fill();
       } else if (p.type === 'candy_wrapper' || p.type === 'casing') {
         // 3D Sweet Candy Wrapper & Cylindrical Shell
         ctx.translate(p.x, p.y);
