@@ -386,6 +386,54 @@ export class ParticleSystem {
     }
   }
 
+  // --- GLASS SUGAR SHATTER SHARDS (Sharp Crystalline Glaze Fragments) ---
+  emitGlassCandyShards(x, y, count = 22) {
+    const iceColors = ['#E0F2FE', '#BAE6FD', '#7DD3FC', '#38BDF8', '#FFFFFF'];
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 120 + Math.random() * 280;
+      this.particles.push({
+        type: 'glass_shard',
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 110,
+        gravity: 520,
+        rebound: 0.65,
+        drag: 0.98,
+        size: 4 + Math.random() * 6,
+        color: iceColors[Math.floor(Math.random() * iceColors.length)],
+        rot: Math.random() * Math.PI,
+        rotSpeed: (Math.random() - 0.5) * 32,
+        bounces: 0,
+        life: 0.9 + Math.random() * 0.5,
+        maxLife: 1.4
+      });
+    }
+    this.emitSparkles(x, y, 12, '#FFFFFF');
+  }
+
+  // --- BOILING VISCOUS SYRUP PUDDLE (Melt Liquefaction Death) ---
+  emitSyrupBoilPool(x, y, color = '#E11D48') {
+    for (let i = 0; i < 8; i++) {
+      this.particles.push({
+        type: 'syrup_bubble',
+        x: x + (Math.random() - 0.5) * 32,
+        y: y + 2 + (Math.random() - 0.5) * 6,
+        vx: (Math.random() - 0.5) * 20,
+        vy: -25 - Math.random() * 35,
+        gravity: -10,
+        drag: 0.92,
+        radius: 3 + Math.random() * 5,
+        growth: 6,
+        color,
+        life: 0.6 + Math.random() * 0.4,
+        maxLife: 1.0
+      });
+    }
+    this.emitSugarSmoke(x, y - 6, 6, '#FBCFE8');
+  }
+
   emitShockwave(x, y, maxRadius = 80, color = 'rgba(255, 119, 176, 0.8)') {
     this.particles.push({
       type: 'shockwave',
@@ -427,8 +475,8 @@ export class ParticleSystem {
       p.x += p.vx * dt;
       p.y += p.vy * dt;
 
-      // Ground rebound collision for bouncy shards, casings, candy wrappers, flying helmets, and gummy debris
-      if ((p.type === 'bouncy_shard' || p.type === 'gummy_debris' || p.type === 'casing' || p.type === 'candy_wrapper' || p.type === 'flying_helmet') && p.y >= 455 && p.vy > 0) {
+      // Ground rebound collision for bouncy shards, casings, candy wrappers, flying helmets, glass shards, and gummy debris
+      if ((p.type === 'bouncy_shard' || p.type === 'gummy_debris' || p.type === 'casing' || p.type === 'candy_wrapper' || p.type === 'flying_helmet' || p.type === 'glass_shard') && p.y >= 455 && p.vy > 0) {
         p.y = 455;
         p.vy = -p.vy * p.rebound;
         p.vx *= 0.65;
@@ -600,6 +648,32 @@ export class ParticleSystem {
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fillStyle = p.color;
+        ctx.fill();
+      } else if (p.type === 'glass_shard') {
+        // Sharp translucent crystalline sugar glass shard
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.moveTo(0, -p.size * 1.3);
+        ctx.lineTo(p.size * 0.7, p.size * 0.7);
+        ctx.lineTo(0, p.size * 0.3);
+        ctx.lineTo(-p.size * 0.7, p.size * 0.7);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(0, -p.size * 0.4, p.size * 0.25, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (p.type === 'syrup_bubble') {
+        // Viscous boiling syrup bubble
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.beginPath();
+        ctx.arc(p.x - p.radius * 0.25, p.y - p.radius * 0.25, p.radius * 0.35, 0, Math.PI * 2);
         ctx.fill();
       } else if (p.type === 'bouncy_shard' || p.type === 'shard') {
         ctx.translate(p.x, p.y);

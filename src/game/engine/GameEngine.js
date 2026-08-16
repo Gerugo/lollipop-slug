@@ -604,7 +604,7 @@ export class GameEngine {
               this.camera.shake(6, 0.2, proj.vx > 0 ? 1 : -1, 0);
             }
 
-            enemy.takeDamage(proj.damage, this.particles, this.sound, proj.x);
+            enemy.takeDamage(proj.damage, this.particles, this.sound, proj.x, proj.type);
             if (enemy.dead) this.handleEnemyDeath(enemy);
             hit = true;
             if (!proj.penetrate) break;

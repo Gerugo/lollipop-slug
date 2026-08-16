@@ -34,6 +34,10 @@ export class Enemy {
     this.rotation = 0;
     this.isStumbling = false;
     this.stumbleTimer = 0;
+    this.deathType = null;
+    this.meltProgress = 0;
+    this.freezeProgress = 0;
+    this.lastHitWeapon = '';
     this.helmetPopped = false;
     this.animTime = Math.random() * 5;
     this.hoverY = this.y;
@@ -225,7 +229,7 @@ export class Enemy {
     }
   }
 
-  takeDamage(amount, particles, soundManager, attackerX = 0) {
+  takeDamage(amount, particles, soundManager, attackerX = 0, weaponType = '') {
     const enemyColorMap = {
       GUMMY: '#EF4444',
       ROLLER: '#22C55E',
@@ -250,6 +254,7 @@ export class Enemy {
       GLOBO: '#EC4899'
     };
     const enemyColor = enemyColorMap[this.type] || '#EF4444';
+    this.lastHitWeapon = weaponType;
 
     // Knight & Royal Guard shield mechanic: blocks frontal projectile damage
     if ((this.type === 'KNIGHT' || this.type === 'GUARDIA_REAL') && this.shieldUp && attackerX) {
@@ -264,7 +269,7 @@ export class Enemy {
         }
         this.hp -= Math.max(1, Math.round(amount * 0.5));
         this.hurtTimer = 0.05;
-        if (this.hp <= 0) this.die(particles, soundManager);
+        if (this.hp <= 0) this.die(particles, soundManager, 'EXPLODE');
         return;
       }
     }
@@ -301,25 +306,53 @@ export class Enemy {
     }
 
     if (this.hp <= 0) {
-      // Comical Stumble on Defeat for bipedal ground enemies
-      const canStumble = (this.type === 'GUMMY' || this.type === 'KNIGHT' || this.type === 'GUARDIA_REAL' || this.type === 'ROLLER' || this.type === 'SNIPER' || this.type === 'RANA' || this.type === 'YETI');
-      if (canStumble && !this.isStumbling) {
+      const isMelt = (weaponType === 'FLAME_BLAST' || weaponType === 'LANZALLAMAS' || weaponType === 'BUBBLE' || weaponType === 'CANON_BURBUJAS' || weaponType === 'LATIGO_DULCE' || weaponType === 'ACIDO');
+      const isShatter = (weaponType === 'ICE_SHARD' || weaponType === 'LANZAHIELOS' || weaponType === 'LASER_BEAM' || weaponType === 'RAYO_LASER');
+      const isExplode = (weaponType === 'ROCKET' || weaponType === 'GRENADE' || weaponType === 'PLASMA_ORB' || weaponType === 'COSMIC_BURST' || weaponType === 'SHOTGUN');
+
+      if (isMelt) {
+        // 1. THEMATIC DEATH: MELT IN VISCOUS SYRUP PUDDLE
+        this.deathType = 'MELT';
         this.isStumbling = true;
-        this.stumbleTimer = 0.42;
-        this.vx = (this.facing === 1 ? -65 : 65);
-        this.vy = -95;
-        if (particles) {
-          particles.emitSparkles(this.x + this.width / 2, this.y - 6, 8, '#FEF08A');
+        this.stumbleTimer = 0.48;
+        this.vx = 0;
+        if (particles && typeof particles.emitSyrupBoilPool === 'function') {
+          particles.emitSyrupBoilPool(this.x + this.width / 2, this.y + this.height - 4, enemyColor);
         }
-      } else if (!this.isStumbling) {
-        this.die(particles, soundManager);
+      } else if (isShatter) {
+        // 2. THEMATIC DEATH: FREEZE & SHATTER INTO HARD CANDY GLASS
+        this.deathType = 'SHATTER';
+        this.isStumbling = true;
+        this.stumbleTimer = 0.32;
+        this.vx = 0;
+        if (particles) {
+          particles.emitSparkles(this.x + this.width / 2, this.y + this.height / 2, 14, '#38BDF8');
+        }
+      } else if (isExplode) {
+        // 3. THEMATIC DEATH: EXPLODE IN SHREDDED GUMMY & CONFETTI
+        this.deathType = 'EXPLODE';
+        this.die(particles, soundManager, 'EXPLODE');
+      } else {
+        // 4. DEFAULT COMICAL STUMBLE OR INSTANT COLLAPSE
+        const canStumble = (this.type === 'GUMMY' || this.type === 'KNIGHT' || this.type === 'GUARDIA_REAL' || this.type === 'ROLLER' || this.type === 'SNIPER' || this.type === 'RANA' || this.type === 'YETI');
+        if (canStumble && !this.isStumbling) {
+          this.deathType = 'STUMBLE';
+          this.isStumbling = true;
+          this.stumbleTimer = 0.42;
+          this.vx = (this.facing === 1 ? -65 : 65);
+          this.vy = -95;
+          if (particles) {
+            particles.emitSparkles(this.x + this.width / 2, this.y - 6, 8, '#FEF08A');
+          }
+        } else if (!this.isStumbling) {
+          this.die(particles, soundManager, 'EXPLODE');
+        }
       }
     }
   }
 
-  die(particles, soundManager) {
+  die(particles, soundManager, deathType = this.deathType) {
     this.dead = true;
-    soundManager.playExplosion();
 
     const enemyColorMap = {
       GUMMY: '#EF4444',
@@ -346,14 +379,49 @@ export class Enemy {
     };
     const debrisColor = enemyColorMap[this.type] || '#EF4444';
 
-    if (particles) {
-      if (typeof particles.emitGummyDebris === 'function') {
-        particles.emitGummyDebris(this.x + this.width / 2, this.y + this.height / 2, debrisColor, 14);
+    if (deathType === 'MELT') {
+      soundManager.playEnemyPop();
+      if (particles) {
+        if (typeof particles.emitSyrupBoilPool === 'function') {
+          particles.emitSyrupBoilPool(this.x + this.width / 2, this.y + this.height, debrisColor);
+        }
+        particles.emitSyrupSplash(this.x + this.width / 2, this.y + this.height, 20, debrisColor);
+        particles.emitSugarSmoke(this.x + this.width / 2, this.y + this.height - 8, 8, '#FBCFE8');
       }
-      particles.emitSyrupSplash(this.x + this.width / 2, this.y + this.height / 2, 24, debrisColor);
-      particles.emitConfetti(this.x + this.width / 2, this.y + this.height / 2, 20);
-      particles.emitCandyShards(this.x + this.width / 2, this.y + this.height / 2, 14);
-      particles.emitSugarSmoke(this.x + this.width / 2, this.y + this.height / 2, 8, '#FCA5A5');
+    } else if (deathType === 'SHATTER') {
+      soundManager.playEnemyPop();
+      if (particles) {
+        if (typeof particles.emitGlassCandyShards === 'function') {
+          particles.emitGlassCandyShards(this.x + this.width / 2, this.y + this.height / 2, 26);
+        }
+        particles.emitSparkles(this.x + this.width / 2, this.y + this.height / 2, 16, '#FFFFFF');
+        particles.emitSugarSmoke(this.x + this.width / 2, this.y + this.height / 2, 6, '#E0F2FE');
+      }
+    } else if (deathType === 'EXPLODE') {
+      soundManager.playExplosion();
+      if (particles) {
+        if (typeof particles.emitShockwave === 'function') {
+          particles.emitShockwave(this.x + this.width / 2, this.y + this.height / 2, 85, 'rgba(254, 205, 211, 0.9)');
+        }
+        if (typeof particles.emitGummyDebris === 'function') {
+          particles.emitGummyDebris(this.x + this.width / 2, this.y + this.height / 2, debrisColor, 22);
+        }
+        particles.emitConfetti(this.x + this.width / 2, this.y + this.height / 2, 35);
+        particles.emitCandyShards(this.x + this.width / 2, this.y + this.height / 2, 18);
+        particles.emitSugarSmoke(this.x + this.width / 2, this.y + this.height / 2, 10, '#FCA5A5');
+      }
+    } else {
+      // Default pop & confetti
+      soundManager.playExplosion();
+      if (particles) {
+        if (typeof particles.emitGummyDebris === 'function') {
+          particles.emitGummyDebris(this.x + this.width / 2, this.y + this.height / 2, debrisColor, 14);
+        }
+        particles.emitSyrupSplash(this.x + this.width / 2, this.y + this.height / 2, 24, debrisColor);
+        particles.emitConfetti(this.x + this.width / 2, this.y + this.height / 2, 20);
+        particles.emitCandyShards(this.x + this.width / 2, this.y + this.height / 2, 14);
+        particles.emitSugarSmoke(this.x + this.width / 2, this.y + this.height / 2, 8, '#FCA5A5');
+      }
     }
   }
 
@@ -406,10 +474,25 @@ export class Enemy {
     }
     this.groundY = this.isGrounded ? this.y + this.height : detectedGroundY;
 
-    // Comical Stumble & Dizzy Collapse Death Sequence
+    // Thematic Death Sequences (Melt in Syrup, Shatter, Comical Stumble)
     if (this.isStumbling) {
       this.stumbleTimer -= dt;
-      this.rotation = Math.sin(this.animTime * 28) * 0.42;
+
+      if (this.deathType === 'MELT') {
+        this.meltProgress = Math.min(1, 1 - (this.stumbleTimer / 0.48));
+        this.vx = 0;
+        this.rotation = (Math.random() - 0.5) * 0.08;
+        if (particles && Math.random() < 0.25) {
+          particles.emitSugarSmoke(this.x + this.width / 2 + (Math.random() - 0.5) * 20, this.y + this.height - 4, 1, '#FBCFE8');
+        }
+      } else if (this.deathType === 'SHATTER') {
+        this.freezeProgress = Math.min(1, 1 - (this.stumbleTimer / 0.32));
+        this.vx = 0;
+        this.rotation = (Math.random() - 0.5) * 0.12;
+      } else {
+        this.rotation = Math.sin(this.animTime * 28) * 0.42;
+      }
+
       this.vy += this.gravity * dt;
       this.x += this.vx * dt;
       this.y += this.vy * dt;
@@ -417,7 +500,7 @@ export class Enemy {
       Physics.resolvePlatforms(this, platforms);
 
       if (this.stumbleTimer <= 0) {
-        this.die(particles, soundManager);
+        this.die(particles, soundManager, this.deathType);
       }
       return;
     }
@@ -1907,10 +1990,18 @@ export class Enemy {
       scaleY -= wobble;
     }
 
+    // Thematic Death Deformations (Melt Collapsing vs Frozen Crystalline Shiver)
+    if (this.isStumbling && this.deathType === 'MELT') {
+      scaleY *= Math.max(0.08, 1 - this.meltProgress * 0.92);
+      scaleX *= (1 + this.meltProgress * 1.5);
+    }
+
     // Anchored firmly on ground
     ctx.translate(cx, bottomY + 1 - bounceY);
 
-    if (this.hurtTimer > 0) {
+    if (this.isStumbling && this.deathType === 'SHATTER') {
+      ctx.filter = 'brightness(2.2) saturate(1.8) hue-rotate(180deg)';
+    } else if (this.hurtTimer > 0) {
       ctx.filter = 'brightness(2.5) contrast(1.4)';
     }
 
@@ -1942,7 +2033,7 @@ export class Enemy {
     }
 
     // Comical Dizzy Stars over head when stumbling before defeat
-    if (this.isStumbling) {
+    if (this.isStumbling && (!this.deathType || this.deathType === 'STUMBLE')) {
       ctx.save();
       const starRadius = 20;
       for (let s = 0; s < 3; s++) {
@@ -1954,6 +2045,37 @@ export class Enemy {
         ctx.textAlign = 'center';
         ctx.fillText('✦', starX, starY);
       }
+      ctx.restore();
+    }
+
+    // Frozen Ice Spikes Glaze when shattering
+    if (this.isStumbling && this.deathType === 'SHATTER') {
+      ctx.save();
+      ctx.strokeStyle = '#BAE6FD';
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      ctx.moveTo(-16, -renderH * 0.8);
+      ctx.lineTo(-24, -renderH * 0.9);
+      ctx.lineTo(-12, -renderH * 0.6);
+      ctx.moveTo(16, -renderH * 0.8);
+      ctx.lineTo(24, -renderH * 0.9);
+      ctx.lineTo(12, -renderH * 0.6);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Boiling Syrup Puddle Base when melting
+    if (this.isStumbling && this.deathType === 'MELT') {
+      ctx.save();
+      const pW = (renderW * 0.9) * (1 + this.meltProgress * 1.2);
+      ctx.fillStyle = '#E11D48';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, pW, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#FDA4AF';
+      ctx.beginPath();
+      ctx.ellipse(-pW * 0.3, -2, pW * 0.35, 2.5, 0, 0, Math.PI * 2);
+      ctx.fill();
       ctx.restore();
     }
 
