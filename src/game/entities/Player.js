@@ -645,32 +645,32 @@ export class Player {
       gunSpriteKey = 'arma_burbujas';
       gunW = 25;
       gunH = 16;
-      flipX = true;
+      flipX = false;
     } else if (this.currentWeapon.id === 'LANZAHIELOS') {
       gunSpriteKey = 'arma_hielo';
       gunW = 26;
       gunH = 15;
-      flipX = true;
+      flipX = false;
     } else if (this.currentWeapon.id === 'RAYO_LASER') {
       gunSpriteKey = 'arma_laser';
       gunW = 26;
       gunH = 15;
-      flipX = true;
+      flipX = false;
     } else if (this.currentWeapon.id === 'LANZALLAMAS') {
       gunSpriteKey = 'arma_flamethrower';
       gunW = 27;
       gunH = 16;
-      flipX = true;
+      flipX = false;
     } else if (this.currentWeapon.id === 'CANON_PLASMA') {
       gunSpriteKey = 'arma_plasma';
       gunW = 28;
       gunH = 16;
-      flipX = true;
+      flipX = false;
     } else if (this.currentWeapon.id === 'CANON_COSMICO') {
       gunSpriteKey = 'arma_cosmic';
       gunW = 28;
       gunH = 16;
-      flipX = true;
+      flipX = false;
     }
 
     const gunSprite = imageLoader.getImage(gunSpriteKey);
