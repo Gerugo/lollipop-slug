@@ -257,6 +257,24 @@ export class Player {
     this.isGrounded = false;
     Physics.resolvePlatforms(this, platforms, this.isDropping, soundManager, particles, this._camera);
 
+    // Calculate nearest ground/platform Y below player for grounded contact shadow
+    let detectedGroundY = 460;
+    if (platforms && platforms.length > 0) {
+      const pBottom = this.y + this.height;
+      const pMidX = this.x + this.width / 2;
+      let closestY = 9999;
+      for (const plat of platforms) {
+        if (plat.type === 'acid_pool' || plat.type === 'soda_tide' || plat.type === 'lava_caramel' || plat.type === 'spikes') continue;
+        if (pMidX >= plat.x - 8 && pMidX <= plat.x + plat.width + 8) {
+          if (plat.y >= pBottom - 12 && plat.y < closestY) {
+            closestY = plat.y;
+          }
+        }
+      }
+      if (closestY < 9999) detectedGroundY = closestY;
+    }
+    this.groundY = this.isGrounded ? this.y + this.height : detectedGroundY;
+
     // Landing Impact Squash Trigger
     if (!wasGrounded && this.isGrounded) {
       this.landSquashTimer = 0.15;
@@ -394,37 +412,33 @@ export class Player {
           vx: bulletVx * 0.95,
           vy: bulletVy * 0.95,
           type: 'ROCKET',
-          damage: 25,
+          damage: 22,
           isPlayer: true,
           rotation: shotAngle
         })
       );
       this.ammo--;
     } else if (this.currentWeapon.id === 'LATIGO_DULCE') {
-      soundManager.playEnemyPop();
+      soundManager.playWhipCrack();
       projectiles.push(
         new Projectile({
-          x: bulletX + this.facing * 12,
+          x: bulletX,
           y: bulletY,
-          vx: bulletVx * 0.75,
-          vy: bulletVy * 0.75,
-          type: 'LATIGO_DULCE',
-          damage: 10,
-          width: 32,
-          height: 26,
-          life: 0.38,
+          vx: bulletVx * 1.15,
+          vy: bulletVy * 1.15,
+          type: 'LATIGO',
+          damage: 7,
           penetrate: true,
           isPlayer: true,
           rotation: shotAngle
         })
       );
-      if (particles) particles.emitSparkles(bulletX + this.facing * 14, bulletY, 8, '#A3E635');
       this.ammo--;
     } else if (this.currentWeapon.id === 'CANON_BURBUJAS') {
-      soundManager.playSodaGrenadeFizz();
+      soundManager.playBubbleShoot();
       projectiles.push(
         new Projectile({
-          x: bulletX + this.facing * 10,
+          x: bulletX,
           y: bulletY,
           vx: bulletVx * 0.85,
           vy: bulletVy * 0.85,
@@ -585,13 +599,32 @@ export class Player {
     const cx = this.x + this.width / 2;
     const bottomY = this.y + this.height;
 
-    // 1. Soft Elliptical Ground Shadow right under feet
-    ctx.save();
-    ctx.beginPath();
-    ctx.ellipse(cx, bottomY + 1, 15, 4.5, 0, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
-    ctx.fill();
-    ctx.restore();
+    // 1. Dynamic Contact & Cast Ground Shadow with distance scaling
+    const groundY = this.groundY || 460;
+    const distToGround = Math.max(0, groundY - bottomY);
+    const maxDist = 320;
+    if (distToGround < maxDist) {
+      const shadowFactor = 1 - (distToGround / maxDist);
+      const shadowAlpha = this.isGrounded ? 0.36 : (0.08 + 0.24 * shadowFactor);
+      const shadowW = 16 * (this.isGrounded ? 1.0 : (0.85 + 0.35 * (1 - shadowFactor)));
+      const shadowH = 5.0 * (this.isGrounded ? 1.0 : (0.75 + 0.25 * (1 - shadowFactor)));
+
+      ctx.save();
+      // Outer diffuse shadow
+      ctx.beginPath();
+      ctx.ellipse(cx, groundY + 1, shadowW, shadowH, 0, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
+      ctx.fill();
+
+      // Sharp dark contact occlusion pill directly under boots when on ground
+      if (this.isGrounded && distToGround < 4) {
+        ctx.beginPath();
+        ctx.ellipse(cx, groundY, 11, 2.0, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.48)';
+        ctx.fill();
+      }
+      ctx.restore();
+    }
 
     // 2. Universal Bottom-Center Pivot Transformation anchored firmly on ground
     ctx.translate(cx + this.recoilX, bottomY + 1 - this.stepArc);

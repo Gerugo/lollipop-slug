@@ -336,6 +336,24 @@ export class Enemy {
       return;
     }
 
+    // Calculate nearest ground/platform Y below enemy for grounded contact shadow
+    let detectedGroundY = 460;
+    if (platforms && platforms.length > 0) {
+      const eBottom = this.y + this.height;
+      const eMidX = this.x + this.width / 2;
+      let closestY = 9999;
+      for (const plat of platforms) {
+        if (plat.type === 'acid_pool' || plat.type === 'soda_tide' || plat.type === 'lava_caramel' || plat.type === 'spikes') continue;
+        if (eMidX >= plat.x - 10 && eMidX <= plat.x + plat.width + 10) {
+          if (plat.y >= eBottom - 12 && plat.y < closestY) {
+            closestY = plat.y;
+          }
+        }
+      }
+      if (closestY < 9999) detectedGroundY = closestY;
+    }
+    this.groundY = this.isGrounded ? this.y + this.height : detectedGroundY;
+
     const distToPlayer = player ? Math.hypot(player.x - this.x, player.y - this.y) : 999;
     const dirToPlayer = player && player.x < this.x ? -1 : 1;
     const pCenterX = player ? player.x + player.width / 2 : this.x;
@@ -1202,13 +1220,31 @@ export class Enemy {
     const cx = this.x + this.width / 2;
     const bottomY = this.y + this.height;
 
-    // Ground Shadow for non-flying enemies
-    if (this.type !== 'PEZ' && this.type !== 'DRONE' && this.type !== 'GLOBO' && this.type !== 'MOTH' && this.type !== 'SNIPER') {
+    // Dynamic Grounded Shadow (Grounded Contact & Cast Shadows)
+    const groundY = this.groundY || 460;
+    const distToGround = Math.max(0, groundY - bottomY);
+    const maxDist = 340;
+    if (distToGround < maxDist && this.type !== 'PEZ') {
+      const shadowFactor = 1 - (distToGround / maxDist);
+      const isFlying = (this.type === 'DRONE' || this.type === 'GLOBO' || this.type === 'MOTH' || this.type === 'MURCIELAGO' || this.type === 'AVISPA_FUEGO');
+      const baseAlpha = this.isGrounded ? 0.38 : (isFlying ? (0.06 + 0.18 * shadowFactor) : (0.10 + 0.26 * shadowFactor));
+      const shadowW = (this.width * 0.48) * (this.isGrounded ? 1.0 : (0.85 + 0.35 * (1 - shadowFactor)));
+      const shadowH = (isFlying ? 4.2 : 5.8) * (this.isGrounded ? 1.0 : (0.75 + 0.25 * (1 - shadowFactor)));
+
       ctx.save();
+      // Outer diffuse shadow
       ctx.beginPath();
-      ctx.ellipse(cx, bottomY + 2, 22, 6, 0, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.20)';
+      ctx.ellipse(cx, groundY + 1, shadowW, shadowH, 0, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(0, 0, 0, ${baseAlpha})`;
       ctx.fill();
+
+      // Sharp dark contact occlusion pill directly under soles when on ground
+      if (this.isGrounded && distToGround < 4) {
+        ctx.beginPath();
+        ctx.ellipse(cx, groundY, shadowW * 0.72, 2.2, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.48)';
+        ctx.fill();
+      }
       ctx.restore();
     }
 

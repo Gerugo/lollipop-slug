@@ -523,13 +523,32 @@ export class Boss {
         }
       }
 
-      // 2. Soft Elliptical Ground Shadow
-      ctx.save();
-      ctx.beginPath();
-      ctx.ellipse(cx, bottomY + 3, 75, 18, 0, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
-      ctx.fill();
-      ctx.restore();
+      // 2. Dynamic Grounded Contact & Cast Shadow
+      const groundY = 460;
+      const distToGround = Math.max(0, groundY - bottomY);
+      const maxDist = 380;
+      if (distToGround < maxDist) {
+        const shadowFactor = 1 - (distToGround / maxDist);
+        const shadowAlpha = this.isGrounded ? 0.42 : (0.12 + 0.30 * shadowFactor);
+        const shadowW = 75 * (this.isGrounded ? 1.0 : (0.85 + 0.35 * (1 - shadowFactor)));
+        const shadowH = 18 * (this.isGrounded ? 1.0 : (0.75 + 0.25 * (1 - shadowFactor)));
+
+        ctx.save();
+        // Diffuse outer shadow
+        ctx.beginPath();
+        ctx.ellipse(cx, groundY + 3, shadowW, shadowH, 0, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
+        ctx.fill();
+
+        // Dark contact occlusion base under massive candy feet
+        if (this.isGrounded && distToGround < 5) {
+          ctx.beginPath();
+          ctx.ellipse(cx, groundY + 1, shadowW * 0.75, 4.5, 0, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+          ctx.fill();
+        }
+        ctx.restore();
+      }
 
       // 3. Dynamic Sprite Selection
       let bossSprite = imageLoader.getImage('boss');
