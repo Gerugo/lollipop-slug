@@ -8,8 +8,8 @@ export class Enemy {
     this.y = options.y || 0;
     this.prevY = this.y;
     this.type = options.type || 'GUMMY'; // 'GUMMY', 'TURRET', 'DRONE', 'GLOBO', 'PEZ', 'ROLLER', 'SNIPER', 'MOTH', 'KNIGHT'
-    this.width = options.width || 40;
-    this.height = options.height || 48;
+    this.width = options.width || 52;
+    this.height = options.height || 62;
     this.vx = 0;
     this.vy = 0;
     this.gravity = 950;
@@ -40,29 +40,29 @@ export class Enemy {
     // Specific enemy type configurations
     if (this.type === 'TURRET') {
       this.gravity = 0;
-      this.width = 46;
-      this.height = 46;
+      this.width = 62;
+      this.height = 62;
       this.hp = 45;
       this.scoreValue = 350;
       this.aimAngle = Math.PI;
     } else if (this.type === 'DRONE' || this.type === 'GLOBO') {
       this.gravity = 0;
-      this.width = 44;
-      this.height = 50;
+      this.width = 58;
+      this.height = 66;
       this.hp = 25;
       this.scoreValue = 300;
     } else if (this.type === 'PEZ') {
       this.gravity = 0;
-      this.width = 46;
-      this.height = 38;
+      this.width = 62;
+      this.height = 50;
       this.hp = 22;
       this.scoreValue = 280;
       this.waveSpeed = 4;
       this.waveAmp = 35;
     } else if (this.type === 'ROLLER') {
       this.gravity = 950;
-      this.width = 44;
-      this.height = 44;
+      this.width = 58;
+      this.height = 58;
       this.hp = 22;
       this.scoreValue = 350;
       this.speed = 50;
@@ -72,8 +72,8 @@ export class Enemy {
       this.rollerChargeDir = -1;
     } else if (this.type === 'SNIPER') {
       this.gravity = 0;
-      this.width = 46;
-      this.height = 54;
+      this.width = 58;
+      this.height = 70;
       this.hp = 28;
       this.scoreValue = 450;
       this.aimCycleTimer = 0;
@@ -82,8 +82,8 @@ export class Enemy {
       this.laserTargetY = 0;
     } else if (this.type === 'MOTH') {
       this.gravity = 0;
-      this.width = 50;
-      this.height = 44;
+      this.width = 68;
+      this.height = 58;
       this.hp = 20;
       this.scoreValue = 320;
       this.isDiving = false;
@@ -92,8 +92,8 @@ export class Enemy {
       this.waveAmp = 38;
     } else if (this.type === 'KNIGHT') {
       this.gravity = 950;
-      this.width = 50;
-      this.height = 56;
+      this.width = 66;
+      this.height = 74;
       this.hp = options.hp || 20;
       this.scoreValue = 500;
       this.speed = 45;
@@ -102,8 +102,8 @@ export class Enemy {
       this.isStabbing = false;
     } else if (this.type === 'LATIGO') {
       this.gravity = 950;
-      this.width = 46;
-      this.height = 54;
+      this.width = 60;
+      this.height = 70;
       this.hp = 38;
       this.scoreValue = 480;
       this.speed = 48;
@@ -111,8 +111,8 @@ export class Enemy {
       this.whipTimer = 0;
     } else if (this.type === 'ACIDO') {
       this.gravity = 0;
-      this.width = 48;
-      this.height = 42;
+      this.width = 62;
+      this.height = 54;
       this.hp = 26;
       this.scoreValue = 360;
       this.spitTimer = 0;
@@ -121,8 +121,8 @@ export class Enemy {
       this.spitInterval = 2.4;
     } else if (this.type === 'RANA') {
       this.gravity = 950;
-      this.width = 46;
-      this.height = 44;
+      this.width = 60;
+      this.height = 58;
       this.hp = 32;
       this.scoreValue = 420;
       this.speed = 60;
@@ -130,8 +130,8 @@ export class Enemy {
       this.frogTimer = 0.7;
     } else if (this.type === 'ANGUILA') {
       this.gravity = 500;
-      this.width = 54;
-      this.height = 40;
+      this.width = 72;
+      this.height = 52;
       this.hp = 34;
       this.scoreValue = 460;
       this.eelState = 'SUBMERGED'; // 'SUBMERGED', 'SURGE', 'DISCHARGE', 'DIVE'
@@ -139,8 +139,8 @@ export class Enemy {
       this.baseY = this.y;
     } else if (this.type === 'PINGUINO') {
       this.gravity = 950;
-      this.width = 50;
-      this.height = 36;
+      this.width = 64;
+      this.height = 48;
       this.hp = 34;
       this.scoreValue = 440;
       this.speed = 190;
@@ -148,8 +148,8 @@ export class Enemy {
       this.shootTimer = 0;
     } else if (this.type === 'YETI') {
       this.gravity = 950;
-      this.width = 64;
-      this.height = 66;
+      this.width = 86;
+      this.height = 90;
       this.hp = 58;
       this.scoreValue = 580;
       this.speed = 40;
@@ -157,8 +157,8 @@ export class Enemy {
       this.slamTimer = 2.0;
     } else if (this.type === 'MURCIELAGO') {
       this.gravity = 0;
-      this.width = 46;
-      this.height = 40;
+      this.width = 62;
+      this.height = 54;
       this.hp = 28;
       this.scoreValue = 400;
       this.speed = 80;
@@ -167,24 +167,24 @@ export class Enemy {
       this.hoverY = this.y;
     } else if (this.type === 'SLIME') {
       this.gravity = 950;
-      this.width = 48;
-      this.height = 36;
+      this.width = 64;
+      this.height = 48;
       this.hp = 36;
       this.scoreValue = 380;
       this.speed = 45;
       this.spitTimer = 0;
     } else if (this.type === 'SALAMANDRA') {
       this.gravity = 950;
-      this.width = 54;
-      this.height = 36;
+      this.width = 72;
+      this.height = 48;
       this.hp = 42;
       this.scoreValue = 450;
       this.speed = 85;
       this.fireTimer = 0;
     } else if (this.type === 'AVISPA_FUEGO') {
       this.gravity = 0;
-      this.width = 46;
-      this.height = 40;
+      this.width = 62;
+      this.height = 54;
       this.hp = 30;
       this.scoreValue = 420;
       this.speed = 90;
@@ -192,8 +192,8 @@ export class Enemy {
       this.shootTimer = 0;
     } else if (this.type === 'GARGOYLA') {
       this.gravity = 0;
-      this.width = 52;
-      this.height = 48;
+      this.width = 70;
+      this.height = 64;
       this.hp = 44;
       this.scoreValue = 480;
       this.speed = 80;
@@ -201,8 +201,8 @@ export class Enemy {
       this.shootTimer = 0;
     } else if (this.type === 'GUARDIA_REAL') {
       this.gravity = 950;
-      this.width = 54;
-      this.height = 62;
+      this.width = 72;
+      this.height = 82;
       this.hp = 60;
       this.scoreValue = 600;
       this.speed = 40;
@@ -210,8 +210,8 @@ export class Enemy {
       this.thrustTimer = 0;
     } else if (this.type === 'HECHICERO_DULCE') {
       this.gravity = 0;
-      this.width = 50;
-      this.height = 54;
+      this.width = 66;
+      this.height = 72;
       this.hp = 52;
       this.scoreValue = 650;
       this.speed = 70;
@@ -1143,8 +1143,8 @@ export class Enemy {
   }
 
   fireBullet(enemyProjectiles, particles) {
-    const muzzleX = this.x + (this.facing === -1 ? 4 : this.width - 4);
-    const muzzleY = this.y + 22;
+    const muzzleX = this.x + (this.facing === -1 ? 6 : this.width - 6);
+    const muzzleY = this.y + 30;
 
     enemyProjectiles.push(
       new Projectile({
@@ -1174,7 +1174,7 @@ export class Enemy {
     if (this.type !== 'PEZ' && this.type !== 'DRONE' && this.type !== 'GLOBO' && this.type !== 'MOTH' && this.type !== 'SNIPER') {
       ctx.save();
       ctx.beginPath();
-      ctx.ellipse(cx, bottomY + 2, 16, 5, 0, 0, Math.PI * 2);
+      ctx.ellipse(cx, bottomY + 2, 22, 6, 0, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(0, 0, 0, 0.20)';
       ctx.fill();
       ctx.restore();
@@ -1188,11 +1188,14 @@ export class Enemy {
       ctx.scale(this.facing, 1);
 
       const pezSprite = imageLoader.getImage('pez');
+      const renderW = 64;
+      const renderH = 52;
+
       if (pezSprite && pezSprite.complete && pezSprite.naturalWidth > 0) {
-        ctx.drawImage(pezSprite, -24, -20, 48, 40);
+        ctx.drawImage(pezSprite, -renderW / 2, -renderH / 2, renderW, renderH);
       } else {
         ctx.beginPath();
-        ctx.arc(0, 0, 16, 0, Math.PI * 2);
+        ctx.arc(0, 0, 22, 0, Math.PI * 2);
         ctx.fillStyle = '#06B6D4';
         ctx.fill();
       }
@@ -1207,11 +1210,14 @@ export class Enemy {
       ctx.rotate(this.rotation);
 
       const globoSprite = imageLoader.getImage('globo');
+      const renderW = 60;
+      const renderH = 68;
+
       if (globoSprite && globoSprite.complete && globoSprite.naturalWidth > 0) {
-        ctx.drawImage(globoSprite, -22, -26, 44, 52);
+        ctx.drawImage(globoSprite, -renderW / 2, -renderH / 2, renderW, renderH);
       } else {
         ctx.beginPath();
-        ctx.arc(0, -6, 18, 0, Math.PI * 2);
+        ctx.arc(0, -6, 24, 0, Math.PI * 2);
         ctx.fillStyle = '#EC4899';
         ctx.fill();
       }
@@ -1226,11 +1232,14 @@ export class Enemy {
       ctx.rotate(this.rotation);
 
       const rollerSprite = imageLoader.getImage('roller');
+      const renderW = 62;
+      const renderH = 62;
+
       if (rollerSprite && rollerSprite.complete && rollerSprite.naturalWidth > 0) {
-        ctx.drawImage(rollerSprite, -24, -24, 48, 48);
+        ctx.drawImage(rollerSprite, -renderW / 2, -renderH / 2, renderW, renderH);
       } else {
         ctx.beginPath();
-        ctx.arc(0, 0, 22, 0, Math.PI * 2);
+        ctx.arc(0, 0, 28, 0, Math.PI * 2);
         ctx.fillStyle = '#22C55E';
         ctx.fill();
         ctx.strokeStyle = '#FFFFFF';
@@ -1247,8 +1256,8 @@ export class Enemy {
       if (this.isAimingLaser) {
         ctx.save();
         ctx.beginPath();
-        const startLaserX = cx + (this.facing === -1 ? -12 : 12);
-        const startLaserY = this.y + 24;
+        const startLaserX = cx + (this.facing === -1 ? -16 : 16);
+        const startLaserY = this.y + 30;
         ctx.moveTo(startLaserX, startLaserY);
         ctx.lineTo(this.laserTargetX, this.laserTargetY);
         ctx.strokeStyle = 'rgba(239, 68, 68, 0.75)';
@@ -1258,7 +1267,7 @@ export class Enemy {
 
         // Laser dot at target
         ctx.beginPath();
-        ctx.arc(this.laserTargetX, this.laserTargetY, 3.5, 0, Math.PI * 2);
+        ctx.arc(this.laserTargetX, this.laserTargetY, 4, 0, Math.PI * 2);
         ctx.fillStyle = '#EF4444';
         ctx.fill();
         ctx.restore();
@@ -1269,11 +1278,14 @@ export class Enemy {
       ctx.scale(this.facing, 1);
 
       const sniperSprite = imageLoader.getImage('sniper');
+      const renderW = 60;
+      const renderH = 72;
+
       if (sniperSprite && sniperSprite.complete && sniperSprite.naturalWidth > 0) {
-        ctx.drawImage(sniperSprite, -24, -54, 48, 54);
+        ctx.drawImage(sniperSprite, -renderW / 2, -renderH, renderW, renderH);
       } else {
         ctx.beginPath();
-        ctx.roundRect(-16, -50, 32, 50, 8);
+        ctx.roundRect(-renderW / 2 + 6, -renderH, renderW - 12, renderH, 8);
         ctx.fillStyle = '#38BDF8';
         ctx.fill();
       }
@@ -1289,11 +1301,14 @@ export class Enemy {
       ctx.scale(this.facing, 1 + Math.sin(this.animTime * 14) * 0.12);
 
       const mothSprite = imageLoader.getImage('moth');
+      const renderW = 70;
+      const renderH = 60;
+
       if (mothSprite && mothSprite.complete && mothSprite.naturalWidth > 0) {
-        ctx.drawImage(mothSprite, -26, -22, 52, 44);
+        ctx.drawImage(mothSprite, -renderW / 2, -renderH / 2, renderW, renderH);
       } else {
         ctx.beginPath();
-        ctx.ellipse(0, 0, 20, 14, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, 0, 26, 18, 0, 0, Math.PI * 2);
         ctx.fillStyle = '#F472B6';
         ctx.fill();
       }
@@ -1305,15 +1320,18 @@ export class Enemy {
     if (this.type === 'KNIGHT') {
       ctx.translate(cx, bottomY);
       if (this.hurtTimer > 0) ctx.filter = 'brightness(2.6) drop-shadow(0 0 6px rgba(255,255,255,0.85))';
-      const stabOffset = this.isStabbing ? this.facing * 8 : 0;
+      const stabOffset = this.isStabbing ? this.facing * 10 : 0;
       ctx.scale(this.facing, 1);
 
       const knightSprite = imageLoader.getImage('knight');
+      const renderW = 68;
+      const renderH = 78;
+
       if (knightSprite && knightSprite.complete && knightSprite.naturalWidth > 0) {
-        ctx.drawImage(knightSprite, -26 + stabOffset, -56, 52, 56);
+        ctx.drawImage(knightSprite, -renderW / 2 + stabOffset, -renderH, renderW, renderH);
       } else {
         ctx.beginPath();
-        ctx.roundRect(-18, -54, 36, 54, 8);
+        ctx.roundRect(-renderW / 2 + 8, -renderH, renderW - 16, renderH, 8);
         ctx.fillStyle = '#F59E0B';
         ctx.fill();
         ctx.strokeStyle = '#FFFFFF';
@@ -1331,14 +1349,14 @@ export class Enemy {
       ctx.scale(this.facing, 1);
 
       const latigoSprite = imageLoader.getImage('latigo');
-      const renderW = 46;
-      const renderH = 54;
+      const renderW = 62;
+      const renderH = 72;
 
       if (latigoSprite && latigoSprite.complete && latigoSprite.naturalWidth > 0) {
         ctx.drawImage(latigoSprite, -renderW / 2, -renderH, renderW, renderH);
       } else {
         ctx.beginPath();
-        ctx.roundRect(-16, -renderH, 32, 48, 8);
+        ctx.roundRect(-renderW / 2 + 8, -renderH, renderW - 16, renderH, 8);
         ctx.fillStyle = '#1E1B4B';
         ctx.fill();
       }
@@ -1346,9 +1364,9 @@ export class Enemy {
       // Whip lash visual arc effect during WHIP state
       if (this.whipState === 'WHIP') {
         ctx.beginPath();
-        ctx.arc(renderW / 2 + 10, -renderH / 2, 45, -Math.PI / 4, Math.PI / 4);
+        ctx.arc(renderW / 2 + 12, -renderH / 2, 54, -Math.PI / 4, Math.PI / 4);
         ctx.strokeStyle = '#A3E635';
-        ctx.lineWidth = 5;
+        ctx.lineWidth = 6;
         ctx.stroke();
       }
 
@@ -1364,14 +1382,14 @@ export class Enemy {
       ctx.scale(this.facing, 1);
 
       const acidoSprite = imageLoader.getImage('acido');
-      const renderW = 48;
-      const renderH = 42;
+      const renderW = 64;
+      const renderH = 56;
 
       if (acidoSprite && acidoSprite.complete && acidoSprite.naturalWidth > 0) {
         ctx.drawImage(acidoSprite, -renderW / 2, -renderH / 2, renderW, renderH);
       } else {
         ctx.beginPath();
-        ctx.ellipse(0, 0, 20, 15, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, 0, 26, 20, 0, 0, Math.PI * 2);
         ctx.fillStyle = '#84CC16';
         ctx.fill();
       }
@@ -1390,14 +1408,14 @@ export class Enemy {
       ctx.scale(this.facing * scaleX, scaleY);
 
       const ranaSprite = imageLoader.getImage('rana');
-      const renderW = 46;
-      const renderH = 44;
+      const renderW = 62;
+      const renderH = 60;
 
       if (ranaSprite && ranaSprite.complete && ranaSprite.naturalWidth > 0) {
         ctx.drawImage(ranaSprite, -renderW / 2, -renderH, renderW, renderH);
       } else {
         ctx.beginPath();
-        ctx.ellipse(0, -renderH / 2, 20, 16, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, -renderH / 2, 26, 20, 0, 0, Math.PI * 2);
         ctx.fillStyle = '#10B981';
         ctx.fill();
       }
@@ -1411,7 +1429,7 @@ export class Enemy {
       if (this.eelState === 'SUBMERGED') {
         // Sparkling bubbles when submerged
         ctx.beginPath();
-        ctx.ellipse(cx, this.baseY, 18, 6, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx, this.baseY, 22, 8, 0, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(6, 182, 212, 0.4)';
         ctx.fill();
         ctx.restore();
@@ -1423,14 +1441,14 @@ export class Enemy {
       ctx.scale(this.facing, 1);
 
       const angSprite = imageLoader.getImage('anguila');
-      const renderW = 54;
-      const renderH = 40;
+      const renderW = 74;
+      const renderH = 54;
 
       if (angSprite && angSprite.complete && angSprite.naturalWidth > 0) {
         ctx.drawImage(angSprite, -renderW / 2, -renderH / 2, renderW, renderH);
       } else {
         ctx.beginPath();
-        ctx.ellipse(0, 0, 24, 12, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, 0, 32, 16, 0, 0, Math.PI * 2);
         ctx.fillStyle = '#06B6D4';
         ctx.fill();
       }
@@ -1438,7 +1456,7 @@ export class Enemy {
       // Electric spark corona in discharge state
       if (this.eelState === 'DISCHARGE') {
         ctx.beginPath();
-        ctx.arc(0, 0, 30, 0, Math.PI * 2);
+        ctx.arc(0, 0, 38, 0, Math.PI * 2);
         ctx.strokeStyle = 'rgba(250, 204, 21, 0.8)';
         ctx.lineWidth = 3;
         ctx.stroke();
@@ -1455,14 +1473,14 @@ export class Enemy {
       ctx.scale(this.facing, 1);
 
       const pingSprite = imageLoader.getImage('pinguino');
-      const renderW = 50;
-      const renderH = 36;
+      const renderW = 66;
+      const renderH = 50;
 
       if (pingSprite && pingSprite.complete && pingSprite.naturalWidth > 0) {
         ctx.drawImage(pingSprite, -renderW / 2, -renderH, renderW, renderH);
       } else {
         ctx.beginPath();
-        ctx.ellipse(0, -renderH / 2, 22, 14, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, -renderH / 2, 28, 18, 0, 0, Math.PI * 2);
         ctx.fillStyle = '#0F172A';
         ctx.fill();
       }
@@ -1481,14 +1499,14 @@ export class Enemy {
       ctx.scale(this.facing * scaleX, scaleY);
 
       const yetiSprite = imageLoader.getImage('yeti');
-      const renderW = 64;
-      const renderH = 66;
+      const renderW = 88;
+      const renderH = 92;
 
       if (yetiSprite && yetiSprite.complete && yetiSprite.naturalWidth > 0) {
         ctx.drawImage(yetiSprite, -renderW / 2, -renderH, renderW, renderH);
       } else {
         ctx.beginPath();
-        ctx.ellipse(0, -renderH / 2, 28, 28, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, -renderH / 2, 38, 38, 0, 0, Math.PI * 2);
         ctx.fillStyle = '#E0F2FE';
         ctx.fill();
       }
@@ -1504,14 +1522,14 @@ export class Enemy {
       ctx.scale(this.facing, 1);
 
       const batSprite = imageLoader.getImage('murcielago');
-      const renderW = 46;
-      const renderH = 40;
+      const renderW = 64;
+      const renderH = 56;
 
       if (batSprite && batSprite.complete && batSprite.naturalWidth > 0) {
         ctx.drawImage(batSprite, -renderW / 2, -renderH / 2, renderW, renderH);
       } else {
         ctx.beginPath();
-        ctx.ellipse(0, 0, 20, 16, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, 0, 26, 20, 0, 0, Math.PI * 2);
         ctx.fillStyle = '#9333EA';
         ctx.fill();
       }
@@ -1531,14 +1549,14 @@ export class Enemy {
       ctx.scale(this.facing * scaleX, scaleY);
 
       const slimeSprite = imageLoader.getImage('slime');
-      const renderW = 48;
-      const renderH = 36;
+      const renderW = 66;
+      const renderH = 50;
 
       if (slimeSprite && slimeSprite.complete && slimeSprite.naturalWidth > 0) {
         ctx.drawImage(slimeSprite, -renderW / 2, -renderH, renderW, renderH);
       } else {
         ctx.beginPath();
-        ctx.ellipse(0, -renderH / 2, 22, 14, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, -renderH / 2, 28, 18, 0, 0, Math.PI * 2);
         ctx.fillStyle = '#84CC16';
         ctx.fill();
       }
@@ -1554,14 +1572,14 @@ export class Enemy {
       ctx.scale(this.facing, 1);
 
       const salSprite = imageLoader.getImage('salamandra');
-      const renderW = 54;
-      const renderH = 36;
+      const renderW = 74;
+      const renderH = 50;
 
       if (salSprite && salSprite.complete && salSprite.naturalWidth > 0) {
         ctx.drawImage(salSprite, -renderW / 2, -renderH, renderW, renderH);
       } else {
         ctx.beginPath();
-        ctx.ellipse(0, -renderH / 2, 26, 14, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, -renderH / 2, 32, 18, 0, 0, Math.PI * 2);
         ctx.fillStyle = '#EA580C';
         ctx.fill();
       }
@@ -1577,14 +1595,14 @@ export class Enemy {
       ctx.scale(this.facing, 1);
 
       const waspSprite = imageLoader.getImage('avispa');
-      const renderW = 46;
-      const renderH = 40;
+      const renderW = 64;
+      const renderH = 56;
 
       if (waspSprite && waspSprite.complete && waspSprite.naturalWidth > 0) {
         ctx.drawImage(waspSprite, -renderW / 2, -renderH / 2, renderW, renderH);
       } else {
         ctx.beginPath();
-        ctx.ellipse(0, 0, 20, 16, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, 0, 26, 20, 0, 0, Math.PI * 2);
         ctx.fillStyle = '#F59E0B';
         ctx.fill();
       }
@@ -1600,14 +1618,14 @@ export class Enemy {
       ctx.scale(this.facing, 1);
 
       const garSprite = imageLoader.getImage('gargola');
-      const renderW = 52;
-      const renderH = 48;
+      const renderW = 72;
+      const renderH = 66;
 
       if (garSprite && garSprite.complete && garSprite.naturalWidth > 0) {
         ctx.drawImage(garSprite, -renderW / 2, -renderH / 2, renderW, renderH);
       } else {
         ctx.beginPath();
-        ctx.ellipse(0, 0, 22, 18, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, 0, 28, 24, 0, 0, Math.PI * 2);
         ctx.fillStyle = '#27272A';
         ctx.fill();
       }
@@ -1623,14 +1641,14 @@ export class Enemy {
       ctx.scale(this.facing, 1);
 
       const guardSprite = imageLoader.getImage('guardia_real');
-      const renderW = 54;
-      const renderH = 62;
+      const renderW = 74;
+      const renderH = 84;
 
       if (guardSprite && guardSprite.complete && guardSprite.naturalWidth > 0) {
         ctx.drawImage(guardSprite, -renderW / 2, -renderH, renderW, renderH);
       } else {
         ctx.beginPath();
-        ctx.ellipse(0, -renderH / 2, 24, 28, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, -renderH / 2, 32, 36, 0, 0, Math.PI * 2);
         ctx.fillStyle = '#27272A';
         ctx.fill();
       }
@@ -1646,14 +1664,14 @@ export class Enemy {
       ctx.scale(this.facing, 1);
 
       const sorSprite = imageLoader.getImage('hechicero');
-      const renderW = 50;
-      const renderH = 54;
+      const renderW = 68;
+      const renderH = 74;
 
       if (sorSprite && sorSprite.complete && sorSprite.naturalWidth > 0) {
         ctx.drawImage(sorSprite, -renderW / 2, -renderH / 2, renderW, renderH);
       } else {
         ctx.beginPath();
-        ctx.ellipse(0, 0, 22, 24, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, 0, 28, 30, 0, 0, Math.PI * 2);
         ctx.fillStyle = '#581C87';
         ctx.fill();
       }
@@ -1666,7 +1684,7 @@ export class Enemy {
     if (this.type === 'TURRET') {
       ctx.translate(cx, this.y + this.height / 2);
       ctx.beginPath();
-      ctx.roundRect(-20, 6, 40, 16, [4, 4, 0, 0]);
+      ctx.roundRect(-26, 8, 52, 20, [5, 5, 0, 0]);
       ctx.fillStyle = '#78350F';
       ctx.fill();
       ctx.strokeStyle = '#451A03';
@@ -1678,17 +1696,17 @@ export class Enemy {
       ctx.rotate(this.aimAngle);
 
       ctx.fillStyle = '#E2E8F0';
-      ctx.fillRect(8, -5, 16, 10);
+      ctx.fillRect(10, -6, 20, 12);
       ctx.strokeStyle = '#94A3B8';
-      ctx.strokeRect(8, -5, 16, 10);
+      ctx.strokeRect(10, -6, 20, 12);
 
-      const sphereGrad = ctx.createRadialGradient(-3, -3, 2, 0, 0, 16);
+      const sphereGrad = ctx.createRadialGradient(-4, -4, 2, 0, 0, 20);
       sphereGrad.addColorStop(0, '#FFFFFF');
       sphereGrad.addColorStop(0.3, '#E0F2FE');
       sphereGrad.addColorStop(1, '#38BDF8');
 
       ctx.beginPath();
-      ctx.arc(0, 0, 15, 0, Math.PI * 2);
+      ctx.arc(0, 0, 19, 0, Math.PI * 2);
       ctx.fillStyle = sphereGrad;
       ctx.fill();
       ctx.strokeStyle = '#0284C7';
@@ -1702,7 +1720,7 @@ export class Enemy {
 
     // --- 8. GUMMY BEAR SOLDIER ---
     const isWalking = Math.abs(this.vx) > 5;
-    const bounceY = (isWalking && this.isGrounded) ? Math.abs(Math.sin(this.animTime * 12)) * 2.5 : 0;
+    const bounceY = (isWalking && this.isGrounded) ? Math.abs(Math.sin(this.animTime * 12)) * 3 : 0;
 
     let scaleX = isWalking ? (1 + Math.sin(this.animTime * 12) * 0.06) : (1 - Math.sin(this.animTime * 3) * 0.03);
     let scaleY = isWalking ? (1 - Math.sin(this.animTime * 12) * 0.06) : (1 + Math.sin(this.animTime * 3) * 0.03);
@@ -1723,16 +1741,16 @@ export class Enemy {
     ctx.scale(this.facing * scaleX, scaleY);
 
     const gummySprite = imageLoader.getImage('gummybear');
-    const renderH = 48;
-    const renderW = 38;
+    const renderH = 64;
+    const renderW = 52;
 
-    const aimOffset = (this.isAiming || this.burstRemaining > 0) ? -2 : 0;
+    const aimOffset = (this.isAiming || this.burstRemaining > 0) ? -3 : 0;
 
     if (gummySprite && gummySprite.complete && gummySprite.naturalWidth > 0) {
       ctx.drawImage(gummySprite, -renderW / 2 + aimOffset, -renderH, renderW, renderH);
     } else {
       ctx.beginPath();
-      ctx.roundRect(-16 + aimOffset, -renderH, 32, 40, 10);
+      ctx.roundRect(-renderW / 2 + 4 + aimOffset, -renderH, renderW - 8, renderH - 8, 12);
       ctx.fillStyle = '#EF4444';
       ctx.fill();
       ctx.strokeStyle = '#FFFFFF';
@@ -1744,16 +1762,16 @@ export class Enemy {
     if (this.isAiming) {
       ctx.save();
       ctx.beginPath();
-      ctx.moveTo(14, -22);
-      ctx.lineTo(85, -22);
-      ctx.strokeStyle = 'rgba(244, 63, 94, 0.7)';
+      ctx.moveTo(18, -30);
+      ctx.lineTo(100, -30);
+      ctx.strokeStyle = 'rgba(244, 63, 94, 0.75)';
       ctx.lineWidth = 1.5;
       ctx.setLineDash([4, 4]);
       ctx.stroke();
 
       // Muzzle glint
       ctx.beginPath();
-      ctx.arc(14, -22, 3, 0, Math.PI * 2);
+      ctx.arc(18, -30, 3.5, 0, Math.PI * 2);
       ctx.fillStyle = '#FB7185';
       ctx.fill();
       ctx.restore();
