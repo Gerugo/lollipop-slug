@@ -11,6 +11,8 @@ export class Destructible {
     this.maxHp = this.hp;
     this.dead = false;
     this.hurtTimer = 0;
+    this.wobble = 0;
+    this.wobblePhase = 0;
     this.dropType = options.dropType || 'ESTRELLA';
   }
 
@@ -19,9 +21,14 @@ export class Destructible {
 
     this.hp -= amount;
     this.hurtTimer = 0.1;
+    this.wobble = 0.25;
+    this.wobblePhase = 0;
     soundManager.playEnemyPop();
 
     if (particles) {
+      if (typeof particles.emitHitImpactFlash === 'function') {
+        particles.emitHitImpactFlash(this.x + this.width / 2, this.y + this.height / 2);
+      }
       particles.emitCandyShards(this.x + this.width / 2, this.y + this.height / 2, 6);
     }
 
@@ -36,8 +43,11 @@ export class Destructible {
 
     if (particles) {
       particles.emitExplosionSprite(this.x + this.width / 2, this.y + this.height / 2, 1.1);
-      particles.emitSyrupSplash(this.x + this.width / 2, this.y + this.height / 2, 20, '#451A03');
-      particles.emitCandyShards(this.x + this.width / 2, this.y + this.height / 2, 20);
+      particles.emitSyrupSplash(this.x + this.width / 2, this.y + this.height / 2, 22, '#451A03');
+      particles.emitCandyShards(this.x + this.width / 2, this.y + this.height / 2, 18);
+      if (typeof particles.emitGummyDebris === 'function') {
+        particles.emitGummyDebris(this.x + this.width / 2, this.y + this.height / 2, '#78350F', 12);
+      }
       particles.emitSugarSmoke(this.x + this.width / 2, this.y + this.height / 2, 8, '#78350F');
     }
 
@@ -47,7 +57,7 @@ export class Destructible {
         x: this.x + this.width / 2 - 13,
         y: this.y + 10,
         vx: (Math.random() - 0.5) * 60,
-        vy: -180,
+        vy: -200,
         type: this.dropType,
         collected: false,
         timer: 0,
@@ -59,6 +69,12 @@ export class Destructible {
 
   update(dt) {
     if (this.hurtTimer > 0) this.hurtTimer -= dt;
+    if (this.wobble > 0.001) {
+      this.wobblePhase += dt * 32;
+      this.wobble *= Math.exp(-dt * 12);
+    } else {
+      this.wobble = 0;
+    }
   }
 
   draw(ctx) {
@@ -76,7 +92,8 @@ export class Destructible {
     ctx.fill();
     ctx.restore();
 
-    ctx.translate(cx, bottomY + 1);
+    const wobbleX = Math.sin(this.wobblePhase) * this.wobble * 8;
+    ctx.translate(cx + wobbleX, bottomY + 1);
 
     if (this.hurtTimer > 0) {
       ctx.filter = 'brightness(2.2)';

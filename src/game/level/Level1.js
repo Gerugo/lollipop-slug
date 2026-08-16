@@ -51,6 +51,11 @@ export class Level1 {
 
   update(dt) {
     this.animTime += dt;
+    for (const plat of this.platforms) {
+      if (plat.squashTimer > 0) {
+        plat.squashTimer = Math.max(0, plat.squashTimer - dt);
+      }
+    }
   }
 
   // --- 3-LAYER CINEMATIC PARALLAX & BIOME SYSTEM ---
@@ -540,7 +545,13 @@ export class Level1 {
       } 
       // --- 3. ELASTIC JELLY BOUNCE TRAMPOLINE ---
       else if (plat.type === 'bounce') {
-        ctx.translate(plat.x, drawY);
+        const squash = plat.squashTimer > 0 ? (plat.squashTimer / 0.25) : 0;
+        const scaleY = 1 - Math.sin(squash * Math.PI) * 0.42;
+        const scaleX = 1 + Math.sin(squash * Math.PI) * 0.22;
+
+        ctx.translate(plat.x + plat.width / 2, drawY + plat.height);
+        ctx.scale(scaleX, scaleY);
+        ctx.translate(-plat.width / 2, -plat.height);
 
         // Trampoline Base Shadow
         ctx.fillStyle = 'rgba(0, 0, 0, 0.30)';

@@ -49,6 +49,8 @@ export class Player {
     this.recoilX = 0;
     this.shootShake = 0;
     this.landSquashTimer = 0;
+    this.skidTimer = 0;
+    this.prevVx = 0;
     this.isVictorious = false;
   }
 
@@ -58,6 +60,7 @@ export class Player {
     this.prevY = y;
     this.vx = 0;
     this.vy = 0;
+    this.prevVx = 0;
     this.facing = 1;
     this.hp = this.maxHp;
     this.isDead = false;
@@ -72,6 +75,7 @@ export class Player {
     this.recoilX = 0;
     this.shootShake = 0;
     this.landSquashTimer = 0;
+    this.skidTimer = 0;
   }
 
   equipWeapon(weaponType) {
@@ -143,6 +147,9 @@ export class Player {
     if (this.landSquashTimer > 0) {
       this.landSquashTimer = Math.max(0, this.landSquashTimer - dt);
     }
+    if (this.skidTimer > 0) {
+      this.skidTimer = Math.max(0, this.skidTimer - dt);
+    }
 
     // Drop through timer
     if (this.dropTimer > 0) {
@@ -168,6 +175,16 @@ export class Player {
     const moveUp = input.isDown('up');
     const moveDown = input.isDown('down') || input.isDown('crouch');
     const jumpPressed = input.isJustPressed('jump');
+
+    // Skid Dust on rapid direction turn while running
+    if (this.isGrounded && Math.abs(this.prevVx) > 130) {
+      if ((moveLeft && this.prevVx > 80) || (moveRight && this.prevVx < -80)) {
+        this.skidTimer = 0.18;
+        if (particles) {
+          particles.emitSkidDust(this.x + this.width / 2, this.y + this.height, this.facing);
+        }
+      }
+    }
 
     // Always update facing immediately based on horizontal input
     if (moveLeft && !moveRight) {
@@ -206,6 +223,8 @@ export class Player {
       this.vx = 0;
       this.walkTimer = 0;
     }
+
+    this.prevVx = this.vx;
 
     // Incline tilt & Stride arc
     const isRunning = Math.abs(this.vx) > 15 && this.isGrounded;
@@ -264,8 +283,8 @@ export class Player {
 
   shoot(projectiles, particles, soundManager) {
     this.fireTimer = this.currentWeapon.fireRate;
-    this.recoilX = -4 * this.facing;
-    this.shootShake = 0.06;
+    this.recoilX = -5 * this.facing;
+    this.shootShake = 0.08;
 
     const bulletSpeed = 680;
     let bulletVx = 0;
@@ -295,6 +314,23 @@ export class Player {
     }
 
     const shotAngle = Math.atan2(bulletVy, bulletVx);
+
+    // Eject Brass Bullet Casings & Micro Camera Kick
+    if (particles && ['PISTOL', 'HMG', 'SHOTGUN'].includes(this.currentWeapon.id)) {
+      particles.emitBulletCasing(bulletX, bulletY, this.facing);
+    }
+
+    if (this._camera) {
+      if (this.currentWeapon.id === 'PISTOL') {
+        this._camera.shake(1.5, 0.05, -this.facing, 0);
+      } else if (this.currentWeapon.id === 'HMG') {
+        this._camera.shake(2.5, 0.06, -this.facing, 0);
+      } else if (this.currentWeapon.id === 'SHOTGUN') {
+        this._camera.shake(6, 0.12, -this.facing, 0);
+      } else if (this.currentWeapon.id === 'ROCKET' || this.currentWeapon.id === 'CANON_PLASMA' || this.currentWeapon.id === 'CANON_COSMICO') {
+        this._camera.shake(8, 0.15, -this.facing, 0);
+      }
+    }
 
     if (this.currentWeapon.id === 'PISTOL') {
       soundManager.playPistol();
@@ -687,6 +723,66 @@ export class Player {
       ctx.fillStyle = '#FF5A9E';
       ctx.fillRect(-2, -3, 14, 6);
     }
+
+    // Dynamic Starburst Muzzle Flash when firing
+    if (this.shootShake > 0) {
+      ctx.save();
+      const flashX = flipX ? gunW - 2 : gunW;
+      ctx.translate(flashX, 0);
+
+      const flashSize = (this.currentWeapon.id === 'SHOTGUN' || this.currentWeapon.id === 'ROCKET') ? 18 : 12;
+      const flashGrad = ctx.createRadialGradient(0, 0, 1, 0, 0, flashSize);
+      flashGrad.addColorStop(0, '#FFFFFF');
+      flashGrad.addColorStop(0.4, '#FDE047');
+      flashGrad.addColorStop(1, 'rgba(244, 63, 94, 0)');
+      ctx.fillStyle = flashGrad;
+      ctx.beginPath();
+      ctx.arc(0, 0, flashSize, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Sharp Diamond Sparks
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.moveTo(0, -flashSize * 0.9);
+      ctx.lineTo(flashSize * 0.3, 0);
+      ctx.lineTo(0, flashSize * 0.9);
+      ctx.lineTo(-flashSize * 0.3, 0);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(-flashSize * 0.9, 0);
+      ctx.lineTo(0, flashSize * 0.3);
+      ctx.lineTo(flashSize * 0.9, 0);
+      ctx.lineTo(0, -flashSize * 0.3);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    ctx.restore(); // End gun transform
+
+    // Dynamic Hero Satin Headband Ribbon trailing behind
+    const trailWind = -this.facing * (Math.abs(this.vx) / this.speed) * 14;
+    const wave1 = Math.sin(this.animTime * 14) * 3;
+    const wave2 = Math.cos(this.animTime * 16) * 4;
+
+    ctx.save();
+    ctx.strokeStyle = '#EC4899';
+    ctx.lineWidth = 3.5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-8, -renderH + 12);
+    ctx.quadraticCurveTo(-14 + trailWind * 0.5, -renderH + 14 + wave1, -22 + trailWind, -renderH + 12 + wave2);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#F472B6';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(-8, -renderH + 15);
+    ctx.quadraticCurveTo(-15 + trailWind * 0.5, -renderH + 17 + wave2, -24 + trailWind, -renderH + 18 + wave1);
+    ctx.stroke();
     ctx.restore();
 
     ctx.restore();

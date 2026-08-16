@@ -243,16 +243,19 @@ export class Enemy {
 
     this.hp -= amount;
     this.hurtTimer = 0.08;
-    this.hitWobble = 0.18;
+    this.hitWobble = 0.28;
     this.wobblePhase = 0;
     soundManager.playEnemyPop();
 
     if (this.gravity > 0 && attackerX) {
-      this.vx = (this.x < attackerX ? -120 : 120);
-      this.vy = -100;
+      this.vx = (this.x < attackerX ? -130 : 130);
+      this.vy = -120;
     }
 
     if (particles) {
+      if (typeof particles.emitHitImpactFlash === 'function') {
+        particles.emitHitImpactFlash(this.x + this.width / 2, this.y + this.height / 2);
+      }
       particles.emitCandyShards(this.x + this.width / 2, this.y + this.height / 2, 6);
       particles.emitSyrupSplash(this.x + this.width / 2, this.y + this.height / 2, 5, '#EF4444');
     }
@@ -265,8 +268,37 @@ export class Enemy {
   die(particles, soundManager) {
     this.dead = true;
     soundManager.playExplosion();
+
+    const enemyColorMap = {
+      GUMMY: '#EF4444',
+      ROLLER: '#22C55E',
+      SNIPER: '#0284C7',
+      MOTH: '#EC4899',
+      KNIGHT: '#F59E0B',
+      TURRET: '#D97706',
+      ACIDO: '#84CC16',
+      RANA: '#10B981',
+      ANGUILA: '#06B6D4',
+      PINGUINO: '#38BDF8',
+      YETI: '#E0F2FE',
+      MURCIELAGO: '#9333EA',
+      SLIME: '#84CC16',
+      SALAMANDRA: '#EA580C',
+      AVISPA_FUEGO: '#F59E0B',
+      GARGOYLA: '#3F3F46',
+      GUARDIA_REAL: '#475569',
+      HECHICERO_DULCE: '#581C87',
+      PEZ: '#06B6D4',
+      DRONE: '#EC4899',
+      GLOBO: '#EC4899'
+    };
+    const debrisColor = enemyColorMap[this.type] || '#EF4444';
+
     if (particles) {
-      particles.emitSyrupSplash(this.x + this.width / 2, this.y + this.height / 2, 24, '#EF4444');
+      if (typeof particles.emitGummyDebris === 'function') {
+        particles.emitGummyDebris(this.x + this.width / 2, this.y + this.height / 2, debrisColor, 14);
+      }
+      particles.emitSyrupSplash(this.x + this.width / 2, this.y + this.height / 2, 24, debrisColor);
       particles.emitConfetti(this.x + this.width / 2, this.y + this.height / 2, 20);
       particles.emitCandyShards(this.x + this.width / 2, this.y + this.height / 2, 14);
       particles.emitSugarSmoke(this.x + this.width / 2, this.y + this.height / 2, 8, '#FCA5A5');

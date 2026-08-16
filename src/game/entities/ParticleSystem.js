@@ -216,6 +216,90 @@ export class ParticleSystem {
     }
   }
 
+  // --- BULLET CASINGS EJECTION (Popping & Bouncing Brass Shells) ---
+  emitBulletCasing(x, y, facing = 1) {
+    const angle = (Math.random() - 0.5) * 0.4;
+    const speedX = -facing * (70 + Math.random() * 80);
+    const speedY = -140 - Math.random() * 90;
+    this.particles.push({
+      type: 'casing',
+      x: x - facing * 8,
+      y: y - 4,
+      vx: speedX,
+      vy: speedY,
+      gravity: 620,
+      rebound: 0.52,
+      drag: 0.98,
+      width: 5,
+      height: 2.5,
+      rot: Math.random() * Math.PI,
+      rotSpeed: (Math.random() - 0.5) * 26,
+      color: '#FBBF24',
+      bounces: 0,
+      life: 1.1,
+      maxLife: 1.1
+    });
+  }
+
+  // --- SKID DUST ON DIRECTION REVERSAL ---
+  emitSkidDust(x, y, facing = 1) {
+    for (let i = 0; i < 4; i++) {
+      const speed = 25 + Math.random() * 50;
+      this.particles.push({
+        type: 'skid_dust',
+        x: x + (Math.random() - 0.5) * 8,
+        y: y + 2,
+        vx: -facing * speed + (Math.random() - 0.5) * 20,
+        vy: -15 - Math.random() * 25,
+        gravity: 60,
+        drag: 0.92,
+        radius: 4 + Math.random() * 5,
+        growth: 8,
+        color: 'rgba(255, 241, 242, 0.85)',
+        life: 0.35 + Math.random() * 0.2,
+        maxLife: 0.55
+      });
+    }
+  }
+
+  // --- JUICY GUMMY DEBRIS ON ENEMY DEFEAT ---
+  emitGummyDebris(x, y, color = '#EF4444', count = 12) {
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 110 + Math.random() * 240;
+      this.particles.push({
+        type: 'gummy_debris',
+        x: x + (Math.random() - 0.5) * 16,
+        y: y + (Math.random() - 0.5) * 16,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 100,
+        gravity: 500,
+        rebound: 0.65,
+        drag: 0.97,
+        size: 5 + Math.random() * 5,
+        color,
+        rot: Math.random() * Math.PI,
+        rotSpeed: (Math.random() - 0.5) * 18,
+        life: 0.9 + Math.random() * 0.4,
+        maxLife: 1.3
+      });
+    }
+    this.emitSparkles(x, y, 6, '#FFFFFF');
+  }
+
+  // --- HIT IMPACT STARBURST GLINT ---
+  emitHitImpactFlash(x, y) {
+    this.particles.push({
+      type: 'impact_glint',
+      x,
+      y,
+      size: 14,
+      life: 0.12,
+      maxLife: 0.12
+    });
+    this.emitSparkles(x, y, 3, '#FEF08A');
+  }
+
   emitCandyShards(x, y, count = 15) {
     const colors = ['#FF5A9E', '#5CD86E', '#52C4FF', '#FFD633', '#C084FC'];
     for (let i = 0; i < count; i++) {
@@ -280,11 +364,17 @@ export class ParticleSystem {
       p.x += p.vx * dt;
       p.y += p.vy * dt;
 
-      // Ground rebound collision for bouncy shards
-      if (p.type === 'bouncy_shard' && p.y >= 455 && p.vy > 0) {
+      // Ground rebound collision for bouncy shards, casings, and gummy debris
+      if ((p.type === 'bouncy_shard' || p.type === 'gummy_debris' || p.type === 'casing') && p.y >= 455 && p.vy > 0) {
         p.y = 455;
         p.vy = -p.vy * p.rebound;
-        p.vx *= 0.7;
+        p.vx *= 0.65;
+        p.bounces = (p.bounces || 0) + 1;
+        if (p.bounces > 3) {
+          p.vy = 0;
+          p.vx = 0;
+          p.rotSpeed = 0;
+        }
       }
 
       if (p.rotSpeed) {
@@ -334,6 +424,48 @@ export class ParticleSystem {
           ctx.fillStyle = '#EF4444';
           ctx.fill();
         }
+      } else if (p.type === 'casing') {
+        // Brass/Golden Bullet Casing
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.width / 2, -p.height / 2, p.width, p.height);
+        ctx.fillStyle = '#FEF08A';
+        ctx.fillRect(-p.width / 2 + 1, -p.height / 2, p.width - 2, 1);
+      } else if (p.type === 'gummy_debris') {
+        // Translucent Bouncy Gummy Bear Chunk with Specular Sheen
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.roundRect(-p.size / 2, -p.size / 2, p.size, p.size, 2.5);
+        ctx.fill();
+        // Shiny jelly corner highlight
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+        ctx.beginPath();
+        ctx.arc(-p.size * 0.2, -p.size * 0.2, p.size * 0.25, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (p.type === 'skid_dust' || p.type === 'smoke') {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+      } else if (p.type === 'impact_glint') {
+        ctx.translate(p.x, p.y);
+        ctx.fillStyle = '#FFFFFF';
+        const s = p.size * (p.life / p.maxLife);
+        ctx.beginPath();
+        ctx.moveTo(0, -s);
+        ctx.lineTo(s * 0.25, 0);
+        ctx.lineTo(0, s);
+        ctx.lineTo(-s * 0.25, 0);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(-s, 0);
+        ctx.lineTo(0, s * 0.25);
+        ctx.lineTo(s, 0);
+        ctx.lineTo(0, -s * 0.25);
+        ctx.fill();
       } else if (p.type === 'crumble') {
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
@@ -354,11 +486,6 @@ export class ParticleSystem {
         ctx.rotate(p.rot);
         ctx.fillStyle = p.color;
         ctx.fillRect(-p.width / 2, -p.height / 2, p.width, p.height);
-      } else if (p.type === 'smoke') {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = p.color;
-        ctx.fill();
       } else if (p.type === 'bubble') {
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);

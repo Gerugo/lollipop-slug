@@ -108,6 +108,7 @@ export class Physics {
           entity.y = platY - entity.height;
           entity.vy = plat.type === 'elastic' ? -780 : -740; // Super bounce launch!
           entity.isGrounded = false;
+          plat.squashTimer = 0.25;
           if (sound && sound.playJump) sound.playJump();
           if (particles) {
             particles.emitSparkles(plat.x + plat.width / 2, platY, 16, '#84CC16');
