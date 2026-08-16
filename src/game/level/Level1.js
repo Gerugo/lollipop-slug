@@ -120,6 +120,9 @@ export class Level1 {
       }
     }
 
+    // Microscopic Sparkling Diamond Sugar Crystals over green hills
+    this.drawHillSugarSparkles(ctx, viewX, viewW, viewH);
+
     // Biome C Factory chocolate gears in mid-distance
     if (viewX + viewW > 3600 && viewX < 5400) {
       ctx.save();
@@ -307,6 +310,9 @@ export class Level1 {
         ctx.fill();
       }
 
+      // Porous Gingerbread & Biscuit Dough Micro-Texture
+      this.drawGingerbreadPorosity(ctx, startX, endX, topY, bottomY);
+
       // Cliff Edge Drop-off Shading (Left and Right Vertical Edge Ambient Occlusion)
       const leftCliffGrad = ctx.createLinearGradient(startX, topY, startX + 32, topY);
       leftCliffGrad.addColorStop(0, 'rgba(0, 0, 0, 0.45)');
@@ -489,59 +495,7 @@ export class Level1 {
       // --- 2. SINKING WAFER PLATFORM ---
       if (plat.type === 'sinking') {
         const shake = plat.isStandingOn ? (Math.random() - 0.5) * 3 : 0;
-        ctx.translate(plat.x + shake, drawY);
-
-        // Platform Bottom Shadow
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
-        ctx.beginPath();
-        ctx.roundRect(2, 4, plat.width - 4, plat.height, 8);
-        ctx.fill();
-
-        // 3-Layer Biscuit Sandwich Body
-        const waferGrad = ctx.createLinearGradient(0, 0, 0, plat.height);
-        waferGrad.addColorStop(0, '#FDA4AF');
-        waferGrad.addColorStop(0.3, '#E11D48');
-        waferGrad.addColorStop(0.5, '#FFFFFF'); // Cream layer
-        waferGrad.addColorStop(0.7, '#E11D48');
-        waferGrad.addColorStop(1, '#9F1239');
-        ctx.beginPath();
-        ctx.roundRect(0, 0, plat.width, plat.height, 8);
-        ctx.fillStyle = waferGrad;
-        ctx.fill();
-
-        // Waffle Grid Texture
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-        ctx.lineWidth = 1.2;
-        const gridW = 16;
-        for (let gx = 8; gx < plat.width - 8; gx += gridW) {
-          ctx.strokeRect(gx, 4, gridW - 4, plat.height - 8);
-        }
-
-        // Top Rim Highlight
-        ctx.strokeStyle = '#FFE4E6';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(4, 1);
-        ctx.lineTo(plat.width - 4, 1);
-        ctx.stroke();
-
-        // Warning crumb crack lines if sinking
-        if (plat.sinkY > 8) {
-          ctx.strokeStyle = '#4C0519';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.moveTo(plat.width * 0.28, 0);
-          ctx.lineTo(plat.width * 0.34, plat.height);
-          ctx.moveTo(plat.width * 0.68, 0);
-          ctx.lineTo(plat.width * 0.62, plat.height);
-          ctx.stroke();
-
-          // Crumbs falling
-          ctx.fillStyle = '#FDA4AF';
-          for (let i = 0; i < 4; i++) {
-            ctx.fillRect(plat.width * 0.3 + i * 20, plat.height + (this.animTime * 60 + i * 8) % 18, 2.5, 2.5);
-          }
-        }
+        this.drawWafer3D(ctx, plat.x + shake, drawY, plat.width, plat.height, true, plat.sinkY, false);
       } 
       // --- 3. ELASTIC JELLY BOUNCE TRAMPOLINE ---
       else if (plat.type === 'bounce') {
@@ -589,106 +543,11 @@ export class Level1 {
       } 
       // --- 4. HOVERING MOVING WAFER PLATFORM ---
       else if (plat.type === 'moving') {
-        ctx.translate(plat.x, drawY);
-
-        // Platform Shadow
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
-        ctx.beginPath();
-        ctx.roundRect(2, 3, plat.width - 4, plat.height, 8);
-        ctx.fill();
-
-        if (barquilloImg && barquilloImg.complete && barquilloImg.naturalWidth > 0) {
-          ctx.drawImage(barquilloImg, 0, 0, plat.width, plat.height);
-        } else {
-          // Baked Waffle Sandwich Gradient
-          const mGrad = ctx.createLinearGradient(0, 0, 0, plat.height);
-          mGrad.addColorStop(0, '#FEF3C7');
-          mGrad.addColorStop(0.35, '#D97706');
-          mGrad.addColorStop(0.5, '#FFFBEB'); // Cream filling
-          mGrad.addColorStop(0.65, '#D97706');
-          mGrad.addColorStop(1, '#92400E');
-          ctx.beginPath();
-          ctx.roundRect(0, 0, plat.width, plat.height, 8);
-          ctx.fillStyle = mGrad;
-          ctx.fill();
-
-          // Waffle Grid Indentation Shading
-          ctx.strokeStyle = 'rgba(120, 53, 15, 0.35)';
-          ctx.lineWidth = 1.2;
-          const gw = 18;
-          for (let gx = 8; gx < plat.width - 8; gx += gw) {
-            ctx.strokeRect(gx, 3, gw - 4, plat.height - 6);
-          }
-        }
-
-        // Top Rim Highlight
-        ctx.strokeStyle = '#FEF3C7';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(6, 1);
-        ctx.lineTo(plat.width - 6, 1);
-        ctx.stroke();
-
-        // Candy Thruster Pods (Left and Right)
-        ctx.fillStyle = '#78350F';
-        ctx.beginPath();
-        ctx.roundRect(14, plat.height - 3, 16, 7, [0, 0, 4, 4]);
-        ctx.roundRect(plat.width - 30, plat.height - 3, 16, 7, [0, 0, 4, 4]);
-        ctx.fill();
-
-        // Shimmering Exhaust Heat & Sweet Thruster Bubbles
-        const bubblePulse = Math.sin(this.animTime * 14) * 2;
-        ctx.fillStyle = '#38BDF8';
-        ctx.beginPath();
-        ctx.arc(22, plat.height + 6, 3.5 + bubblePulse, 0, Math.PI * 2);
-        ctx.arc(plat.width - 22, plat.height + 6, 3.5 - bubblePulse, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#E0F2FE';
-        ctx.beginPath();
-        ctx.arc(22, plat.height + 12, 2.2, 0, Math.PI * 2);
-        ctx.arc(plat.width - 22, plat.height + 12, 2.2, 0, Math.PI * 2);
-        ctx.fill();
+        this.drawWafer3D(ctx, plat.x, drawY, plat.width, plat.height, false, 0, true);
       } 
       // --- 5. STANDARD WAFER / BARQUILLO PLATFORM ---
       else if (plat.type === 'wafer') {
-        // Platform Shadow
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
-        ctx.beginPath();
-        ctx.roundRect(plat.x + 2, drawY + 4, plat.width - 4, plat.height, 8);
-        ctx.fill();
-
-        if (barquilloImg && barquilloImg.complete && barquilloImg.naturalWidth > 0) {
-          ctx.drawImage(barquilloImg, plat.x, drawY, plat.width, plat.height);
-        } else {
-          // Layered Wafer Sandwich
-          const waferGrad = ctx.createLinearGradient(0, drawY, 0, drawY + plat.height);
-          waferGrad.addColorStop(0, '#FEF3C7');
-          waferGrad.addColorStop(0.32, '#D97706');
-          waferGrad.addColorStop(0.5, '#FFFFFF'); // Cream layer
-          waferGrad.addColorStop(0.68, '#D97706');
-          waferGrad.addColorStop(1, '#92400E');
-          ctx.beginPath();
-          ctx.roundRect(plat.x, drawY, plat.width, plat.height, 8);
-          ctx.fillStyle = waferGrad;
-          ctx.fill();
-
-          // Waffle Cross-Hatch Grid Shading
-          ctx.strokeStyle = 'rgba(120, 53, 15, 0.32)';
-          ctx.lineWidth = 1.2;
-          const gw = 18;
-          for (let gx = plat.x + 8; gx < plat.x + plat.width - 8; gx += gw) {
-            ctx.strokeRect(gx, drawY + 3, gw - 4, plat.height - 6);
-          }
-        }
-
-        // Top Satin Rim Light
-        ctx.strokeStyle = '#FFFBEB';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(plat.x + 6, drawY + 1);
-        ctx.lineTo(plat.x + plat.width - 6, drawY + 1);
-        ctx.stroke();
+        this.drawWafer3D(ctx, plat.x, drawY, plat.width, plat.height, false, 0, false);
       } 
       // --- 6. 3D CYLINDRICAL CANDY CANE PLATFORM ---
       else if (plat.type === 'candy_cane') {
@@ -756,5 +615,250 @@ export class Level1 {
 
       ctx.restore();
     }
+  }
+
+  // --- 1. MICROSCOPIC SPARKLING DIAMOND SUGAR CRYSTALS OVER GREEN HILLS ---
+  drawHillSugarSparkles(ctx, viewX, viewW, viewH) {
+    ctx.save();
+    const hillBaseY = viewH * 0.45;
+    const crystalCount = 38;
+    for (let i = 0; i < crystalCount; i++) {
+      const seed = i * 197.3;
+      const worldX = (i * 180 + Math.sin(seed) * 90);
+      const screenX = (worldX - viewX * 0.30) % (viewW + 200);
+      if (screenX < -20 || screenX > viewW + 20) continue;
+
+      const screenY = hillBaseY + (Math.sin(worldX * 0.005) * 60) + ((seed * 13) % 110);
+      const twinkle = Math.sin(this.animTime * 5 + seed) * 0.5 + 0.5;
+      if (twinkle < 0.2) continue;
+
+      const size = (1.5 + (seed % 2.5)) * twinkle;
+      const isDiamond = (i % 3 === 0);
+
+      ctx.save();
+      ctx.translate(screenX, screenY);
+      ctx.globalAlpha = 0.55 + twinkle * 0.45;
+
+      // Soft Radial Aura
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.beginPath();
+      ctx.arc(0, 0, size * 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Sharp Diamond Star Glint
+      ctx.fillStyle = '#FFFFFF';
+      if (isDiamond) {
+        // 4-pointed diamond glint
+        ctx.beginPath();
+        ctx.moveTo(0, -size * 2.2);
+        ctx.lineTo(size * 0.6, 0);
+        ctx.lineTo(0, size * 2.2);
+        ctx.lineTo(-size * 0.6, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(-size * 2.2, 0);
+        ctx.lineTo(0, size * 0.6);
+        ctx.lineTo(size * 2.2, 0);
+        ctx.lineTo(0, -size * 0.6);
+        ctx.closePath();
+        ctx.fill();
+      } else {
+        // Hexagonal sugar crystal grain
+        ctx.beginPath();
+        ctx.arc(0, 0, size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  // --- 2. POROUS GINGERBREAD & BISCUIT DOUGH MICRO-TEXTURE ---
+  drawGingerbreadPorosity(ctx, startX, endX, topY, bottomY) {
+    ctx.save();
+    const step = 28;
+    for (let px = startX + 12; px < endX - 12; px += step) {
+      for (let py = topY + 16; py < bottomY - 14; py += 22) {
+        const hash = (px * 73.1 + py * 19.7);
+        const poreRadius = 1.5 + (Math.sin(hash) * 0.5 + 0.5) * 2.2;
+        const poreX = px + Math.sin(hash * 2.3) * 6;
+        const poreY = py + Math.cos(hash * 1.7) * 4;
+
+        // Dark sunken air pocket in spongy biscuit dough
+        ctx.fillStyle = 'rgba(45, 15, 5, 0.38)';
+        ctx.beginPath();
+        ctx.arc(poreX, poreY, poreRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Upper pore rim light (baked crust highlight)
+        ctx.strokeStyle = 'rgba(254, 243, 199, 0.28)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(poreX - 0.6, poreY - 0.8, poreRadius * 0.7, -Math.PI * 0.8, -Math.PI * 0.2);
+        ctx.stroke();
+
+        // Embedded cinnamon spice speck / caramelized brown sugar grain
+        if ((Math.floor(hash) % 3) === 0) {
+          ctx.fillStyle = '#3E1504';
+          ctx.fillRect(poreX + 4, poreY + 2, 1.8, 1.8);
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+          ctx.fillRect(poreX + 4, poreY + 2, 1, 1);
+        }
+      }
+    }
+    ctx.restore();
+  }
+
+  // --- 3. 5-LAYER BEVELED WAFER & OBLEA WITH MICRO-RELIEF & CRUMBS ---
+  drawWafer3D(ctx, x, y, width, height, isSinking = false, sinkY = 0, isMoving = false) {
+    const barquilloImg = imageLoader.getImage('barquillo') || imageLoader.getImage('plataforma-barquillo');
+
+    ctx.save();
+    // Platform Bottom Shadow
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+    ctx.beginPath();
+    ctx.roundRect(x + 2, y + 4, width - 4, height, 8);
+    ctx.fill();
+
+    if (barquilloImg && barquilloImg.complete && barquilloImg.naturalWidth > 0 && !isSinking && !isMoving) {
+      ctx.drawImage(barquilloImg, x, y, width, height);
+    } else {
+      // 5-Layer Biscuit Sandwich Geometry
+      ctx.save();
+      ctx.beginPath();
+      ctx.roundRect(x, y, width, height, 8);
+      ctx.clip();
+
+      // Layer 1: Top Baked Wafer Crust
+      const crust1Grad = ctx.createLinearGradient(0, y, 0, y + height * 0.28);
+      crust1Grad.addColorStop(0, '#FEF3C7');
+      crust1Grad.addColorStop(0.4, '#F59E0B');
+      crust1Grad.addColorStop(1, '#B45309');
+      ctx.fillStyle = crust1Grad;
+      ctx.fillRect(x, y, width, height * 0.28);
+
+      // Layer 2: Cream Filling 1 (Vanilla / Strawberry Cream with 3D Bead Volume)
+      const cream1Grad = ctx.createLinearGradient(0, y + height * 0.25, 0, y + height * 0.45);
+      cream1Grad.addColorStop(0, '#78350F');
+      cream1Grad.addColorStop(0.25, '#FFF1F2');
+      cream1Grad.addColorStop(0.75, '#FFE4E6');
+      cream1Grad.addColorStop(1, '#78350F');
+      ctx.fillStyle = cream1Grad;
+      ctx.fillRect(x, y + height * 0.25, width, height * 0.20);
+
+      // Layer 3: Middle Wafer Crust
+      const crust2Grad = ctx.createLinearGradient(0, y + height * 0.42, 0, y + height * 0.65);
+      crust2Grad.addColorStop(0, '#F59E0B');
+      crust2Grad.addColorStop(0.5, '#D97706');
+      crust2Grad.addColorStop(1, '#92400E');
+      ctx.fillStyle = crust2Grad;
+      ctx.fillRect(x, y + height * 0.42, width, height * 0.23);
+
+      // Layer 4: Cream Filling 2
+      const cream2Grad = ctx.createLinearGradient(0, y + height * 0.62, 0, y + height * 0.80);
+      cream2Grad.addColorStop(0, '#78350F');
+      cream2Grad.addColorStop(0.25, '#FFF1F2');
+      cream2Grad.addColorStop(0.75, '#FFE4E6');
+      cream2Grad.addColorStop(1, '#451A03');
+      ctx.fillStyle = cream2Grad;
+      ctx.fillRect(x, y + height * 0.62, width, height * 0.18);
+
+      // Layer 5: Bottom Caramelized Crust
+      const crust3Grad = ctx.createLinearGradient(0, y + height * 0.78, 0, y + height);
+      crust3Grad.addColorStop(0, '#B45309');
+      crust3Grad.addColorStop(0.5, '#78350F');
+      crust3Grad.addColorStop(1, '#451A03');
+      ctx.fillStyle = crust3Grad;
+      ctx.fillRect(x, y + height * 0.78, width, height * 0.22);
+
+      // Bevel & Emboss Waffle Grid Micro-Relief (3D Sunken Pockets)
+      const cellW = 16;
+      const cellH = 10;
+      for (let cx = x + 6; cx < x + width - 6; cx += cellW) {
+        for (let cy = y + 2; cy < y + height - 4; cy += cellH) {
+          // Deep sunken pocket
+          ctx.fillStyle = 'rgba(69, 26, 3, 0.35)';
+          ctx.fillRect(cx + 1, cy + 1, cellW - 4, cellH - 3);
+
+          // Top & Left highlight bevel
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+          ctx.fillRect(cx, cy, cellW - 3, 1.2);
+          ctx.fillRect(cx, cy, 1.2, cellH - 2);
+
+          // Bottom & Right shadow bevel
+          ctx.fillStyle = 'rgba(45, 15, 5, 0.55)';
+          ctx.fillRect(cx, cy + cellH - 3, cellW - 3, 1.2);
+          ctx.fillRect(cx + cellW - 3, cy, 1.2, cellH - 2);
+        }
+      }
+
+      ctx.restore(); // Exit clip
+
+      // Top Satin Specular Rim Light
+      ctx.strokeStyle = '#FEF3C7';
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.moveTo(x + 4, y + 1);
+      ctx.lineTo(x + width - 4, y + 1);
+      ctx.stroke();
+
+      // Crunchy Wafer Crumb Grains (3D Biscuit Flakes)
+      ctx.fillStyle = '#FEF08A';
+      for (let i = 0; i < 6; i++) {
+        const crumbX = x + 8 + ((i * 37) % (width - 16));
+        const crumbY = y + 1.5 + (i % 3);
+        ctx.fillRect(crumbX, crumbY, 2, 2);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.fillRect(crumbX + 1, crumbY + 1.8, 2, 1);
+        ctx.fillStyle = '#FEF08A';
+      }
+    }
+
+    // Dynamic Sinking Fractures and Falling Crumbs
+    if (isSinking && sinkY > 4) {
+      ctx.strokeStyle = '#451A03';
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      ctx.moveTo(x + width * 0.32, y);
+      ctx.lineTo(x + width * 0.36, y + height);
+      ctx.moveTo(x + width * 0.68, y);
+      ctx.lineTo(x + width * 0.64, y + height);
+      ctx.stroke();
+
+      // Falling crumb particles
+      ctx.fillStyle = '#FDA4AF';
+      for (let i = 0; i < 5; i++) {
+        const fallY = y + height + ((this.animTime * 70 + i * 14) % 24);
+        const fallX = x + width * 0.3 + i * 18;
+        ctx.fillRect(fallX, fallY, 2.5, 2.5);
+      }
+    }
+
+    // Thruster Pods if moving platform
+    if (isMoving) {
+      ctx.fillStyle = '#78350F';
+      ctx.beginPath();
+      ctx.roundRect(x + 14, y + height - 2, 16, 7, [0, 0, 4, 4]);
+      ctx.roundRect(x + width - 30, y + height - 2, 16, 7, [0, 0, 4, 4]);
+      ctx.fill();
+
+      const bubblePulse = Math.sin(this.animTime * 14) * 2;
+      ctx.fillStyle = '#38BDF8';
+      ctx.beginPath();
+      ctx.arc(x + 22, y + height + 6, 3.5 + bubblePulse, 0, Math.PI * 2);
+      ctx.arc(x + width - 22, y + height + 6, 3.5 - bubblePulse, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#E0F2FE';
+      ctx.beginPath();
+      ctx.arc(x + 22, y + height + 12, 2.2, 0, Math.PI * 2);
+      ctx.arc(x + width - 22, y + height + 12, 2.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.restore();
   }
 }
