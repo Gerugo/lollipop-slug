@@ -21,6 +21,7 @@ export class Boss5 {
     this.hurtTimer = 0;
     this.stateTimer = 0;
     this.attackTimer = 0;
+    this.attackAnimTimer = 0;
     this.animTime = 0;
 
     // Phases: 1 (100%-65%), 2 (65%-30%), 3 (30%-0%)
@@ -86,6 +87,7 @@ export class Boss5 {
     this.attackTimer += dt;
 
     if (this.hurtTimer > 0) this.hurtTimer -= dt;
+    if (this.attackAnimTimer > 0) this.attackAnimTimer -= dt;
 
     const cx = this.x + this.width / 2;
     const cy = this.y + this.height / 2;
@@ -104,6 +106,7 @@ export class Boss5 {
 
       if (this.attackTimer >= 2.2) {
         this.attackTimer = 0;
+        this.attackAnimTimer = 0.7;
         // Fire 3 spreading bubbles
         [-0.3, 0, 0.3].forEach(offset => {
           const angle = Math.atan2(py - cy, px - cx) + offset;
@@ -130,6 +133,7 @@ export class Boss5 {
 
       if (this.attackTimer >= 2.0) {
         this.attackTimer = 0;
+        this.attackAnimTimer = 0.85;
         // 4-way electric discharge
         [-135, -45, 45, 135].forEach(deg => {
           const rad = (deg * Math.PI) / 180;
@@ -208,12 +212,30 @@ export class Boss5 {
     }
 
     // Breathing pulsation
-    const pulse = 1 + Math.sin(this.animTime * 4) * 0.05;
+    const pulse = 1 + Math.sin(this.animTime * 4) * 0.04;
     ctx.scale(this.facing * pulse, pulse);
 
-    const bossSprite = imageLoader.getImage('boss5');
+    let spriteKey = 'boss5';
+    let renderW = this.width;
+    let renderH = this.height;
+
+    if (this.phase === 3) {
+      spriteKey = 'boss5_rage';
+      renderW = 180;
+      renderH = 170;
+    } else if (this.phase === 2 || (this.attackAnimTimer > 0 && this.phase === 2)) {
+      spriteKey = 'boss5_electric';
+      renderW = 160;
+      renderH = 160;
+    } else if (this.attackAnimTimer > 0 && this.phase === 1) {
+      spriteKey = 'boss5_bubble';
+      renderW = 170;
+      renderH = 150;
+    }
+
+    const bossSprite = imageLoader.getImage(spriteKey) || imageLoader.getImage('boss5');
     if (bossSprite && bossSprite.complete && bossSprite.naturalWidth > 0) {
-      ctx.drawImage(bossSprite, -this.width / 2, -this.height / 2, this.width, this.height);
+      ctx.drawImage(bossSprite, -renderW / 2, -renderH / 2, renderW, renderH);
     } else {
       // Fallback
       ctx.beginPath();
