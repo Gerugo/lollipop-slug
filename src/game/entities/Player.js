@@ -619,51 +619,70 @@ export class Player {
     let gunW = 20;
     let gunH = 13;
 
+    let flipX = true; // Default: sprites facing left in image assets (pistol, shotgun, etc.) need flip
+
     if (this.currentWeapon.id === 'HMG') {
       gunSpriteKey = 'arma_hmg';
       gunW = 26;
       gunH = 13;
+      flipX = false;
     } else if (this.currentWeapon.id === 'SHOTGUN') {
       gunSpriteKey = 'arma_shotgun';
       gunW = 26;
       gunH = 11;
+      flipX = true;
     } else if (this.currentWeapon.id === 'ROCKET') {
       gunSpriteKey = 'arma_rocket';
       gunW = 27;
       gunH = 14;
+      flipX = false;
     } else if (this.currentWeapon.id === 'LATIGO_DULCE') {
       gunSpriteKey = 'arma_latigo';
       gunW = 22;
       gunH = 15;
+      flipX = true;
     } else if (this.currentWeapon.id === 'CANON_BURBUJAS') {
       gunSpriteKey = 'arma_burbujas';
       gunW = 25;
       gunH = 16;
+      flipX = true;
     } else if (this.currentWeapon.id === 'LANZAHIELOS') {
       gunSpriteKey = 'arma_hielo';
       gunW = 26;
       gunH = 15;
+      flipX = true;
     } else if (this.currentWeapon.id === 'RAYO_LASER') {
       gunSpriteKey = 'arma_laser';
       gunW = 26;
       gunH = 15;
+      flipX = true;
     } else if (this.currentWeapon.id === 'LANZALLAMAS') {
       gunSpriteKey = 'arma_flamethrower';
       gunW = 27;
       gunH = 16;
+      flipX = true;
     } else if (this.currentWeapon.id === 'CANON_PLASMA') {
       gunSpriteKey = 'arma_plasma';
       gunW = 28;
       gunH = 16;
+      flipX = true;
     } else if (this.currentWeapon.id === 'CANON_COSMICO') {
       gunSpriteKey = 'arma_cosmic';
       gunW = 28;
       gunH = 16;
+      flipX = true;
     }
 
     const gunSprite = imageLoader.getImage(gunSpriteKey);
     if (gunSprite && gunSprite.complete && gunSprite.naturalWidth > 0) {
-      ctx.drawImage(gunSprite, -4, -gunH / 2, gunW, gunH);
+      if (flipX) {
+        ctx.save();
+        ctx.scale(-1, 1);
+        ctx.drawImage(gunSprite, -gunW + 4, -gunH / 2, gunW, gunH);
+        ctx.restore();
+      } else {
+        ctx.drawImage(gunSprite, -4, -gunH / 2, gunW, gunH);
+      }
     } else {
       ctx.fillStyle = '#FF5A9E';
       ctx.fillRect(-2, -3, 14, 6);
