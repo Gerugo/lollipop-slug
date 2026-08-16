@@ -22,7 +22,10 @@ export class Enemy {
 
     // AI & Procedural Animation Variables
     this.shootTimer = Math.random() * 1.5;
-    this.shootInterval = options.shootInterval || 2.4;
+    this.shootInterval = options.shootInterval || (options.level ? Math.max(1.8, 3.4 - options.level * 0.18) : 3.0);
+    this.isAiming = false;
+    this.aimTimer = 0;
+    this.aimTelegraphDuration = options.level ? Math.max(0.3, 0.6 - options.level * 0.04) : 0.55;
     this.burstRemaining = 0;
     this.burstTimer = 0;
     this.hurtTimer = 0;
@@ -31,7 +34,7 @@ export class Enemy {
     this.rotation = 0;
     this.animTime = Math.random() * 5;
     this.hoverY = this.y;
-    this.speed = options.speed || 60;
+    this.speed = options.speed || 55;
     this.patrolDir = -1;
 
     // Specific enemy type configurations
@@ -270,6 +273,19 @@ export class Enemy {
     }
   }
 
+  checkCliffAhead(platforms) {
+    if (!platforms || platforms.length === 0) return false;
+    const checkX = this.x + (this.facing === 1 ? this.width + 12 : -12);
+    const checkY = this.y + this.height + 15;
+    for (const plat of platforms) {
+      if (plat.type === 'acid_pool' || plat.type === 'soda_tide' || plat.type === 'lava_caramel' || plat.type === 'spikes') continue;
+      if (checkX >= plat.x && checkX <= plat.x + plat.width && checkY >= plat.y && checkY <= plat.y + plat.height + 35) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   update(dt, player, platforms, enemyProjectiles, particles, soundManager, camera) {
     if (this.dead) return;
 
@@ -379,6 +395,10 @@ export class Enemy {
       const inSight = distToPlayer < 260 && Math.abs(player.y - this.y) < 90 && inFrontOfRoller;
 
       if (this.rollerState === 'PATROL') {
+        if (this.isGrounded && this.checkCliffAhead(platforms)) {
+          this.patrolDir = -this.patrolDir;
+          this.facing = this.patrolDir;
+        }
         this.vx = this.patrolDir * this.speed;
         this.facing = this.patrolDir;
 
@@ -539,8 +559,16 @@ export class Enemy {
       } else {
         const inSight = distToPlayer < 400;
         if (inSight) {
-          this.vx = this.facing * this.speed;
+          if (this.isGrounded && this.checkCliffAhead(platforms)) {
+            this.vx = 0;
+          } else {
+            this.vx = this.facing * this.speed;
+          }
         } else {
+          if (this.isGrounded && this.checkCliffAhead(platforms)) {
+            this.patrolDir = -this.patrolDir;
+            this.facing = this.patrolDir;
+          }
           this.vx = this.patrolDir * this.speed;
         }
       }
@@ -560,7 +588,21 @@ export class Enemy {
       const inWhipRange = distToPlayer < 160 && Math.abs(player.y - this.y) < 70;
 
       if (this.whipState === 'PATROL') {
-        this.vx = (distToPlayer < 380 ? dirToPlayer : this.patrolDir) * this.speed;
+        const inSight = distToPlayer < 380;
+        if (inSight) {
+          if (this.isGrounded && this.checkCliffAhead(platforms)) {
+            this.vx = 0;
+          } else {
+            this.vx = dirToPlayer * this.speed;
+          }
+        } else {
+          if (this.isGrounded && this.checkCliffAhead(platforms)) {
+            this.patrolDir = -this.patrolDir;
+            this.facing = this.patrolDir;
+          }
+          this.vx = this.patrolDir * this.speed;
+        }
+
         if (inWhipRange) {
           this.whipState = 'TELEGRAPH';
           this.whipTimer = 0.42; // 0.42s winding whip back
@@ -870,7 +912,11 @@ export class Enemy {
     // 12. SLIME (Acid Gummy Slime)
     if (this.type === 'SLIME') {
       this.facing = dirToPlayer;
-      this.vx = dirToPlayer * this.speed;
+      if (this.isGrounded && this.checkCliffAhead(platforms)) {
+        this.vx = 0;
+      } else {
+        this.vx = dirToPlayer * this.speed;
+      }
 
       this.spitTimer += dt;
       if (this.spitTimer >= 2.2 && distToPlayer < 420) {
@@ -901,7 +947,11 @@ export class Enemy {
     // 13. SALAMANDRA (Fiery Caramel Salamander)
     if (this.type === 'SALAMANDRA') {
       this.facing = dirToPlayer;
-      this.vx = dirToPlayer * this.speed;
+      if (this.isGrounded && this.checkCliffAhead(platforms)) {
+        this.vx = 0;
+      } else {
+        this.vx = dirToPlayer * this.speed;
+      }
 
       this.fireTimer += dt;
       if (this.fireTimer >= 1.9 && distToPlayer < 400) {
@@ -985,7 +1035,11 @@ export class Enemy {
     // 16. GUARDIA_REAL (Royal Candy Guard with Lance & Shield)
     if (this.type === 'GUARDIA_REAL') {
       this.facing = dirToPlayer;
-      this.vx = dirToPlayer * this.speed;
+      if (this.isGrounded && this.checkCliffAhead(platforms)) {
+        this.vx = 0;
+      } else {
+        this.vx = dirToPlayer * this.speed;
+      }
 
       this.thrustTimer += dt;
       if (this.thrustTimer >= 2.4 && distToPlayer < 380) {
@@ -1039,15 +1093,24 @@ export class Enemy {
     }
 
     // 8. DEFAULT GUMMY SOLDIER
-    const inSight = distToPlayer < 420;
+    const inSight = distToPlayer < 440;
 
     if (inSight) {
       this.facing = dirToPlayer;
       this.vx = 0;
 
-      if (this.burstRemaining > 0) {
+      if (this.isAiming) {
+        this.aimTimer -= dt;
+        if (this.aimTimer <= 0) {
+          this.isAiming = false;
+          this.burstRemaining = 2;
+          this.burstTimer = 0;
+          this.fireBullet(enemyProjectiles, particles);
+          this.burstRemaining--;
+        }
+      } else if (this.burstRemaining > 0) {
         this.burstTimer += dt;
-        if (this.burstTimer >= 0.14) {
+        if (this.burstTimer >= 0.16) {
           this.burstTimer = 0;
           this.burstRemaining--;
           this.fireBullet(enemyProjectiles, particles);
@@ -1056,14 +1119,17 @@ export class Enemy {
         this.shootTimer += dt;
         if (this.shootTimer >= this.shootInterval) {
           this.shootTimer = 0;
-          this.burstRemaining = 2;
-          this.burstTimer = 0;
-          this.fireBullet(enemyProjectiles, particles);
-          this.burstRemaining--;
+          this.isAiming = true;
+          this.aimTimer = this.aimTelegraphDuration;
+          if (particles) particles.emitSparkles(this.x + (this.facing === 1 ? this.width : 0), this.y + 22, 3, '#F43F5E');
         }
       }
     } else {
       this.facing = this.patrolDir;
+      if (this.isGrounded && this.checkCliffAhead(platforms)) {
+        this.patrolDir = -this.patrolDir;
+        this.facing = this.patrolDir;
+      }
       this.vx = this.patrolDir * this.speed;
       if (this.x < 100) this.patrolDir = 1;
     }
@@ -1660,16 +1726,37 @@ export class Enemy {
     const renderH = 48;
     const renderW = 38;
 
+    const aimOffset = (this.isAiming || this.burstRemaining > 0) ? -2 : 0;
+
     if (gummySprite && gummySprite.complete && gummySprite.naturalWidth > 0) {
-      ctx.drawImage(gummySprite, -renderW / 2, -renderH, renderW, renderH);
+      ctx.drawImage(gummySprite, -renderW / 2 + aimOffset, -renderH, renderW, renderH);
     } else {
       ctx.beginPath();
-      ctx.roundRect(-16, -renderH, 32, 40, 10);
+      ctx.roundRect(-16 + aimOffset, -renderH, 32, 40, 10);
       ctx.fillStyle = '#EF4444';
       ctx.fill();
       ctx.strokeStyle = '#FFFFFF';
       ctx.lineWidth = 2;
       ctx.stroke();
+    }
+
+    // Aiming laser guide line / warning indicator
+    if (this.isAiming) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(14, -22);
+      ctx.lineTo(85, -22);
+      ctx.strokeStyle = 'rgba(244, 63, 94, 0.7)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      ctx.stroke();
+
+      // Muzzle glint
+      ctx.beginPath();
+      ctx.arc(14, -22, 3, 0, Math.PI * 2);
+      ctx.fillStyle = '#FB7185';
+      ctx.fill();
+      ctx.restore();
     }
 
     ctx.restore();

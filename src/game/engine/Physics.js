@@ -169,4 +169,42 @@ export class Physics {
 
     return null;
   }
+
+  // Physical solid obstacle resolution for destructibles (barrels, crates)
+  static resolveDestructibles(entity, destructibles) {
+    if (!destructibles || destructibles.length === 0 || !entity) return;
+    const prevBottom = entity.prevY !== undefined ? entity.prevY + entity.height : entity.y + entity.height - entity.vy * 0.016;
+
+    for (const d of destructibles) {
+      if (d.dead) continue;
+
+      // Check overlap
+      if (
+        entity.x + entity.width > d.x &&
+        entity.x < d.x + d.width &&
+        entity.y + entity.height > d.y &&
+        entity.y < d.y + d.height
+      ) {
+        // Landing on top of destructible
+        if (entity.vy >= 0 && prevBottom <= d.y + 14) {
+          entity.y = d.y - entity.height;
+          entity.vy = 0;
+          entity.isGrounded = true;
+          continue;
+        }
+
+        // Horizontal obstacle collision: push out
+        const overlapLeft = (entity.x + entity.width) - d.x;
+        const overlapRight = (d.x + d.width) - entity.x;
+
+        if (overlapLeft < overlapRight) {
+          entity.x = d.x - entity.width;
+          if (entity.vx > 0) entity.vx = 0;
+        } else {
+          entity.x = d.x + d.width;
+          if (entity.vx < 0) entity.vx = 0;
+        }
+      }
+    }
+  }
 }

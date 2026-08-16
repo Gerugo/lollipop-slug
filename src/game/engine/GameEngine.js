@@ -511,6 +511,7 @@ export class GameEngine {
     try {
       if (this.vehicle) {
         this.vehicle.update(dt, this.player, this.input, this.level.platforms, this.projectiles, this.enemies, this.particles, this.sound, this.camera);
+        Physics.resolveDestructibles(this.vehicle, this.destructibles);
       }
     } catch(e) { console.error('[update] step 4 vehicle:', e); }
 
@@ -527,6 +528,7 @@ export class GameEngine {
           this.sound,
           this.camera
         );
+        Physics.resolveDestructibles(this.player, this.destructibles);
       }
     } catch(e) { console.error('[update] step 5 player:', e); }
 
@@ -704,6 +706,7 @@ export class GameEngine {
       for (let i = this.enemies.length - 1; i >= 0; i--) {
         const enemy = this.enemies[i];
         enemy.update(dt, this.player, this.level.platforms, this.enemyProjectiles, this.particles, this.sound, this.camera);
+        Physics.resolveDestructibles(enemy, this.destructibles);
         if (!enemy.dead) {
           if (this.vehicle && this.vehicle.isOccupied && !this.vehicle.isDestroyed && Physics.checkAABB(this.vehicle, enemy)) {
             this.triggerHaptic(40);
