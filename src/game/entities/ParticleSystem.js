@@ -434,6 +434,34 @@ export class ParticleSystem {
     this.emitSugarSmoke(x, y - 6, 6, '#FBCFE8');
   }
 
+  // --- FLYING WAFER BITE CHUNKS & BISCUIT DEBRIS (Reactive Environment) ---
+  emitWaferBiteChunks(x, y, count = 8) {
+    const waferColors = ['#FEF3C7', '#F59E0B', '#B45309', '#FFF1F2', '#FB7185', '#78350F'];
+    for (let i = 0; i < count; i++) {
+      const angle = -Math.PI / 2 + (Math.random() - 0.5) * 2.2;
+      const speed = 70 + Math.random() * 180;
+      this.particles.push({
+        type: 'bouncy_shard',
+        x,
+        y: y + (Math.random() - 0.5) * 6,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        gravity: 520,
+        rebound: 0.55,
+        drag: 0.96,
+        size: 4 + Math.random() * 5,
+        color: waferColors[Math.floor(Math.random() * waferColors.length)],
+        rot: Math.random() * Math.PI,
+        rotSpeed: (Math.random() - 0.5) * 28,
+        bounces: 0,
+        life: 0.8 + Math.random() * 0.5,
+        maxLife: 1.3
+      });
+    }
+    this.emitCrumble(x, y, 6, '#FEF3C7');
+    this.emitSparkles(x, y, 3, '#FFFFFF');
+  }
+
   // --- TERRAIN / PLATFORM BULLET IMPACT & CHIPPING ---
   emitTerrainImpact(x, y, surfaceType = 'ground') {
     let color1 = '#4ADE80';

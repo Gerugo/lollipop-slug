@@ -495,7 +495,7 @@ export class Level1 {
       // --- 2. SINKING WAFER PLATFORM ---
       if (plat.type === 'sinking') {
         const shake = plat.isStandingOn ? (Math.random() - 0.5) * 3 : 0;
-        this.drawWafer3D(ctx, plat.x + shake, drawY, plat.width, plat.height, true, plat.sinkY, false);
+        this.drawWafer3D(ctx, plat.x + shake, drawY, plat.width, plat.height, true, plat.sinkY, false, plat.bites);
       } 
       // --- 3. ELASTIC JELLY BOUNCE TRAMPOLINE ---
       else if (plat.type === 'bounce') {
@@ -543,11 +543,11 @@ export class Level1 {
       } 
       // --- 4. HOVERING MOVING WAFER PLATFORM ---
       else if (plat.type === 'moving') {
-        this.drawWafer3D(ctx, plat.x, drawY, plat.width, plat.height, false, 0, true);
+        this.drawWafer3D(ctx, plat.x, drawY, plat.width, plat.height, false, 0, true, plat.bites);
       } 
       // --- 5. STANDARD WAFER / BARQUILLO PLATFORM ---
       else if (plat.type === 'wafer') {
-        this.drawWafer3D(ctx, plat.x, drawY, plat.width, plat.height, false, 0, false);
+        this.drawWafer3D(ctx, plat.x, drawY, plat.width, plat.height, false, 0, false, plat.bites);
       } 
       // --- 6. 3D CYLINDRICAL CANDY CANE PLATFORM ---
       else if (plat.type === 'candy_cane') {
@@ -713,7 +713,7 @@ export class Level1 {
   }
 
   // --- 3. 5-LAYER BEVELED WAFER & OBLEA WITH MICRO-RELIEF & CRUMBS ---
-  drawWafer3D(ctx, x, y, width, height, isSinking = false, sinkY = 0, isMoving = false) {
+  drawWafer3D(ctx, x, y, width, height, isSinking = false, sinkY = 0, isMoving = false, bites = []) {
     const barquilloImg = imageLoader.getImage('barquillo') || imageLoader.getImage('plataforma-barquillo');
 
     ctx.save();
@@ -774,7 +774,7 @@ export class Level1 {
       ctx.fillStyle = crust3Grad;
       ctx.fillRect(x, y + height * 0.78, width, height * 0.22);
 
-      // Bevel & Emboss Waffle Grid Micro-Relief (3D Sunken Pockets)
+      // Bevel & Emboss Waffle Grid Micro-RelIEF (3D Sunken Pockets)
       const cellW = 16;
       const cellH = 10;
       for (let cx = x + 6; cx < x + width - 6; cx += cellW) {
@@ -814,6 +814,59 @@ export class Level1 {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
         ctx.fillRect(crumbX + 1, crumbY + 1.8, 2, 1);
         ctx.fillStyle = '#FEF08A';
+      }
+    }
+
+    // --- REACTIVE BITE MARKS & BREAK NOTCHES (Scalloped Tooth Cuts with Exposed Cream & Crumbs) ---
+    if (bites && bites.length > 0) {
+      for (const bite of bites) {
+        const bx = x + bite.relX;
+        const by = bite.edge === 'top' ? y : y + height;
+        const r = bite.radius || 11;
+        const dir = bite.edge === 'top' ? 1 : -1;
+
+        ctx.save();
+        // 1. Dark Depth Hole
+        ctx.fillStyle = '#1C0A00';
+        ctx.beginPath();
+        ctx.arc(bx - r * 0.45, by + dir * r * 0.25, r * 0.42, 0, Math.PI * 2);
+        ctx.arc(bx, by + dir * r * 0.45, r * 0.52, 0, Math.PI * 2);
+        ctx.arc(bx + r * 0.45, by + dir * r * 0.25, r * 0.42, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 2. Exposed Vanilla Cream Filling in Bite Center
+        ctx.fillStyle = '#FFF1F2';
+        ctx.beginPath();
+        ctx.arc(bx - r * 0.35, by + dir * r * 0.2, r * 0.32, 0, Math.PI * 2);
+        ctx.arc(bx, by + dir * r * 0.35, r * 0.40, 0, Math.PI * 2);
+        ctx.arc(bx + r * 0.35, by + dir * r * 0.2, r * 0.32, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Strawberry Cream Accent Dot
+        ctx.fillStyle = '#FB7185';
+        ctx.beginPath();
+        ctx.arc(bx, by + dir * r * 0.32, r * 0.22, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 3. Broken Biscuit Edge Outline
+        ctx.strokeStyle = '#D97706';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.arc(bx - r * 0.45, by + dir * r * 0.25, r * 0.42, 0, Math.PI);
+        ctx.arc(bx, by + dir * r * 0.45, r * 0.52, 0, Math.PI);
+        ctx.arc(bx + r * 0.45, by + dir * r * 0.25, r * 0.42, 0, Math.PI);
+        ctx.stroke();
+
+        // 4. Broken Biscuit Crumbs on Crater Perimeter
+        ctx.fillStyle = '#FEF08A';
+        ctx.fillRect(bx - r * 0.75, by + (dir > 0 ? 1 : -3), 2, 2);
+        ctx.fillRect(bx + r * 0.7, by + (dir > 0 ? 2 : -4), 2.5, 2);
+        ctx.fillRect(bx - 1.5, by + dir * (r * 0.6), 2, 2);
+        ctx.fillStyle = '#F59E0B';
+        ctx.fillRect(bx + r * 0.25, by + (dir > 0 ? 3 : -5), 1.5, 1.5);
+        ctx.fillRect(bx - r * 0.35, by + (dir > 0 ? 3 : -4), 2, 1.5);
+
+        ctx.restore();
       }
     }
 

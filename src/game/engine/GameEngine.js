@@ -587,6 +587,20 @@ export class GameEngine {
         if (hit) { this.projectiles.splice(i, 1); continue; }
         for (const plat of this.level.platforms) {
           if (Physics.checkAABB(proj, plat)) {
+            // Reactive Environment: Record bullet bite mark / chip crater on platform
+            plat.bites = plat.bites || [];
+            if (plat.bites.length < 16) {
+              const relX = Math.max(6, Math.min(plat.width - 6, proj.x - plat.x));
+              const edge = proj.y < plat.y + plat.height * 0.5 ? 'top' : 'bottom';
+              const radius = (proj.type === 'ROCKET' || proj.type === 'COSMIC_BURST') ? 15 : (7 + Math.random() * 5);
+              plat.bites.push({ relX, radius, edge });
+            }
+
+            if (plat.type === 'wafer' || plat.type === 'sinking' || plat.type === 'moving') {
+              if (typeof this.particles.emitWaferBiteChunks === 'function') {
+                this.particles.emitWaferBiteChunks(proj.x, proj.y, 8);
+              }
+            }
             if (typeof this.particles.emitTerrainImpact === 'function') {
               this.particles.emitTerrainImpact(proj.x, proj.y, plat.type);
             } else {
