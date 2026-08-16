@@ -232,15 +232,19 @@ export class SlugVehicle {
 
     // 2. Transform with Bottom-Center Pivot
     ctx.translate(cx + this.recoilX, bottomY);
-    ctx.scale(this.facing, 1);
 
     if (this.hurtTimer > 0) {
       ctx.filter = 'brightness(2.2)';
     }
 
-    const tankSprite = imageLoader.getImage('tanque');
     const renderW = 100;
     const renderH = 74;
+
+    // Draw Tank Body flipped according to facing direction (tanque.png points left in asset)
+    ctx.save();
+    ctx.scale(-this.facing, 1);
+
+    const tankSprite = imageLoader.getImage('tanque');
 
     if (tankSprite && tankSprite.complete && tankSprite.naturalWidth > 0) {
       // Draw Tank Sprite anchored at bottom-center: (-renderW / 2, -renderH)
@@ -257,10 +261,11 @@ export class SlugVehicle {
 
       // Turret Barrel
       ctx.fillStyle = '#FF77B0';
-      ctx.fillRect(15, -renderH + 28, 38, 14);
+      ctx.fillRect(-15 - 38, -renderH + 28, 38, 14);
     }
+    ctx.restore();
 
-    // 3. Floating "IN / [E] ENTRAR" Badge when unoccupied
+    // 3. Floating "IN / [E] ENTRAR" Badge when unoccupied (never mirrored)
     if (!this.isOccupied) {
       const bob = Math.sin(this.animTime * 6) * 4;
       ctx.save();
