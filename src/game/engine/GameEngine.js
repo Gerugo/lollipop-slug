@@ -577,9 +577,25 @@ export class GameEngine {
           proj.y > 700 || proj.y < -300
         ) { this.projectiles.splice(i, 1); continue; }
         let hit = false;
-        for (const d of this.destructibles) { if (!d.dead && Physics.checkAABB(proj, d)) { d.takeDamage(proj.damage, this.particles, this.sound, this.drops); hit = true; break; } }
+        for (const d of this.destructibles) {
+          if (!d.dead && Physics.checkAABB(proj, d)) {
+            d.takeDamage(proj.damage, this.particles, this.sound, this.drops, this.enemies, this.destructibles, this.camera);
+            hit = true;
+            break;
+          }
+        }
         if (hit) { this.projectiles.splice(i, 1); continue; }
-        for (const plat of this.level.platforms) { if (Physics.checkAABB(proj, plat)) { this.particles.emitCrumble(proj.x, proj.y, 6, '#FDE68A'); hit = true; break; } }
+        for (const plat of this.level.platforms) {
+          if (Physics.checkAABB(proj, plat)) {
+            if (typeof this.particles.emitTerrainImpact === 'function') {
+              this.particles.emitTerrainImpact(proj.x, proj.y, plat.type);
+            } else {
+              this.particles.emitCrumble(proj.x, proj.y, 6, '#FDE68A');
+            }
+            hit = true;
+            break;
+          }
+        }
         if (hit && !proj.penetrate) { this.projectiles.splice(i, 1); continue; }
         for (const enemy of this.enemies) {
           if (!enemy.dead && Physics.checkAABB(proj, enemy)) {
@@ -681,7 +697,11 @@ export class GameEngine {
           this.camera.punchZoom(1.08, 3.5);
           this.triggerHitStop(0.08, 0.03);
           this.triggerHaptic(50);
-          for (const d of this.destructibles) { if (!d.dead && Physics.checkCircleAABB(g, d)) { d.takeDamage(50, this.particles, this.sound, this.drops); } }
+          for (const d of this.destructibles) {
+            if (!d.dead && Physics.checkCircleAABB(g, d)) {
+              d.takeDamage(55, this.particles, this.sound, this.drops, this.enemies, this.destructibles, this.camera);
+            }
+          }
           for (const enemy of this.enemies) {
             if (!enemy.dead && Physics.checkCircleAABB(g, enemy)) {
               this.addDamageNumber(enemy.x + enemy.width / 2, enemy.y, g.damage, '#FEF08A', true);

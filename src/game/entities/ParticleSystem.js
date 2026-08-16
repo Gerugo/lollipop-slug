@@ -434,6 +434,80 @@ export class ParticleSystem {
     this.emitSugarSmoke(x, y - 6, 6, '#FBCFE8');
   }
 
+  // --- TERRAIN / PLATFORM BULLET IMPACT & CHIPPING ---
+  emitTerrainImpact(x, y, surfaceType = 'ground') {
+    let color1 = '#4ADE80';
+    let color2 = '#FEF08A';
+    if (surfaceType === 'wafer' || surfaceType === 'sinking' || surfaceType === 'moving') {
+      color1 = '#F59E0B';
+      color2 = '#FEF3C7';
+    } else if (surfaceType === 'candy_cane') {
+      color1 = '#EF4444';
+      color2 = '#FFFFFF';
+    } else if (surfaceType === 'bounce') {
+      color1 = '#FB7185';
+      color2 = '#BE123C';
+    }
+
+    // Impact sparks and dust
+    for (let i = 0; i < 4; i++) {
+      const angle = -Math.PI / 2 + (Math.random() - 0.5) * 1.6;
+      const speed = 40 + Math.random() * 80;
+      this.particles.push({
+        type: 'bouncy_shard',
+        x,
+        y: y - 2,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        gravity: 480,
+        rebound: 0.45,
+        drag: 0.95,
+        size: 3 + Math.random() * 3,
+        color: (i % 2 === 0) ? color1 : color2,
+        rot: Math.random() * Math.PI,
+        rotSpeed: (Math.random() - 0.5) * 20,
+        bounces: 0,
+        life: 0.5 + Math.random() * 0.3,
+        maxLife: 0.8
+      });
+    }
+    this.emitSugarSmoke(x, y - 4, 3, color2);
+  }
+
+  // --- MEGA CHOCOLATE BARREL EXPLOSION (Staves, Syrup, Cocoa Shockwave) ---
+  emitChocolateBarrelExplosion(x, y) {
+    this.emitShockwave(x, y, 95, 'rgba(120, 53, 15, 0.85)');
+    this.emitExplosionSprite(x, y, 1.25);
+    this.emitSyrupSplash(x, y, 26, '#451A03');
+    this.emitCandyShards(x, y, 18);
+    this.emitGummyDebris(x, y, '#78350F', 16);
+    this.emitSugarSmoke(x, y, 10, '#92400E');
+    this.emitSparkles(x, y, 14, '#FDE047');
+
+    // Flying wooden/chocolate barrel stave fragments
+    for (let i = 0; i < 7; i++) {
+      const angle = -Math.PI / 2 + (Math.random() - 0.5) * 1.8;
+      const speed = 110 + Math.random() * 190;
+      this.particles.push({
+        type: 'bouncy_shard',
+        x,
+        y: y - 10,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        gravity: 580,
+        rebound: 0.48,
+        drag: 0.97,
+        size: 7 + Math.random() * 7,
+        color: '#451A03',
+        rot: Math.random() * Math.PI,
+        rotSpeed: (Math.random() - 0.5) * 22,
+        bounces: 0,
+        life: 1.1 + Math.random() * 0.4,
+        maxLife: 1.5
+      });
+    }
+  }
+
   emitShockwave(x, y, maxRadius = 80, color = 'rgba(255, 119, 176, 0.8)') {
     this.particles.push({
       type: 'shockwave',
