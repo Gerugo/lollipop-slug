@@ -1257,7 +1257,7 @@ export class Enemy {
       return;
     }
 
-    // --- 3. ROLLER SPRITE ---
+    // --- 3. ROLLER SPRITE (LIME JELLY ROLLER WITH SSS & WET GLOSS) ---
     if (this.type === 'ROLLER') {
       ctx.translate(cx, this.y + this.height / 2);
       if (this.hurtTimer > 0) ctx.filter = 'brightness(2.6) drop-shadow(0 0 6px rgba(255,255,255,0.85))';
@@ -1267,17 +1267,57 @@ export class Enemy {
       const renderW = 62;
       const renderH = 62;
 
+      // 1. SSS Emerald Backlight Glow
+      ctx.save();
+      ctx.shadowColor = 'rgba(74, 222, 128, 0.70)';
+      ctx.shadowBlur = 10;
+
       if (rollerSprite && rollerSprite.complete && rollerSprite.naturalWidth > 0) {
         ctx.drawImage(rollerSprite, -renderW / 2, -renderH / 2, renderW, renderH);
       } else {
+        const rollGrad = ctx.createRadialGradient(-6, -6, 2, 0, 0, 28);
+        rollGrad.addColorStop(0, '#BBF7D0');
+        rollGrad.addColorStop(0.35, '#22C55E');
+        rollGrad.addColorStop(0.8, '#15803D');
+        rollGrad.addColorStop(1, '#052E16');
         ctx.beginPath();
         ctx.arc(0, 0, 28, 0, Math.PI * 2);
-        ctx.fillStyle = '#22C55E';
+        ctx.fillStyle = rollGrad;
         ctx.fill();
         ctx.strokeStyle = '#FFFFFF';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 2.5;
         ctx.stroke();
       }
+      ctx.restore();
+
+      // 2. SSS Internal Lime Diffusion Core
+      ctx.save();
+      ctx.globalCompositeOperation = 'screen';
+      ctx.globalAlpha = 0.50;
+      const sssRoll = ctx.createRadialGradient(-4, -4, 1, 0, 0, 20);
+      sssRoll.addColorStop(0, 'rgba(254, 240, 138, 0.9)');
+      sssRoll.addColorStop(0.6, 'rgba(74, 222, 128, 0.5)');
+      sssRoll.addColorStop(1, 'rgba(34, 197, 94, 0)');
+      ctx.fillStyle = sssRoll;
+      ctx.beginPath();
+      ctx.arc(0, 0, 22, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // 3. Hard Wet Lacquer Specular Crescent Reflection
+      ctx.save();
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 3.2;
+      ctx.beginPath();
+      ctx.arc(0, 0, 20, -Math.PI * 0.85, -Math.PI * 0.25);
+      ctx.stroke();
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(-10, -10, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
       ctx.restore();
       return;
     }
@@ -1750,7 +1790,7 @@ export class Enemy {
       return;
     }
 
-    // --- 8. GUMMY BEAR SOLDIER ---
+    // --- 8. GUMMY BEAR SOLDIER WITH SUBSURFACE SCATTERING & WET LACQUER ---
     const isWalking = Math.abs(this.vx) > 5;
     const bounceY = (isWalking && this.isGrounded) ? Math.abs(Math.sin(this.animTime * 12)) * 3 : 0;
 
@@ -1772,23 +1812,11 @@ export class Enemy {
 
     ctx.scale(this.facing * scaleX, scaleY);
 
-    const gummySprite = imageLoader.getImage('gummybear');
     const renderH = 64;
     const renderW = 52;
-
     const aimOffset = (this.isAiming || this.burstRemaining > 0) ? -3 : 0;
 
-    if (gummySprite && gummySprite.complete && gummySprite.naturalWidth > 0) {
-      ctx.drawImage(gummySprite, -renderW / 2 + aimOffset, -renderH, renderW, renderH);
-    } else {
-      ctx.beginPath();
-      ctx.roundRect(-renderW / 2 + 4 + aimOffset, -renderH, renderW - 8, renderH - 8, 12);
-      ctx.fillStyle = '#EF4444';
-      ctx.fill();
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
+    this.drawGummyBearSSS(ctx, renderW, renderH, aimOffset);
 
     // Aiming laser guide line / warning indicator
     if (this.isAiming) {
@@ -1808,6 +1836,175 @@ export class Enemy {
       ctx.fill();
       ctx.restore();
     }
+
+    ctx.restore();
+  }
+
+  // --- SUBSURFACE SCATTERING (SSS) & WET LACQUER SPECULAR SHADER ---
+  drawGummyBearSSS(ctx, renderW, renderH, aimOffset) {
+    const gummySprite = imageLoader.getImage('gummybear');
+    const ox = aimOffset;
+
+    // 1. SSS Backlight Halo / Subsurface Scattering Bleed (Light passing through gelatin borders)
+    ctx.save();
+    ctx.shadowColor = 'rgba(255, 45, 110, 0.75)';
+    ctx.shadowBlur = 12;
+
+    if (gummySprite && gummySprite.complete && gummySprite.naturalWidth > 0) {
+      ctx.drawImage(gummySprite, -renderW / 2 + ox, -renderH, renderW, renderH);
+    } else {
+      // Procedural Volumetric Translucent Gummy Body
+      // Ears
+      const earGrad = ctx.createRadialGradient(-16 + ox, -renderH + 8, 1, -16 + ox, -renderH + 8, 9);
+      earGrad.addColorStop(0, '#FFA8BA');
+      earGrad.addColorStop(0.5, '#F43F5E');
+      earGrad.addColorStop(1, '#9F1239');
+      ctx.fillStyle = earGrad;
+      ctx.beginPath();
+      ctx.arc(-16 + ox, -renderH + 8, 8, 0, Math.PI * 2);
+      ctx.arc(16 + ox, -renderH + 8, 8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Head
+      const headGrad = ctx.createRadialGradient(ox, -renderH + 18, 3, ox, -renderH + 20, 20);
+      headGrad.addColorStop(0, '#FDA4AF');
+      headGrad.addColorStop(0.45, '#E11D48');
+      headGrad.addColorStop(1, '#881337');
+      ctx.fillStyle = headGrad;
+      ctx.beginPath();
+      ctx.roundRect(-18 + ox, -renderH + 8, 36, 28, 14);
+      ctx.fill();
+
+      // Body & Belly
+      const bodyGrad = ctx.createRadialGradient(-2 + ox, -renderH + 40, 4, ox, -renderH + 42, 26);
+      bodyGrad.addColorStop(0, '#FECDD3');
+      bodyGrad.addColorStop(0.4, '#E11D48');
+      bodyGrad.addColorStop(0.85, '#9F1239');
+      bodyGrad.addColorStop(1, '#4C0519');
+      ctx.fillStyle = bodyGrad;
+      ctx.beginPath();
+      ctx.roundRect(-22 + ox, -renderH + 26, 44, 34, [16, 16, 12, 12]);
+      ctx.fill();
+
+      // Feet
+      ctx.fillStyle = '#9F1239';
+      ctx.beginPath();
+      ctx.ellipse(-14 + ox, -6, 10, 7, 0, 0, Math.PI * 2);
+      ctx.ellipse(14 + ox, -6, 10, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // 2. INTERNAL SUBSURFACE SCATTERING GLOW CORE (Volumetric Light Diffusion)
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    ctx.globalAlpha = 0.58;
+
+    // Belly Internal Lantern Glow
+    const sssBelly = ctx.createRadialGradient(-3 + ox, -renderH + 42, 1, ox, -renderH + 42, 20);
+    sssBelly.addColorStop(0, 'rgba(255, 200, 220, 0.95)');
+    sssBelly.addColorStop(0.45, 'rgba(255, 60, 110, 0.65)');
+    sssBelly.addColorStop(1, 'rgba(255, 0, 60, 0)');
+    ctx.fillStyle = sssBelly;
+    ctx.beginPath();
+    ctx.ellipse(ox, -renderH + 42, 18, 14, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Head / Muzzle Internal SSS Glow
+    const sssHead = ctx.createRadialGradient(ox, -renderH + 20, 1, ox, -renderH + 20, 14);
+    sssHead.addColorStop(0, 'rgba(255, 220, 230, 0.90)');
+    sssHead.addColorStop(0.5, 'rgba(255, 75, 120, 0.50)');
+    sssHead.addColorStop(1, 'rgba(255, 0, 80, 0)');
+    ctx.fillStyle = sssHead;
+    ctx.beginPath();
+    ctx.ellipse(ox, -renderH + 20, 13, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Ear translucency (Backlight edge diffusion)
+    const earSSS = ctx.createRadialGradient(-16 + ox, -renderH + 8, 1, -16 + ox, -renderH + 8, 7);
+    earSSS.addColorStop(0, 'rgba(255, 230, 240, 0.85)');
+    earSSS.addColorStop(0.7, 'rgba(255, 50, 100, 0.45)');
+    earSSS.addColorStop(1, 'rgba(255, 0, 50, 0)');
+    ctx.fillStyle = earSSS;
+    ctx.beginPath();
+    ctx.arc(-16 + ox, -renderH + 8, 6.5, 0, Math.PI * 2);
+    ctx.arc(16 + ox, -renderH + 8, 6.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // 3. HARD SPECULAR HIGHLIGHTS (WET / VARNISHED JELLY GLOSS - Brillos Especulares Duros)
+    ctx.save();
+    ctx.globalAlpha = 0.92;
+
+    // 3a. Sharp Wet Ear Crescent Glints
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.ellipse(-17 + ox, -renderH + 5, 4.5, 2.2, -Math.PI / 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(14 + ox, -renderH + 5, 4.5, 2.2, Math.PI / 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Secondary micro-sparkle on ear tips
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.beginPath();
+    ctx.arc(-14 + ox, -renderH + 11, 1.4, 0, Math.PI * 2);
+    ctx.arc(18 + ox, -renderH + 11, 1.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 3b. Forehead Wet Curved Specular Streak
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 2.4;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(-2 + ox, -renderH + 15, 10, -Math.PI * 0.85, -Math.PI * 0.25);
+    ctx.stroke();
+
+    // 3c. Snout / Nose Tip Hard High-Gloss Pearl
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.ellipse(-2 + ox, -renderH + 22, 3.2, 2.2, -Math.PI / 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.beginPath();
+    ctx.arc(3 + ox, -renderH + 24, 1.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 3d. Cheeks & Muzzle Wet Sheen
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.arc(-10 + ox, -renderH + 22, 5, -Math.PI * 0.7, -Math.PI * 0.1);
+    ctx.stroke();
+
+    // 3e. Big Volumetric Belly Dome Specular Reflection (Lacquered Jelly Gloss)
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 3.2;
+    ctx.beginPath();
+    ctx.arc(-5 + ox, -renderH + 38, 14, -Math.PI * 0.85, -Math.PI * 0.35);
+    ctx.stroke();
+
+    // Soft secondary fill under belly specular streak
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.40)';
+    ctx.beginPath();
+    ctx.ellipse(-7 + ox, -renderH + 42, 6, 3.5, -Math.PI / 6, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 3f. Left & Right Paw / Foot Lacquer Glints
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.ellipse(-14 + ox, -renderH + 34, 3.5, 1.8, -Math.PI / 4, 0, Math.PI * 2); // Left hand
+    ctx.ellipse(-15 + ox, -6, 4.2, 2.0, -Math.PI / 6, 0, Math.PI * 2); // Left foot
+    ctx.ellipse(12 + ox, -6, 3.5, 1.8, Math.PI / 6, 0, Math.PI * 2); // Right foot
+    ctx.fill();
+
+    // 3g. Internal Micro-Caustic Sugar Bubbles (Tiny suspended bubbles catching light)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+    ctx.beginPath();
+    ctx.arc(6 + ox, -renderH + 36, 1.5, 0, Math.PI * 2);
+    ctx.arc(-8 + ox, -renderH + 49, 1.8, 0, Math.PI * 2);
+    ctx.arc(8 + ox, -renderH + 46, 1.2, 0, Math.PI * 2);
+    ctx.fill();
 
     ctx.restore();
   }
