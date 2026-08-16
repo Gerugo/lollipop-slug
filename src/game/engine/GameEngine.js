@@ -921,6 +921,11 @@ export class GameEngine {
     // 1. Draw 3-Layer Parallax Biome Background
     this.level.drawBackground(ctx, this.camera);
 
+    // 1.5. Draw Background Parallax Powdered Sugar Dust (Far Depth)
+    if (this.particles && typeof this.particles.drawAmbientBackground === 'function') {
+      this.particles.drawAmbientBackground(ctx, this.camera);
+    }
+
     // 2. Apply Camera World Transform
     this.camera.applyTransform(ctx);
 
@@ -991,6 +996,11 @@ export class GameEngine {
 
     // 14. Restore Camera Transform
     this.camera.restoreTransform(ctx);
+
+    // 14.5. Draw Foreground Lens Bokeh Powdered Sugar Particles (Screen Space Parallax)
+    if (this.particles && typeof this.particles.drawAmbientForeground === 'function') {
+      this.particles.drawAmbientForeground(ctx, this.camera, this.viewportWidth, this.viewportHeight);
+    }
 
     // 15. Draw Cinematic Level Intro Title Banner (Screen Space)
     if (this.levelIntroTimer > 0 && !this.isBossIntroActive) {

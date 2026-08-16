@@ -3,50 +3,96 @@ import { imageLoader } from '../engine/ImageLoader.js';
 export class ParticleSystem {
   constructor() {
     this.particles = [];
-    this.ambientParticles = [];
+    this.bgAmbientParticles = [];
+    this.midAmbientParticles = [];
+    this.fgAmbientParticles = [];
     this.maxParticles = 600;
     this.ambientTimer = 0;
   }
 
-  // --- AMBIENT PARTICLES (Sugar Dust & Sparks) ---
+  // --- AMBIENT PARTICLES: MULTI-PLANE PARALLAX POWDERED SUGAR GLAS ---
   updateAmbient(dt, camera, currentBiome) {
     this.ambientTimer += dt;
-    if (this.ambientTimer >= 0.08 && this.ambientParticles.length < 50) {
-      this.ambientTimer = 0;
-      const screenX = camera.x + Math.random() * (camera.viewportWidth + 100);
-      const screenY = Math.random() * camera.viewportHeight;
 
-      let color = 'rgba(255, 255, 255, 0.7)';
-      let size = 2 + Math.random() * 3;
-      let vy = 15 + Math.random() * 25;
-
-      if (currentBiome === 'BIOME_B') {
-        color = 'rgba(251, 113, 133, 0.65)'; // Syrup pink dew
-        size = 3 + Math.random() * 4;
-      } else if (currentBiome === 'BIOME_C') {
-        color = 'rgba(216, 180, 254, 0.7)'; // Factory neon glow
-        size = 2 + Math.random() * 3;
-      }
-
-      this.ambientParticles.push({
-        x: screenX,
-        y: screenY,
-        vx: 15 + Math.sin(screenY * 0.05) * 20,
-        vy: vy,
-        size,
-        color,
-        life: 4.0,
-        maxLife: 4.0
+    // 1. Background Powdered Sugar Dust (Far depth, slow drift, soft motas)
+    while (this.bgAmbientParticles.length < 32) {
+      const bx = camera.x * 0.35 + Math.random() * (camera.viewportWidth + 200) - 100;
+      const by = Math.random() * (camera.viewportHeight + 40);
+      this.bgAmbientParticles.push({
+        x: bx,
+        y: by,
+        baseVx: -8 + (Math.random() - 0.5) * 12,
+        baseVy: 6 + Math.random() * 12,
+        size: 1.2 + Math.random() * 1.8,
+        color: currentBiome === 'BIOME_B' ? 'rgba(254, 205, 211, 0.45)' : 'rgba(255, 255, 255, 0.50)',
+        seed: Math.random() * 100,
+        life: 5.0 + Math.random() * 3.0,
+        maxLife: 8.0
       });
     }
 
-    for (let i = this.ambientParticles.length - 1; i >= 0; i--) {
-      const p = this.ambientParticles[i];
+    for (let i = this.bgAmbientParticles.length - 1; i >= 0; i--) {
+      const p = this.bgAmbientParticles[i];
       p.life -= dt;
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
-      if (p.life <= 0 || p.x > camera.x + camera.viewportWidth + 150) {
-        this.ambientParticles.splice(i, 1);
+      p.x += (p.baseVx + Math.sin(p.y * 0.03 + p.seed) * 8) * dt;
+      p.y += p.baseVy * dt;
+      if (p.life <= 0 || p.y > camera.viewportHeight + 40) {
+        this.bgAmbientParticles.splice(i, 1);
+      }
+    }
+
+    // 2. Midground Powdered Sugar Motes & Twinkles (World space depth)
+    while (this.midAmbientParticles.length < 36) {
+      const mx = camera.x + Math.random() * (camera.viewportWidth + 140) - 70;
+      const my = Math.random() * (camera.viewportHeight + 20);
+      this.midAmbientParticles.push({
+        x: mx,
+        y: my,
+        baseVx: -15 + (Math.random() - 0.5) * 16,
+        baseVy: 10 + Math.random() * 18,
+        size: 2.0 + Math.random() * 2.5,
+        color: currentBiome === 'BIOME_B' ? 'rgba(251, 113, 133, 0.70)' : (currentBiome === 'BIOME_C' ? 'rgba(233, 213, 255, 0.75)' : 'rgba(255, 255, 255, 0.75)'),
+        isDiamond: Math.random() < 0.22,
+        seed: Math.random() * 100,
+        life: 4.5 + Math.random() * 2.5,
+        maxLife: 7.0
+      });
+    }
+
+    for (let i = this.midAmbientParticles.length - 1; i >= 0; i--) {
+      const p = this.midAmbientParticles[i];
+      p.life -= dt;
+      p.x += (p.baseVx + Math.sin(p.y * 0.04 + p.seed) * 14) * dt;
+      p.y += p.baseVy * dt;
+      if (p.life <= 0 || p.y > 600 || p.x < camera.x - 120 || p.x > camera.x + camera.viewportWidth + 120) {
+        this.midAmbientParticles.splice(i, 1);
+      }
+    }
+
+    // 3. Foreground Camera Lens Sugar Bokeh (Close to lens, fast parallax, out-of-focus aura)
+    while (this.fgAmbientParticles.length < 16) {
+      const fx = Math.random() * (camera.viewportWidth + 80) - 40;
+      const fy = -20 + Math.random() * (camera.viewportHeight + 40);
+      this.fgAmbientParticles.push({
+        x: fx,
+        y: fy,
+        baseVx: -28 + (Math.random() - 0.5) * 22,
+        baseVy: 16 + Math.random() * 26,
+        size: 5.0 + Math.random() * 4.5,
+        color: 'rgba(255, 255, 255, 0.85)',
+        seed: Math.random() * 100,
+        life: 3.5 + Math.random() * 2.0,
+        maxLife: 5.5
+      });
+    }
+
+    for (let i = this.fgAmbientParticles.length - 1; i >= 0; i--) {
+      const p = this.fgAmbientParticles[i];
+      p.life -= dt;
+      p.x += (p.baseVx + Math.sin(p.y * 0.02 + p.seed) * 20) * dt;
+      p.y += p.baseVy * dt;
+      if (p.life <= 0 || p.y > camera.viewportHeight + 50 || p.x < -60 || p.x > camera.viewportWidth + 60) {
+        this.fgAmbientParticles.splice(i, 1);
       }
     }
   }
@@ -628,16 +674,69 @@ export class ParticleSystem {
     }
   }
 
-  draw(ctx) {
-    // 1. Draw Ambient Particles
-    for (const ap of this.ambientParticles) {
-      const alpha = Math.max(0, Math.min(1, ap.life / ap.maxLife));
+  // --- 1. DRAW BACKGROUND POWDERED SUGAR PARALLAX LAYER ---
+  drawAmbientBackground(ctx, camera) {
+    for (const p of this.bgAmbientParticles) {
+      const alpha = Math.max(0, Math.min(1, p.life / p.maxLife));
+      const twinkle = Math.sin(p.life * 4 + p.seed) * 0.3 + 0.7;
+
       ctx.save();
-      ctx.globalAlpha = alpha * 0.75;
+      ctx.globalAlpha = alpha * twinkle * 0.65;
+      ctx.fillStyle = p.color;
       ctx.beginPath();
-      ctx.arc(ap.x, ap.y, ap.size, 0, Math.PI * 2);
-      ctx.fillStyle = ap.color;
+      ctx.arc(p.x - camera.x * 0.35, p.y, p.size, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  // --- 2. DRAW FOREGROUND CAMERA LENS BOKEH POWDERED SUGAR LAYER ---
+  drawAmbientForeground(ctx, camera, viewportWidth, viewportHeight) {
+    for (const p of this.fgAmbientParticles) {
+      const alpha = Math.max(0, Math.min(1, p.life / p.maxLife));
+      const twinkle = Math.sin(p.life * 5 + p.seed) * 0.25 + 0.75;
+
+      ctx.save();
+      ctx.globalAlpha = alpha * twinkle * 0.85;
+
+      // Soft Camera Lens Out-Of-Focus Bokeh Flare
+      const bokehGrad = ctx.createRadialGradient(p.x, p.y, p.size * 0.15, p.x, p.y, p.size);
+      bokehGrad.addColorStop(0, '#FFFFFF');
+      bokehGrad.addColorStop(0.35, 'rgba(255, 255, 255, 0.75)');
+      bokehGrad.addColorStop(0.7, 'rgba(254, 205, 211, 0.35)');
+      bokehGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+      ctx.fillStyle = bokehGrad;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  draw(ctx) {
+    // 1. Draw Midground Sugar Particles
+    for (const mp of this.midAmbientParticles) {
+      const alpha = Math.max(0, Math.min(1, mp.life / mp.maxLife));
+      const twinkle = Math.sin(mp.life * 6 + mp.seed) * 0.35 + 0.65;
+      ctx.save();
+      ctx.globalAlpha = alpha * twinkle * 0.75;
+
+      if (mp.isDiamond) {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.moveTo(mp.x, mp.y - mp.size * 1.5);
+        ctx.lineTo(mp.x + mp.size * 0.6, mp.y);
+        ctx.lineTo(mp.x, mp.y + mp.size * 1.5);
+        ctx.lineTo(mp.x - mp.size * 0.6, mp.y);
+        ctx.closePath();
+        ctx.fill();
+      } else {
+        ctx.beginPath();
+        ctx.arc(mp.x, mp.y, mp.size, 0, Math.PI * 2);
+        ctx.fillStyle = mp.color;
+        ctx.fill();
+      }
       ctx.restore();
     }
 
