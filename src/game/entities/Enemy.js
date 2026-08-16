@@ -91,7 +91,7 @@ export class Enemy {
       this.gravity = 950;
       this.width = 50;
       this.height = 56;
-      this.hp = 55;
+      this.hp = options.hp || 20;
       this.scoreValue = 500;
       this.speed = 45;
       this.shieldUp = true;
@@ -231,7 +231,7 @@ export class Enemy {
           particles.emitSparkles(this.x + (this.facing === -1 ? 8 : this.width - 8), this.y + 24, 6, '#FBBF24');
           particles.emitCandyShards(this.x + (this.facing === -1 ? 8 : this.width - 8), this.y + 24, 4);
         }
-        this.hp -= Math.max(1, Math.floor(amount * 0.2));
+        this.hp -= Math.max(1, Math.round(amount * 0.5));
         this.hurtTimer = 0.05;
         if (this.hp <= 0) this.die(particles, soundManager);
         return;

@@ -321,8 +321,8 @@ export class Player {
           vx: bulletVx,
           vy: bulletVy + spread,
           type: 'HMG',
-          damage: 14,
-          penetrate: true,
+          damage: 6,
+          penetrate: false,
           isPlayer: true,
           rotation: shotAngle
         })
