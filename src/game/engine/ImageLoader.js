@@ -8,10 +8,15 @@ class ImageLoader {
     this.total = 0;
     this.count = 0;
 
-    // Vite-resolved reliable asset URLs
     this.sources = {
       player: new URL('../../assets/mascota.png', import.meta.url).href,
       hero: new URL('../../assets/mascota.png', import.meta.url).href,
+      mascota: new URL('../../assets/mascota.png', import.meta.url).href,
+      mascota_run: new URL('../../assets/mascota_run.png', import.meta.url).href,
+      mascota_jump: new URL('../../assets/mascota_jump.png', import.meta.url).href,
+      mascota_crouch: new URL('../../assets/mascota_crouch.png', import.meta.url).href,
+      mascota_hurt: new URL('../../assets/mascota_hurt.png', import.meta.url).href,
+      mascota_victory: new URL('../../assets/mascota_victory.png', import.meta.url).href,
       boss: new URL('../../assets/boss.png', import.meta.url).href,
       boss_cannon: new URL('../../assets/boss_cannon.png', import.meta.url).href,
       boss_slam: new URL('../../assets/boss_slam.png', import.meta.url).href,

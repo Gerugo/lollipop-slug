@@ -231,10 +231,18 @@ export class Player {
 
     this.prevVx = this.vx;
 
-    // Incline tilt & Stride arc
+    // Incline tilt & Stride arc & Footstep sugar dust
     const isRunning = Math.abs(this.vx) > 15 && this.isGrounded;
-    this.rotation = isRunning ? (this.vx / this.speed) * 0.08 : 0;
-    this.stepArc = isRunning ? Math.abs(Math.sin(this.walkTimer * 14)) * 3 : 0;
+    this.rotation = this.skidTimer > 0 ? (-this.facing * 0.16) : (isRunning ? (this.vx / this.speed) * 0.08 : 0);
+    this.stepArc = isRunning ? Math.abs(Math.sin(this.walkTimer * 14)) * 3.5 : 0;
+
+    if (isRunning && particles) {
+      const prevPhase = Math.sin((this.walkTimer - dt) * 14);
+      const currPhase = Math.sin(this.walkTimer * 14);
+      if (prevPhase <= 0 && currPhase > 0) {
+        particles.emitFootstepSugarDust(this.x + this.width / 2, this.y + this.height, this.facing);
+      }
+    }
 
     // 4. PLATFORM DROP-THROUGH [DOWN + JUMP]
     if (moveDown && jumpPressed) {
@@ -249,7 +257,7 @@ export class Player {
       this.isGrounded = false;
       soundManager.playJump();
       if (particles) {
-        particles.emitSugarSmoke(this.x + this.width / 2, this.y + this.height, 4, '#FFFFFF');
+        particles.emitJumpLaunchPuff(this.x + this.width / 2, this.y + this.height);
       }
     }
 
@@ -280,11 +288,11 @@ export class Player {
     }
     this.groundY = this.isGrounded ? this.y + this.height : detectedGroundY;
 
-    // Landing Impact Squash Trigger
+    // Landing Impact Squash & Radial Shockwave Trigger
     if (!wasGrounded && this.isGrounded) {
-      this.landSquashTimer = 0.15;
+      this.landSquashTimer = 0.16;
       if (particles) {
-        particles.emitSugarSmoke(this.x + this.width / 2, this.y + this.height, 3, '#FFE4E6');
+        particles.emitLandingImpactDust(this.x + this.width / 2, this.y + this.height);
       }
     }
 
@@ -601,8 +609,9 @@ export class Player {
   draw(ctx) {
     if (this.isDead) return;
 
-    if (this.invulnerableTimer > 0 && Math.floor(this.animTime * 18) % 2 === 0) {
-      return;
+    // Fused invulnerability blink & opacity modulation
+    if (this.invulnerableTimer > 0 && Math.floor(this.animTime * 24) % 2 === 0) {
+      // Fast arcade blink
     }
 
     ctx.save();
@@ -651,42 +660,97 @@ export class Player {
     } 
     // Jump Stretch (Ascending)
     else if (!this.isGrounded && this.vy < -50) {
-      scaleY = 1.18;
-      scaleX = 0.85;
+      scaleY = 1.14;
+      scaleX = 0.88;
     }
 
-    // Landing Impact Squash (Lerp recovery in 0.15s)
+    // Landing Impact Squash (Lerp recovery in 0.16s)
     if (this.landSquashTimer > 0) {
-      const t = this.landSquashTimer / 0.15;
-      scaleY = 1 - (0.20 * t);
-      scaleX = 1 + (0.20 * t);
+      const t = this.landSquashTimer / 0.16;
+      scaleY = 1 - (0.22 * t);
+      scaleX = 1 + (0.22 * t);
     }
 
-    // Firing Recoil Keyframe Anticipation & Squash/Stretch (Harmonic Kickback & Rebound)
+    // Firing Recoil Keyframe Anticipation & Squash/Stretch
     if (this.shootRecoilTimer > 0) {
       const progress = 1 - (this.shootRecoilTimer / 0.16); // 0 -> 1
       if (progress < 0.28) {
-        // Keyframe 1: Sudden impact compression & kickback
         const k = progress / 0.28;
-        scaleX *= (1 - 0.22 * Math.sin(k * Math.PI / 2));
-        scaleY *= (1 + 0.18 * Math.sin(k * Math.PI / 2));
+        scaleX *= (1 - 0.20 * Math.sin(k * Math.PI / 2));
+        scaleY *= (1 + 0.16 * Math.sin(k * Math.PI / 2));
       } else if (progress < 0.72) {
-        // Keyframe 2: Elastic rebound forward
         const k = (progress - 0.28) / 0.44;
-        scaleX *= (1 + 0.12 * Math.sin(k * Math.PI));
-        scaleY *= (1 - 0.10 * Math.sin(k * Math.PI));
+        scaleX *= (1 + 0.10 * Math.sin(k * Math.PI));
+        scaleY *= (1 - 0.08 * Math.sin(k * Math.PI));
       }
     }
 
     // Flip horizontally when facing === -1 (perfect mirror with center pivot)
     ctx.scale(this.facing * scaleX, scaleY);
 
-    const sprite = imageLoader.getImage('player');
-    const renderH = 50;
-    const renderW = 38;
+    // 3. Dynamic Pose Selection
+    let spriteKey = 'player';
+    let renderH = 50;
+    let renderW = 38;
+    let gunY = -renderH + 28;
+    let showGun = true;
+
+    if (this.isVictorious) {
+      spriteKey = 'mascota_victory';
+      renderW = 46;
+      renderH = 52;
+      showGun = false;
+    } else if (this.invulnerableTimer > 0) {
+      spriteKey = 'mascota_hurt';
+      renderW = 46;
+      renderH = 52;
+      gunY = -renderH + 30;
+    } else if (this.isCrouching) {
+      spriteKey = 'mascota_crouch';
+      renderW = 44;
+      renderH = 42;
+      gunY = -renderH + 24;
+    } else if (!this.isGrounded) {
+      spriteKey = 'mascota_jump';
+      renderW = 42;
+      renderH = 52;
+      gunY = -renderH + 24;
+    } else if (Math.abs(this.vx) > 15) {
+      // 2-frame running stride
+      const isRunStride = Math.sin(this.walkTimer * 14) > 0;
+      spriteKey = isRunStride ? 'mascota_run' : 'mascota';
+      renderW = isRunStride ? 40 : 38;
+      renderH = 50;
+      gunY = -renderH + 28;
+    }
+
+    if (this.aimUp) {
+      gunY = -renderH + 16;
+    }
+
+    const sprite = imageLoader.getImage(spriteKey) || imageLoader.getImage('player');
+
+    // 4. Iridescent Bubble Shield during Invulnerability
+    if (this.invulnerableTimer > 0) {
+      ctx.save();
+      const shieldRadius = 28;
+      const shieldGrad = ctx.createRadialGradient(0, -renderH / 2, shieldRadius * 0.4, 0, -renderH / 2, shieldRadius);
+      shieldGrad.addColorStop(0, 'rgba(255, 255, 255, 0.05)');
+      shieldGrad.addColorStop(0.65, 'rgba(253, 164, 175, 0.25)');
+      shieldGrad.addColorStop(0.88, 'rgba(186, 230, 253, 0.45)');
+      shieldGrad.addColorStop(1, 'rgba(221, 214, 254, 0.65)');
+      ctx.fillStyle = shieldGrad;
+      ctx.beginPath();
+      ctx.arc(0, -renderH / 2, shieldRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+      ctx.lineWidth = 1.8;
+      ctx.stroke();
+      ctx.restore();
+    }
 
     if (sprite && sprite.complete && sprite.naturalWidth > 0) {
-      // Draw PNG Mascot Sprite with subtle studio rim-light backlight
+      // Draw Mascot Pose Sprite with soft rim-light
       ctx.save();
       ctx.shadowColor = 'rgba(255, 255, 255, 0.45)';
       ctx.shadowBlur = 5;
@@ -702,141 +766,141 @@ export class Player {
       ctx.stroke();
     }
 
-    // Draw Gun Overlay in Hand (aligned with facing direction with dynamic kickback)
-    const gunX = this.aimUp ? 8 : 14;
-    const gunY = this.aimUp ? -renderH + 16 : (this.isCrouching ? -renderH + 34 : -renderH + 28);
+    // 5. Draw Gun Overlay in Hand (aligned with facing direction with dynamic kickback)
+    if (showGun) {
+      const gunX = this.aimUp ? 8 : 14;
 
-    // Calculate dynamic gun kick translation and angular recoil
-    let gunRecoil = 0;
-    let gunKickAngle = 0;
-    if (this.shootRecoilTimer > 0) {
-      const p = this.shootRecoilTimer / 0.16;
-      const kickPower = (this.currentWeapon.id === 'SHOTGUN' || this.currentWeapon.id === 'ROCKET') ? 1.5 : 1.0;
-      gunRecoil = 7.5 * p * kickPower;
-      gunKickAngle = -0.24 * p * kickPower; // Muzzle kicks up ~14 degrees
-    }
-
-    ctx.save();
-    ctx.translate(gunX - gunRecoil, gunY);
-    if (this.aimUp) {
-      ctx.rotate(-Math.PI / 2 + gunKickAngle);
-    } else {
-      ctx.rotate(gunKickAngle);
-    }
-
-    let gunSpriteKey = 'arma_pistol';
-    let gunW = 20;
-    let gunH = 13;
-
-    let flipX = true; // Default: sprites facing left in image assets (pistol, shotgun, etc.) need flip
-
-    if (this.currentWeapon.id === 'HMG') {
-      gunSpriteKey = 'arma_hmg';
-      gunW = 26;
-      gunH = 13;
-      flipX = false;
-    } else if (this.currentWeapon.id === 'SHOTGUN') {
-      gunSpriteKey = 'arma_shotgun';
-      gunW = 26;
-      gunH = 11;
-      flipX = true;
-    } else if (this.currentWeapon.id === 'ROCKET') {
-      gunSpriteKey = 'arma_rocket';
-      gunW = 27;
-      gunH = 14;
-      flipX = false;
-    } else if (this.currentWeapon.id === 'LATIGO_DULCE') {
-      gunSpriteKey = 'arma_latigo';
-      gunW = 22;
-      gunH = 15;
-      flipX = true;
-    } else if (this.currentWeapon.id === 'CANON_BURBUJAS') {
-      gunSpriteKey = 'arma_burbujas';
-      gunW = 25;
-      gunH = 16;
-      flipX = false;
-    } else if (this.currentWeapon.id === 'LANZAHIELOS') {
-      gunSpriteKey = 'arma_hielo';
-      gunW = 26;
-      gunH = 15;
-      flipX = false;
-    } else if (this.currentWeapon.id === 'RAYO_LASER') {
-      gunSpriteKey = 'arma_laser';
-      gunW = 26;
-      gunH = 15;
-      flipX = false;
-    } else if (this.currentWeapon.id === 'LANZALLAMAS') {
-      gunSpriteKey = 'arma_flamethrower';
-      gunW = 27;
-      gunH = 16;
-      flipX = false;
-    } else if (this.currentWeapon.id === 'CANON_PLASMA') {
-      gunSpriteKey = 'arma_plasma';
-      gunW = 28;
-      gunH = 16;
-      flipX = false;
-    } else if (this.currentWeapon.id === 'CANON_COSMICO') {
-      gunSpriteKey = 'arma_cosmic';
-      gunW = 28;
-      gunH = 16;
-      flipX = false;
-    }
-
-    const gunSprite = imageLoader.getImage(gunSpriteKey);
-    if (gunSprite && gunSprite.complete && gunSprite.naturalWidth > 0) {
-      if (flipX) {
-        ctx.save();
-        ctx.scale(-1, 1);
-        ctx.drawImage(gunSprite, -gunW + 4, -gunH / 2, gunW, gunH);
-        ctx.restore();
-      } else {
-        ctx.drawImage(gunSprite, -4, -gunH / 2, gunW, gunH);
+      // Calculate dynamic gun kick translation and angular recoil
+      let gunRecoil = 0;
+      let gunKickAngle = 0;
+      if (this.shootRecoilTimer > 0) {
+        const p = this.shootRecoilTimer / 0.16;
+        const kickPower = (this.currentWeapon.id === 'SHOTGUN' || this.currentWeapon.id === 'ROCKET') ? 1.5 : 1.0;
+        gunRecoil = 7.5 * p * kickPower;
+        gunKickAngle = -0.24 * p * kickPower; // Muzzle kicks up ~14 degrees
       }
-    } else {
-      ctx.fillStyle = '#FF5A9E';
-      ctx.fillRect(-2, -3, 14, 6);
-    }
 
-    // Dynamic Starburst Muzzle Flash when firing
-    if (this.shootShake > 0) {
       ctx.save();
-      const flashX = flipX ? gunW - 2 : gunW;
-      ctx.translate(flashX, 0);
+      ctx.translate(gunX - gunRecoil, gunY);
+      if (this.aimUp) {
+        ctx.rotate(-Math.PI / 2 + gunKickAngle);
+      } else {
+        ctx.rotate(gunKickAngle);
+      }
 
-      const flashSize = (this.currentWeapon.id === 'SHOTGUN' || this.currentWeapon.id === 'ROCKET') ? 18 : 12;
-      const flashGrad = ctx.createRadialGradient(0, 0, 1, 0, 0, flashSize);
-      flashGrad.addColorStop(0, '#FFFFFF');
-      flashGrad.addColorStop(0.4, '#FDE047');
-      flashGrad.addColorStop(1, 'rgba(244, 63, 94, 0)');
-      ctx.fillStyle = flashGrad;
-      ctx.beginPath();
-      ctx.arc(0, 0, flashSize, 0, Math.PI * 2);
-      ctx.fill();
+      let gunSpriteKey = 'arma_pistol';
+      let gunW = 20;
+      let gunH = 13;
+      let flipX = true;
 
-      // Sharp Diamond Sparks
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      ctx.moveTo(0, -flashSize * 0.9);
-      ctx.lineTo(flashSize * 0.3, 0);
-      ctx.lineTo(0, flashSize * 0.9);
-      ctx.lineTo(-flashSize * 0.3, 0);
-      ctx.closePath();
-      ctx.fill();
+      if (this.currentWeapon.id === 'HMG') {
+        gunSpriteKey = 'arma_hmg';
+        gunW = 26;
+        gunH = 13;
+        flipX = false;
+      } else if (this.currentWeapon.id === 'SHOTGUN') {
+        gunSpriteKey = 'arma_shotgun';
+        gunW = 26;
+        gunH = 11;
+        flipX = true;
+      } else if (this.currentWeapon.id === 'ROCKET') {
+        gunSpriteKey = 'arma_rocket';
+        gunW = 27;
+        gunH = 14;
+        flipX = false;
+      } else if (this.currentWeapon.id === 'LATIGO_DULCE') {
+        gunSpriteKey = 'arma_latigo';
+        gunW = 22;
+        gunH = 15;
+        flipX = true;
+      } else if (this.currentWeapon.id === 'CANON_BURBUJAS') {
+        gunSpriteKey = 'arma_burbujas';
+        gunW = 25;
+        gunH = 16;
+        flipX = false;
+      } else if (this.currentWeapon.id === 'LANZAHIELOS') {
+        gunSpriteKey = 'arma_hielo';
+        gunW = 26;
+        gunH = 15;
+        flipX = false;
+      } else if (this.currentWeapon.id === 'RAYO_LASER') {
+        gunSpriteKey = 'arma_laser';
+        gunW = 26;
+        gunH = 15;
+        flipX = false;
+      } else if (this.currentWeapon.id === 'LANZALLAMAS') {
+        gunSpriteKey = 'arma_flamethrower';
+        gunW = 27;
+        gunH = 16;
+        flipX = false;
+      } else if (this.currentWeapon.id === 'CANON_PLASMA') {
+        gunSpriteKey = 'arma_plasma';
+        gunW = 28;
+        gunH = 16;
+        flipX = false;
+      } else if (this.currentWeapon.id === 'CANON_COSMICO') {
+        gunSpriteKey = 'arma_cosmic';
+        gunW = 28;
+        gunH = 16;
+        flipX = false;
+      }
 
-      ctx.beginPath();
-      ctx.moveTo(-flashSize * 0.9, 0);
-      ctx.lineTo(0, flashSize * 0.3);
-      ctx.lineTo(flashSize * 0.9, 0);
-      ctx.lineTo(0, -flashSize * 0.3);
-      ctx.closePath();
-      ctx.fill();
+      const gunSprite = imageLoader.getImage(gunSpriteKey);
+      if (gunSprite && gunSprite.complete && gunSprite.naturalWidth > 0) {
+        if (flipX) {
+          ctx.save();
+          ctx.scale(-1, 1);
+          ctx.drawImage(gunSprite, -gunW + 4, -gunH / 2, gunW, gunH);
+          ctx.restore();
+        } else {
+          ctx.drawImage(gunSprite, -4, -gunH / 2, gunW, gunH);
+        }
+      } else {
+        ctx.fillStyle = '#FF5A9E';
+        ctx.fillRect(-2, -3, 14, 6);
+      }
 
-      ctx.restore();
+      // Dynamic Starburst Muzzle Flash when firing
+      if (this.shootShake > 0) {
+        ctx.save();
+        const flashX = flipX ? gunW - 2 : gunW;
+        ctx.translate(flashX, 0);
+
+        const flashSize = (this.currentWeapon.id === 'SHOTGUN' || this.currentWeapon.id === 'ROCKET') ? 18 : 12;
+        const flashGrad = ctx.createRadialGradient(0, 0, 1, 0, 0, flashSize);
+        flashGrad.addColorStop(0, '#FFFFFF');
+        flashGrad.addColorStop(0.4, '#FDE047');
+        flashGrad.addColorStop(1, 'rgba(244, 63, 94, 0)');
+        ctx.fillStyle = flashGrad;
+        ctx.beginPath();
+        ctx.arc(0, 0, flashSize, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Sharp Diamond Sparks
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.moveTo(0, -flashSize * 0.9);
+        ctx.lineTo(flashSize * 0.3, 0);
+        ctx.lineTo(0, flashSize * 0.9);
+        ctx.lineTo(-flashSize * 0.3, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(-flashSize * 0.9, 0);
+        ctx.lineTo(0, flashSize * 0.3);
+        ctx.lineTo(flashSize * 0.9, 0);
+        ctx.lineTo(0, -flashSize * 0.3);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.restore();
+      }
+
+      ctx.restore(); // End gun transform
     }
 
-    ctx.restore(); // End gun transform
-
-    // Dynamic Hero Satin Headband Ribbon trailing behind
+    // 6. Dynamic Hero Satin Headband Ribbon trailing behind
     const trailWind = -this.facing * (Math.abs(this.vx) / this.speed) * 14;
     const wave1 = Math.sin(this.animTime * 14) * 3;
     const wave2 = Math.cos(this.animTime * 16) * 4;

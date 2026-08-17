@@ -377,23 +377,93 @@ export class ParticleSystem {
 
   // --- SKID DUST ON DIRECTION REVERSAL ---
   emitSkidDust(x, y, facing = 1) {
-    for (let i = 0; i < 4; i++) {
-      const speed = 25 + Math.random() * 50;
+    for (let i = 0; i < 5; i++) {
+      const speed = 35 + Math.random() * 65;
       this.particles.push({
         type: 'skid_dust',
         x: x + (Math.random() - 0.5) * 8,
         y: y + 2,
         vx: -facing * speed + (Math.random() - 0.5) * 20,
-        vy: -15 - Math.random() * 25,
+        vy: -18 - Math.random() * 30,
         gravity: 60,
         drag: 0.92,
-        radius: 4 + Math.random() * 5,
-        growth: 8,
-        color: 'rgba(255, 241, 242, 0.85)',
+        radius: 4.5 + Math.random() * 5,
+        growth: 10,
+        color: 'rgba(255, 241, 242, 0.90)',
+        life: 0.38 + Math.random() * 0.2,
+        maxLife: 0.58
+      });
+    }
+    this.emitSparkles(x, y, 2, '#FEF08A');
+  }
+
+  // --- FOOTSTEP SUGAR DUST ON RUNNING ---
+  emitFootstepSugarDust(x, y, facing = 1) {
+    const puffColors = ['rgba(255, 255, 255, 0.85)', 'rgba(254, 205, 211, 0.75)', 'rgba(254, 240, 138, 0.75)'];
+    for (let i = 0; i < 2; i++) {
+      this.particles.push({
+        type: 'skid_dust',
+        x: x - facing * (8 + Math.random() * 8),
+        y: y + (Math.random() - 0.5) * 4,
+        vx: -facing * (18 + Math.random() * 28),
+        vy: -10 - Math.random() * 16,
+        gravity: 45,
+        drag: 0.90,
+        radius: 3.2 + Math.random() * 3.5,
+        growth: 6,
+        color: puffColors[Math.floor(Math.random() * puffColors.length)],
+        life: 0.25 + Math.random() * 0.15,
+        maxLife: 0.4
+      });
+    }
+  }
+
+  // --- JUMP LAUNCH SUGAR BLAST RING ---
+  emitJumpLaunchPuff(x, y) {
+    const puffColors = ['rgba(255, 255, 255, 0.95)', 'rgba(254, 205, 211, 0.85)', 'rgba(219, 234, 254, 0.85)'];
+    for (let i = 0; i < 6; i++) {
+      const angle = Math.PI + (i / 5) * Math.PI;
+      const speed = 40 + Math.random() * 70;
+      this.particles.push({
+        type: 'skid_dust',
+        x: x + (Math.random() - 0.5) * 14,
+        y: y + 2,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed * 0.4,
+        gravity: 30,
+        drag: 0.91,
+        radius: 4.5 + Math.random() * 4,
+        growth: 9,
+        color: puffColors[i % puffColors.length],
         life: 0.35 + Math.random() * 0.2,
         maxLife: 0.55
       });
     }
+    this.emitSparkles(x, y, 4, '#FDE047');
+  }
+
+  // --- HEAVY LANDING IMPACT RADIAL SHOCKWAVE ---
+  emitLandingImpactDust(x, y) {
+    for (let dir of [-1, 1]) {
+      for (let i = 0; i < 4; i++) {
+        const speed = 50 + Math.random() * 70;
+        this.particles.push({
+          type: 'skid_dust',
+          x: x + dir * (4 + i * 2),
+          y: y + 2,
+          vx: dir * speed,
+          vy: -12 - Math.random() * 22,
+          gravity: 50,
+          drag: 0.88,
+          radius: 5 + Math.random() * 4,
+          growth: 12,
+          color: 'rgba(255, 255, 255, 0.92)',
+          life: 0.32 + Math.random() * 0.18,
+          maxLife: 0.5
+        });
+      }
+    }
+    this.emitSparkles(x, y, 6, '#FEF08A');
   }
 
   // --- JUICY GUMMY DEBRIS ON ENEMY DEFEAT ---
