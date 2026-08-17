@@ -1,160 +1,145 @@
 import { useEffect, useRef } from 'react';
-import stageBgmUrl from '../assets/Candy_Coated_Carnage.mp3';
-import bossBgmUrl from '../assets/boss_battle.wav';
+import stage1BgmUrl from '../assets/Candy_Coated_Carnage.mp3';
+import boss1BgmUrl from '../assets/boss_battle.wav';
+import stage2BgmUrl from '../assets/level2_bgm.wav';
+import boss2BgmUrl from '../assets/level2_boss.wav';
 
 /**
- * Custom hook for dual dynamic background music (Stage & Boss BGM) management in React.
+ * Custom hook for dynamic multi-level background music (Stage & Boss BGM) management in React.
  *
  * @param {string} gameState - Current game state ('PLAYING', 'PAUSED', 'MENU', 'GAME_OVER', 'VICTORY')
  * @param {number} [volume=0.5] - Audio volume between 0 and 1
  * @param {boolean} [isMuted=false] - Whether the audio is muted
  * @param {boolean} [isBossActive=false] - Whether a boss fight is currently active
+ * @param {number} [currentLevel=1] - Current active level index (1, 2, etc.)
  */
-export function useBackgroundMusic(gameState, volume = 0.5, isMuted = false, isBossActive = false) {
-  const stageAudioRef = useRef(null);
-  const bossAudioRef = useRef(null);
-  const isPlayingStageRef = useRef(false);
-  const isPlayingBossRef = useRef(false);
+export function useBackgroundMusic(
+  gameState,
+  volume = 0.5,
+  isMuted = false,
+  isBossActive = false,
+  currentLevel = 1
+) {
+  const currentLevelRef = useRef(currentLevel);
+  const audioTracksRef = useRef({});
+  const activeTrackRef = useRef(null);
 
-  // Initialize and cleanup Audio instances safely
+  // Initialize and preload all audio tracks
   useEffect(() => {
     try {
       if (typeof window !== 'undefined' && typeof Audio !== 'undefined') {
-        // 1. Stage Music
-        if (stageBgmUrl) {
-          const stageAudio = new Audio();
-          stageAudio.src = stageBgmUrl;
-          stageAudio.loop = true;
-          stageAudio.preload = 'auto';
-          stageAudio.volume = Math.max(0, Math.min(1, volume));
-          stageAudio.muted = isMuted;
-
-          stageAudio.addEventListener('error', () => {
-            try { stageAudio.src = './assets/Candy_Coated_Carnage.mp3'; } catch (_) {}
+        const createAudio = (src, fallbackSrc) => {
+          const a = new Audio();
+          a.src = src;
+          a.loop = true;
+          a.preload = 'auto';
+          a.volume = Math.max(0, Math.min(1, volume));
+          a.muted = isMuted;
+          a.addEventListener('error', () => {
+            if (fallbackSrc) {
+              try { a.src = fallbackSrc; } catch (_) {}
+            }
           });
+          return a;
+        };
 
-          stageAudioRef.current = stageAudio;
-        }
-
-        // 2. Boss Battle Music
-        if (bossBgmUrl) {
-          const bossAudio = new Audio();
-          bossAudio.src = bossBgmUrl;
-          bossAudio.loop = true;
-          bossAudio.preload = 'auto';
-          bossAudio.volume = Math.max(0, Math.min(1, volume));
-          bossAudio.muted = isMuted;
-
-          bossAudio.addEventListener('error', () => {
-            try { bossAudio.src = './assets/boss_battle.wav'; } catch (_) {}
-          });
-
-          bossAudioRef.current = bossAudio;
-        }
+        audioTracksRef.current = {
+          stage_1: createAudio(stage1BgmUrl, './assets/Candy_Coated_Carnage.mp3'),
+          boss_1: createAudio(boss1BgmUrl, './assets/boss_battle.wav'),
+          stage_2: createAudio(stage2BgmUrl, './assets/level2_bgm.wav'),
+          boss_2: createAudio(boss2BgmUrl, './assets/level2_boss.wav'),
+        };
       }
     } catch (err) {
       console.warn('[useBackgroundMusic] Failed to initialize Audio objects:', err);
     }
 
     return () => {
-      if (stageAudioRef.current) {
-        try {
-          stageAudioRef.current.pause();
-          stageAudioRef.current.src = '';
-        } catch (_) {}
-        stageAudioRef.current = null;
-      }
-      if (bossAudioRef.current) {
-        try {
-          bossAudioRef.current.pause();
-          bossAudioRef.current.src = '';
-        } catch (_) {}
-        bossAudioRef.current = null;
-      }
+      Object.values(audioTracksRef.current).forEach((audio) => {
+        if (audio) {
+          try {
+            audio.pause();
+            audio.src = '';
+          } catch (_) {}
+        }
+      });
+      audioTracksRef.current = {};
+      activeTrackRef.current = null;
     };
   }, []);
+
+  // Update currentLevelRef
+  useEffect(() => {
+    currentLevelRef.current = currentLevel;
+  }, [currentLevel]);
 
   // Update volume and muted state dynamically across all tracks
   useEffect(() => {
     const safeVol = Math.max(0, Math.min(1, volume));
-    if (stageAudioRef.current) {
-      stageAudioRef.current.volume = safeVol;
-      stageAudioRef.current.muted = isMuted;
-    }
-    if (bossAudioRef.current) {
-      bossAudioRef.current.volume = safeVol;
-      bossAudioRef.current.muted = isMuted;
-    }
+    Object.values(audioTracksRef.current).forEach((audio) => {
+      if (audio) {
+        audio.volume = safeVol;
+        audio.muted = isMuted;
+      }
+    });
   }, [volume, isMuted]);
 
-  // Handle play / pause / track switching based on gameState & isBossActive
+  // Handle play / pause / track switching based on gameState, isBossActive & currentLevel
   useEffect(() => {
-    const stageAudio = stageAudioRef.current;
-    const bossAudio = bossAudioRef.current;
+    const tracks = audioTracksRef.current;
+    if (!tracks || Object.keys(tracks).length === 0) return;
+
     const normalizedState = (gameState || '').toLowerCase();
+    const lvlKey = currentLevel === 2 ? '2' : '1';
+    const targetTrackKey = isBossActive ? `boss_${lvlKey}` : `stage_${lvlKey}`;
+    const targetAudio = tracks[targetTrackKey];
 
     try {
       if (normalizedState === 'playing') {
-        if (isBossActive && bossAudio) {
-          // Pause stage music and start boss music
-          if (stageAudio && isPlayingStageRef.current) {
-            stageAudio.pause();
-            isPlayingStageRef.current = false;
-          }
-
-          if (!isPlayingBossRef.current) {
-            const playPromise = bossAudio.play();
-            if (playPromise !== undefined) {
-              playPromise
-                .then(() => { isPlayingBossRef.current = true; })
-                .catch((err) => {
-                  isPlayingBossRef.current = false;
-                  console.warn('[useBackgroundMusic] Boss audio playback awaiting interaction:', err);
-                });
+        // Pause any active track that is not the target
+        Object.entries(tracks).forEach(([key, audio]) => {
+          if (key !== targetTrackKey && audio && !audio.paused) {
+            audio.pause();
+            if (key.startsWith('boss_') && !isBossActive) {
+              audio.currentTime = 0;
             }
           }
-        } else if (stageAudio) {
-          // Pause boss music and resume/start stage music
-          if (bossAudio && isPlayingBossRef.current) {
-            bossAudio.pause();
-            bossAudio.currentTime = 0;
-            isPlayingBossRef.current = false;
-          }
+        });
 
-          if (!isPlayingStageRef.current) {
-            const playPromise = stageAudio.play();
-            if (playPromise !== undefined) {
-              playPromise
-                .then(() => { isPlayingStageRef.current = true; })
-                .catch((err) => {
-                  isPlayingStageRef.current = false;
-                  console.warn('[useBackgroundMusic] Stage audio playback awaiting interaction:', err);
-                });
-            }
+        // Play the target track
+        if (targetAudio && targetAudio.paused) {
+          const playPromise = targetAudio.play();
+          if (playPromise !== undefined) {
+            playPromise
+              .then(() => {
+                activeTrackRef.current = targetTrackKey;
+              })
+              .catch((err) => {
+                console.warn(`[useBackgroundMusic] Track ${targetTrackKey} playback awaiting user interaction:`, err);
+              });
           }
         }
       } else {
         // Paused, Menu, Game Over, Victory
-        if (stageAudio && isPlayingStageRef.current) {
-          stageAudio.pause();
-          isPlayingStageRef.current = false;
-        }
-        if (bossAudio && isPlayingBossRef.current) {
-          bossAudio.pause();
-          isPlayingBossRef.current = false;
-        }
+        Object.values(tracks).forEach((audio) => {
+          if (audio && !audio.paused) {
+            audio.pause();
+          }
+        });
 
         if (normalizedState === 'menu') {
-          if (stageAudio) stageAudio.currentTime = 0;
-          if (bossAudio) bossAudio.currentTime = 0;
+          Object.values(tracks).forEach((audio) => {
+            if (audio) audio.currentTime = 0;
+          });
         }
+        activeTrackRef.current = null;
       }
     } catch (err) {
       console.warn('[useBackgroundMusic] Play/pause error:', err);
     }
-  }, [gameState, isBossActive]);
+  }, [gameState, isBossActive, currentLevel]);
 
-  return { stageAudioRef, bossAudioRef };
+  return { audioTracksRef };
 }
 
 export default useBackgroundMusic;
