@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Play, HelpCircle, Trophy, Sparkles, Volume2, VolumeX, Maximize2, MapPin } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Play, HelpCircle, Trophy, Sparkles, Volume2, VolumeX, Maximize2, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import { LEVEL_REGISTRY } from '../game/level/LevelRegistry.js';
 
 export const MainMenu = ({
@@ -15,6 +15,7 @@ export const MainMenu = ({
 }) => {
   const [selectedLevel, setSelectedLevel] = useState(1);
   const levels = LEVEL_REGISTRY;
+  const levelListRef = useRef(null);
 
   const handleLevelClick = (lvlId) => {
     setSelectedLevel(lvlId);
@@ -23,130 +24,156 @@ export const MainMenu = ({
     }
   };
 
+  const handlePrevLevel = () => {
+    const nextId = selectedLevel > 1 ? selectedLevel - 1 : levels.length;
+    handleLevelClick(nextId);
+  };
+
+  const handleNextLevel = () => {
+    const nextId = selectedLevel < levels.length ? selectedLevel + 1 : 1;
+    handleLevelClick(nextId);
+  };
+
   const handlePlayClick = () => {
     if (onStartGame) {
       onStartGame(selectedLevel);
     }
   };
 
+  const currentLvl = levels.find((l) => l.id === selectedLevel) || levels[0];
+
   const safeHighScore = (highScore !== undefined && highScore !== null)
     ? Number(highScore).toString().padStart(6, '0')
     : '000000';
 
   return (
-    <div className="fixed inset-0 z-30 flex flex-col items-center justify-between p-3 sm:p-5 bg-gradient-to-b from-slate-950/90 via-slate-900/80 to-slate-950/95 backdrop-blur-md select-none overflow-y-auto">
+    <div className="fixed inset-0 z-30 flex flex-col items-center justify-between p-2 sm:p-4 bg-gradient-to-b from-slate-950/95 via-slate-900/90 to-slate-950/98 backdrop-blur-md select-none touch-scrollable overflow-y-auto overscroll-contain">
       {/* Top Bar: High Score, Fullscreen & Sound Toggle */}
-      <div className="w-full max-w-4xl flex items-center justify-between">
-        <div className="flex items-center gap-2 px-3 py-1 sm:px-4 sm:py-1.5 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md shadow-lg">
-          <Trophy size={15} className="text-candy-yellow" />
-          <span className="font-arcade text-[10px] sm:text-xs text-slate-300">RÉCORD:</span>
-          <span className="font-arcade text-xs sm:text-sm text-candy-yellow tracking-wider">
+      <div className="w-full max-w-4xl flex items-center justify-between gap-2 shrink-0 py-1">
+        <div className="flex items-center gap-1.5 px-2.5 py-1 sm:px-4 sm:py-1.5 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md shadow-lg">
+          <Trophy size={14} className="text-candy-yellow" />
+          <span className="font-arcade text-[9px] sm:text-xs text-slate-300">RÉCORD:</span>
+          <span className="font-arcade text-[11px] sm:text-sm text-candy-yellow tracking-wider font-bold">
             {safeHighScore}
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <button
             onClick={onToggleFullscreen}
             aria-label="Pantalla completa"
-            className="flex items-center gap-1.5 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-candy text-xs sm:text-sm transition-all shadow-lg active:scale-95"
+            className="flex items-center gap-1 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-xl sm:rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-candy text-[11px] sm:text-xs transition-all shadow-lg active:scale-95"
           >
-            <Maximize2 size={15} className="text-amber-400" />
-            <span className="hidden sm:inline">Pantalla Completa</span>
+            <Maximize2 size={13} className="text-amber-400" />
+            <span className="hidden xs:inline">Pantalla Completa</span>
           </button>
 
           <button
             onClick={onToggleMute}
             aria-label="Silenciar o activar sonido"
-            className="flex items-center gap-1.5 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-candy text-xs sm:text-sm transition-all shadow-lg active:scale-95"
+            className="flex items-center gap-1 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-xl sm:rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-candy text-[11px] sm:text-xs transition-all shadow-lg active:scale-95"
           >
-            {isMuted ? <VolumeX size={15} className="text-red-400" /> : <Volume2 size={15} className="text-candy-green" />}
-            <span className="hidden sm:inline">{isMuted ? 'Mudo' : 'Sonido'}</span>
+            {isMuted ? <VolumeX size={13} className="text-red-400" /> : <Volume2 size={13} className="text-candy-green" />}
+            <span className="hidden xs:inline">{isMuted ? 'Mudo' : 'Sonido'}</span>
           </button>
         </div>
       </div>
 
-      {/* Main Title Banner */}
-      <div className="flex flex-col items-center text-center my-auto py-1 sm:py-2">
+      {/* Main Center Area */}
+      <div className="flex flex-col items-center text-center my-auto py-1 sm:py-2 w-full max-w-2xl shrink-0">
         {/* Title Logo */}
-        <h1 className="text-2.5xl sm:text-5xl md:text-6xl font-bungee tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-candy-pink via-candy-yellow to-candy-blue drop-shadow-[0_4px_16px_rgba(255,119,176,0.8)] mb-0.5">
+        <h1 className="text-2xl xs:text-3xl sm:text-5xl md:text-6xl font-bungee tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-candy-pink via-candy-yellow to-candy-blue drop-shadow-[0_4px_16px_rgba(255,119,176,0.8)] mb-0.5 leading-tight">
           LOLLIPOP SLUG
         </h1>
-        <p className="font-arcade text-[9px] sm:text-[11px] text-candy-mint tracking-widest uppercase mb-3 flex items-center justify-center gap-1.5">
-          <Sparkles size={12} className="text-candy-yellow animate-spin-slow" />
+        <p className="font-arcade text-[8px] xs:text-[9px] sm:text-[11px] text-candy-mint tracking-widest uppercase mb-2 sm:mb-3 flex items-center justify-center gap-1.5">
+          <Sparkles size={11} className="text-candy-yellow animate-spin-slow" />
           Mundo Lulipop • Metal Slug Candy Edition
-          <Sparkles size={12} className="text-candy-pink animate-spin-slow" />
+          <Sparkles size={11} className="text-candy-pink animate-spin-slow" />
         </p>
 
-        {/* --- LEVEL SELECTOR SECTION --- */}
-        <div className="w-full max-w-3xl mb-3 sm:mb-4">
-          <div className="flex items-center justify-center gap-1.5 mb-1.5">
-            <MapPin size={14} className="text-candy-pink" />
-            <span className="font-arcade text-[10px] sm:text-xs text-slate-200 tracking-wider">
-              ELIGE EL NIVEL A JUGAR:
-            </span>
+        {/* --- ACTIVE LEVEL SHOWCASE CARD WITH QUICK NAV --- */}
+        <div className="w-full max-w-md bg-gradient-to-b from-slate-900/90 to-slate-950/95 border border-white/20 rounded-2xl p-2 sm:p-3 shadow-xl backdrop-blur-md mb-2 sm:mb-3">
+          <div className="flex items-center justify-between gap-2">
+            <button
+              onClick={handlePrevLevel}
+              aria-label="Nivel anterior"
+              className="p-1.5 sm:p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white active:scale-90 transition-transform"
+            >
+              <ChevronLeft size={18} />
+            </button>
+
+            <div className="flex flex-col items-center flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <span className={`text-[9px] sm:text-[10px] font-bungee px-2 py-0.5 rounded-full ${currentLvl.badge}`}>
+                  {currentLvl.title}
+                </span>
+                <span className="text-base sm:text-lg">{currentLvl.emoji}</span>
+              </div>
+              <span className="font-bungee text-xs sm:text-sm text-white tracking-wide truncate w-full">
+                {currentLvl.name}
+              </span>
+              <span className="font-candy text-[9px] sm:text-[10px] text-slate-300 truncate w-full">
+                {currentLvl.desc}
+              </span>
+            </div>
+
+            <button
+              onClick={handleNextLevel}
+              aria-label="Nivel siguiente"
+              className="p-1.5 sm:p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white active:scale-90 transition-transform"
+            >
+              <ChevronRight size={18} />
+            </button>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
+          {/* Horizontal Level Ribbon (All 10 levels) */}
+          <div
+            ref={levelListRef}
+            className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-2 mt-1 border-t border-white/10 scroll-smooth snap-x"
+          >
             {levels.map((lvl) => {
               const isSelected = selectedLevel === lvl.id;
               return (
                 <button
                   key={lvl.id}
                   onClick={() => handleLevelClick(lvl.id)}
-                  className={`relative flex flex-col items-center text-left p-2 sm:p-2.5 rounded-xl sm:rounded-2xl transition-all duration-200 bg-gradient-to-b ${lvl.color} border backdrop-blur-md shadow-lg ${
+                  className={`snap-center shrink-0 flex items-center gap-1 px-2 py-1 rounded-xl font-candy text-[10px] transition-all border ${
                     isSelected
-                      ? `${lvl.activeBorder} scale-[1.03] bg-opacity-90`
-                      : `${lvl.borderColor} opacity-75 hover:opacity-100 hover:scale-[1.01]`
+                      ? 'bg-candy-pink text-white font-bold border-white scale-105 shadow-md'
+                      : 'bg-white/5 hover:bg-white/15 text-slate-300 border-white/10'
                   }`}
                 >
-                  <div className="flex items-center justify-between w-full mb-1">
-                    <span className={`text-[8px] sm:text-[10px] font-bungee px-1.5 py-0.5 rounded-full ${lvl.badge}`}>
-                      {lvl.title}
-                    </span>
-                    <span className="text-sm sm:text-base">{lvl.emoji}</span>
-                  </div>
-
-                  <span className="font-bungee text-[10px] sm:text-xs text-white text-center line-clamp-1 w-full">
-                    {lvl.name}
-                  </span>
-
-                  <span className="font-candy text-[8px] sm:text-[9px] text-slate-300 text-center line-clamp-1 w-full mt-0.5 hidden xs:block">
-                    {lvl.desc}
-                  </span>
-
-                  {isSelected && (
-                    <div className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-candy-yellow border-2 border-white flex items-center justify-center animate-pulse" />
-                  )}
+                  <span>{lvl.emoji}</span>
+                  <span>{lvl.id}</span>
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 w-full max-w-md mb-3">
+        {/* --- MAIN ACTION BUTTONS (PLAY & HELP) --- */}
+        <div className="flex items-center justify-center gap-2 sm:gap-3 w-full max-w-md mb-2 sm:mb-3">
           <button
             onClick={handlePlayClick}
-            className="w-full sm:flex-1 py-2.5 sm:py-3.5 px-6 candy-button-pink rounded-2xl font-bungee text-base sm:text-lg text-white tracking-wider flex items-center justify-center gap-2.5 active:scale-95 shadow-xl transition-transform"
+            className="flex-1 py-2.5 sm:py-3.5 px-4 sm:px-6 candy-button-pink rounded-2xl font-bungee text-sm sm:text-lg text-white tracking-wider flex items-center justify-center gap-2 active:scale-95 shadow-2xl transition-transform"
           >
-            <Play size={20} className="fill-white stroke-none" />
-            ¡JUGAR NIVEL {selectedLevel}!
+            <Play size={18} className="fill-white stroke-none shrink-0" />
+            <span>¡JUGAR NIVEL {selectedLevel}!</span>
           </button>
 
           <button
             onClick={onOpenHowToPlay}
-            className="w-full sm:w-auto py-2.5 sm:py-3.5 px-4 candy-button-blue rounded-2xl font-bungee text-xs sm:text-sm text-white tracking-wider flex items-center justify-center gap-1.5 active:scale-95 shadow-lg transition-transform"
+            className="py-2.5 sm:py-3.5 px-3 sm:px-4 candy-button-blue rounded-2xl font-bungee text-xs sm:text-sm text-white tracking-wider flex items-center justify-center gap-1.5 active:scale-95 shadow-lg transition-transform shrink-0"
           >
-            <HelpCircle size={16} />
-            AYUDA
+            <HelpCircle size={15} />
+            <span className="hidden xs:inline">AYUDA</span>
           </button>
         </div>
 
         {/* Difficulty Selector */}
-        <div className="flex flex-col items-center gap-1">
-          <span className="font-arcade text-[9px] text-slate-400 tracking-wider">DIFICULTAD:</span>
-          <div className="flex items-center gap-1 sm:gap-1.5 p-1 rounded-2xl bg-slate-900/80 border border-white/20">
+        <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+          <span className="font-arcade text-[8px] sm:text-[9px] text-slate-400 tracking-wider">DIFICULTAD:</span>
+          <div className="flex items-center gap-1 p-0.5 sm:p-1 rounded-xl sm:rounded-2xl bg-slate-900/80 border border-white/20">
             {[
               { id: 'EASY', label: 'FÁCIL (4 HP)' },
               { id: 'NORMAL', label: 'ARCADE (3 HP)' },
@@ -155,7 +182,7 @@ export const MainMenu = ({
               <button
                 key={diff.id}
                 onClick={() => onSelectDifficulty && onSelectDifficulty(diff.id)}
-                className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl font-candy text-[10px] sm:text-[11px] transition-all ${
+                className={`px-2 py-0.5 sm:py-1 rounded-lg sm:rounded-xl font-candy text-[9px] sm:text-[11px] transition-all ${
                   difficulty === diff.id
                     ? 'bg-candy-pink text-white font-bold shadow-md scale-105'
                     : 'text-slate-400 hover:text-white'
@@ -169,7 +196,7 @@ export const MainMenu = ({
       </div>
 
       {/* Footer Info */}
-      <div className="w-full max-w-4xl text-center text-[9px] sm:text-[10px] font-candy text-slate-400">
+      <div className="w-full max-w-4xl text-center text-[8px] sm:text-[10px] font-candy text-slate-400 shrink-0 py-1">
         Usa <strong className="text-white">WASD</strong> o el <strong className="text-white">Gamepad táctil</strong> para jugar a 60 FPS en pantalla completa.
       </div>
     </div>

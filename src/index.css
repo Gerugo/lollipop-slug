@@ -7,7 +7,7 @@
     -webkit-tap-highlight-color: transparent;
     user-select: none;
     -webkit-user-select: none;
-    touch-action: none;
+    touch-action: manipulation;
     box-sizing: border-box;
   }
   
@@ -36,6 +36,20 @@
     inset: 0;
     overflow: hidden;
   }
+}
+
+.touch-scrollable {
+  touch-action: pan-y !important;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* Candy Glassmorphism & Arcade Styles */

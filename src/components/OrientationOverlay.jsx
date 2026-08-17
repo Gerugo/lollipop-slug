@@ -50,13 +50,21 @@ export const OrientationOverlay = ({ onForceFullscreen }) => {
         Para disfrutar de la mejor experiencia arcade en pantalla completa de <strong className="text-candy-pink font-bold">Lollipop Slug</strong>, gira tu móvil en horizontal (Landscape).
       </p>
 
-      <button
-        onClick={handleAction}
-        className="flex items-center gap-2 px-6 py-3 rounded-2xl candy-button-pink font-bungee text-white text-xs tracking-wider shadow-xl active:scale-95 transition-transform"
-      >
-        <Maximize2 size={16} />
-        JUGAR / ACTIVAR PANTALLA COMPLETA
-      </button>
+      <div className="flex flex-col gap-2.5 w-full max-w-xs">
+        <button
+          onClick={handleAction}
+          className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl candy-button-pink font-bungee text-white text-xs tracking-wider shadow-xl active:scale-95 transition-transform"
+        >
+          <Maximize2 size={16} />
+          PANTALLA COMPLETA
+        </button>
+        <button
+          onClick={() => setDismissed(true)}
+          className="text-xs font-candy text-slate-400 hover:text-white py-1 transition-colors"
+        >
+          Continuar de todas formas
+        </button>
+      </div>
     </div>
   );
 };
