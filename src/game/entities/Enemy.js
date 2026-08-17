@@ -2082,9 +2082,25 @@ export class Enemy {
     ctx.restore();
   }
 
-  // --- SUBSURFACE SCATTERING (SSS) & WET LACQUER SPECULAR SHADER ---
+  // --- SUBSURFACE SCATTERING (SSS) & DYNAMIC SPRITE POSES ---
   drawGummyBearSSS(ctx, renderW, renderH, aimOffset) {
-    const gummySprite = imageLoader.getImage('gummybear');
+    const isWalking = Math.abs(this.vx) > 5;
+    let spriteKey = 'gummybear';
+    let currentRenderW = renderW;
+
+    if (this.hurtTimer > 0 || this.isStumbling) {
+      spriteKey = 'gummybear_hurt';
+      currentRenderW = renderW * 1.08;
+    } else if (this.isAiming || this.burstRemaining > 0) {
+      spriteKey = 'gummybear_shoot';
+      currentRenderW = renderW * 1.15;
+    } else if (isWalking) {
+      // 2-frame walking cycle alternating foot steps
+      const walkFrame = Math.sin(this.animTime * 10) > 0;
+      spriteKey = walkFrame ? 'gummybear_walk' : 'gummybear';
+    }
+
+    const gummySprite = imageLoader.getImage(spriteKey) || imageLoader.getImage('gummybear');
     const ox = aimOffset;
 
     // 1. Gummy Sprite Rendering with Translucent Backlight Glow
@@ -2092,7 +2108,7 @@ export class Enemy {
       ctx.save();
       ctx.shadowColor = 'rgba(255, 45, 110, 0.65)';
       ctx.shadowBlur = 8;
-      ctx.drawImage(gummySprite, -renderW / 2 + ox, -renderH, renderW, renderH);
+      ctx.drawImage(gummySprite, -currentRenderW / 2 + ox, -renderH, currentRenderW, renderH);
       ctx.restore();
       return;
     }
