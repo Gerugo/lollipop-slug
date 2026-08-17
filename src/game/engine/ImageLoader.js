@@ -30,7 +30,7 @@ class ImageLoader {
       manzana: new URL('../../assets/manzana.png', import.meta.url).href,
       platano: new URL('../../assets/platano.png', import.meta.url).href,
       estrella: new URL('../../assets/estrella.png', import.meta.url).href,
-      cielo: new URL('../../assets/fondo-cielo.jpg', import.meta.url).href,
+      cielo: new URL('../../assets/fondo-cielo.png', import.meta.url).href,
       cielo2: new URL('../../assets/fondo-caverna.jpg', import.meta.url).href,
       colinas: new URL('../../assets/fondo-colinas.png', import.meta.url).href,
       caverna: new URL('../../assets/fondo-cristales.png', import.meta.url).href,
