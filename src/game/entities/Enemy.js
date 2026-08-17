@@ -2087,55 +2087,20 @@ export class Enemy {
     const gummySprite = imageLoader.getImage('gummybear');
     const ox = aimOffset;
 
-    // 1. SSS Backlight Halo / Subsurface Scattering Bleed (Light passing through gelatin borders)
+    // 1. Gummy Sprite Rendering with Translucent Backlight Glow
+    if (gummySprite && gummySprite.complete && gummySprite.naturalWidth > 0) {
+      ctx.save();
+      ctx.shadowColor = 'rgba(255, 45, 110, 0.65)';
+      ctx.shadowBlur = 8;
+      ctx.drawImage(gummySprite, -renderW / 2 + ox, -renderH, renderW, renderH);
+      ctx.restore();
+      return;
+    }
+
+    // Procedural Volumetric Translucent Gummy Body Fallback (When sprite is not loaded)
     ctx.save();
     ctx.shadowColor = 'rgba(255, 45, 110, 0.75)';
     ctx.shadowBlur = 12;
-
-    if (gummySprite && gummySprite.complete && gummySprite.naturalWidth > 0) {
-      ctx.drawImage(gummySprite, -renderW / 2 + ox, -renderH, renderW, renderH);
-    } else {
-      // Procedural Volumetric Translucent Gummy Body
-      // Ears
-      const earGrad = ctx.createRadialGradient(-16 + ox, -renderH + 8, 1, -16 + ox, -renderH + 8, 9);
-      earGrad.addColorStop(0, '#FFA8BA');
-      earGrad.addColorStop(0.5, '#F43F5E');
-      earGrad.addColorStop(1, '#9F1239');
-      ctx.fillStyle = earGrad;
-      ctx.beginPath();
-      ctx.arc(-16 + ox, -renderH + 8, 8, 0, Math.PI * 2);
-      ctx.arc(16 + ox, -renderH + 8, 8, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Head
-      const headGrad = ctx.createRadialGradient(ox, -renderH + 18, 3, ox, -renderH + 20, 20);
-      headGrad.addColorStop(0, '#FDA4AF');
-      headGrad.addColorStop(0.45, '#E11D48');
-      headGrad.addColorStop(1, '#881337');
-      ctx.fillStyle = headGrad;
-      ctx.beginPath();
-      ctx.roundRect(-18 + ox, -renderH + 8, 36, 28, 14);
-      ctx.fill();
-
-      // Body & Belly
-      const bodyGrad = ctx.createRadialGradient(-2 + ox, -renderH + 40, 4, ox, -renderH + 42, 26);
-      bodyGrad.addColorStop(0, '#FECDD3');
-      bodyGrad.addColorStop(0.4, '#E11D48');
-      bodyGrad.addColorStop(0.85, '#9F1239');
-      bodyGrad.addColorStop(1, '#4C0519');
-      ctx.fillStyle = bodyGrad;
-      ctx.beginPath();
-      ctx.roundRect(-22 + ox, -renderH + 26, 44, 34, [16, 16, 12, 12]);
-      ctx.fill();
-
-      // Feet
-      ctx.fillStyle = '#9F1239';
-      ctx.beginPath();
-      ctx.ellipse(-14 + ox, -6, 10, 7, 0, 0, Math.PI * 2);
-      ctx.ellipse(14 + ox, -6, 10, 7, 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.restore();
 
     // 2. INTERNAL SUBSURFACE SCATTERING GLOW CORE (Volumetric Light Diffusion)
     ctx.save();
