@@ -558,6 +558,8 @@ export class Boss {
         bossSprite = imageLoader.getImage('boss_slam') || bossSprite;
       } else if (this.rageMode || this.laserActive || this.isLaserAiming) {
         bossSprite = imageLoader.getImage('boss_rage') || bossSprite;
+      } else if (Math.abs(this.vx) > 8 && Math.sin(this.walkTimer * 5) > 0) {
+        bossSprite = imageLoader.getImage('boss_walk') || bossSprite;
       }
 
       const renderW = 180;
