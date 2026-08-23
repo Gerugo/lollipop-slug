@@ -194,23 +194,69 @@ export class Boss7 {
 
     ctx.translate(cx, cy);
 
-    if (this.hurtTimer > 0) {
-      // ctx.filter removed for mobile performance
+    // 1. GPU-Accelerated Gelatinous Glow Aura
+    if (this.phase === 3) {
+      ctx.save();
+      const aura = ctx.createRadialGradient(0, 0, 20, 0, 0, 95);
+      aura.addColorStop(0, 'rgba(251, 113, 133, 0.45)');
+      aura.addColorStop(0.6, 'rgba(225, 29, 72, 0.25)');
+      aura.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = aura;
+      ctx.beginPath();
+      ctx.arc(0, 0, 95, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    } else if (this.phase === 2) {
+      ctx.save();
+      const aura = ctx.createRadialGradient(0, 0, 20, 0, 0, 85);
+      aura.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
+      aura.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = aura;
+      ctx.beginPath();
+      ctx.arc(0, 0, 85, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
 
-    // Undulating body motion
-    const wave = Math.sin(this.animTime * 6) * 0.12;
-    ctx.rotate(wave);
-    ctx.scale(this.facing, 1);
+    // 2. Dynamic Gummy Undulation & Squash-and-Stretch
+    const wave = Math.sin(this.animTime * (this.phase === 3 ? 10 : 6)) * 0.12;
+    let scaleY = 1 + Math.sin(this.animTime * 5) * 0.04;
+    let scaleX = 1 - Math.sin(this.animTime * 5) * 0.04;
 
-    const bossSprite = imageLoader.getImage('boss7');
+    ctx.rotate(wave);
+    ctx.scale(this.facing * scaleX, scaleY);
+
+    // 3. Dynamic Sprite Selection
+    let spriteKey = 'boss7';
+    if (this.phase === 3 || this.state === 'FRENZY') {
+      spriteKey = 'boss7_rage';
+    } else if (this.attackTimer < 0.75 || this.state === 'ELASTIC_BOUNCE') {
+      spriteKey = 'boss7_attack';
+    }
+
+    const renderW = 180;
+    const renderH = 175;
+    const bossSprite = imageLoader.getImage(spriteKey) || imageLoader.getImage('boss7');
+
     if (bossSprite && bossSprite.complete && bossSprite.naturalWidth > 0) {
-      ctx.drawImage(bossSprite, -this.width / 2, -this.height / 2, this.width, this.height);
+      ctx.drawImage(bossSprite, -renderW / 2, -renderH / 2, renderW, renderH);
+
+      // 4. GPU-Accelerated White Hit Flash
+      if (this.hurtTimer > 0) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = 0.65;
+        ctx.drawImage(bossSprite, -renderW / 2, -renderH / 2, renderW, renderH);
+        ctx.restore();
+      }
     } else {
       ctx.beginPath();
       ctx.ellipse(0, 0, 60, 45, 0, 0, Math.PI * 2);
       ctx.fillStyle = '#E11D48';
       ctx.fill();
+      ctx.strokeStyle = '#FB7185';
+      ctx.lineWidth = 3;
+      ctx.stroke();
     }
 
     ctx.restore();
