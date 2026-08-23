@@ -1,6 +1,6 @@
 import { Enemy } from '../entities/Enemy.js';
 import { Hostage } from '../entities/Hostage.js';
-import { Boss } from '../entities/Boss.js';
+import { Boss2 } from '../entities/Boss2.js';
 import { SlugVehicle } from '../entities/SlugVehicle.js';
 import { Destructible } from '../entities/Destructible.js';
 import { imageLoader } from '../engine/ImageLoader.js';
@@ -42,9 +42,7 @@ export class Level2 {
   }
 
   createBoss() {
-    const boss = new Boss(this.config.boss.x, this.config.boss.y);
-    boss.hp = 800; // Escalado de HP para Level 2
-    return boss;
+    return new Boss2(this.config.boss.x, this.config.boss.y);
   }
 
   getCurrentBiome(worldX) {
