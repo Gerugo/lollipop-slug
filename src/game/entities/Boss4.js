@@ -365,15 +365,61 @@ export class Boss4 {
 
     // 2. Boss Sprite Anchor
     ctx.translate(cx, bottomY + 1);
-    if (this.hurtTimer > 0) // ctx.filter removed for mobile performance
-    ctx.scale(this.facing, 1);
 
-    const viperSprite = imageLoader.getImage('boss4');
-    const renderW = 220;
-    const renderH = 200;
+    // 3. GPU-Accelerated Toxic Acid Aura
+    if (this.phase === 3 || this.rageMode) {
+      ctx.save();
+      const aura = ctx.createRadialGradient(0, -95, 20, 0, -95, 110);
+      aura.addColorStop(0, 'rgba(163, 230, 53, 0.45)');
+      aura.addColorStop(0.6, 'rgba(132, 204, 22, 0.25)');
+      aura.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = aura;
+      ctx.beginPath();
+      ctx.arc(0, -95, 110, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    } else if (this.phase === 2) {
+      ctx.save();
+      const aura = ctx.createRadialGradient(0, -95, 20, 0, -95, 95);
+      aura.addColorStop(0, 'rgba(132, 204, 22, 0.35)');
+      aura.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = aura;
+      ctx.beginPath();
+      ctx.arc(0, -95, 95, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    let scaleY = 1 + Math.sin(this.animTime * 4) * 0.04;
+    let scaleX = 1 - Math.sin(this.animTime * 4) * 0.04;
+    const rot = Math.sin(this.animTime * 3) * 0.03;
+
+    ctx.rotate(rot);
+    ctx.scale(this.facing * scaleX, scaleY);
+
+    // 4. Dynamic Sprite Selection
+    let spriteKey = 'boss4';
+    if (this.phase === 3 || this.rageMode) {
+      spriteKey = 'boss4_rage';
+    } else if (this.attackTimer < 0.75 || this.isTelegraphing) {
+      spriteKey = 'boss4_attack';
+    }
+
+    const viperSprite = imageLoader.getImage(spriteKey) || imageLoader.getImage('boss4');
+    const renderW = 225;
+    const renderH = 205;
 
     if (viperSprite && viperSprite.complete && viperSprite.naturalWidth > 0) {
       ctx.drawImage(viperSprite, -renderW / 2, -renderH, renderW, renderH);
+
+      // 5. GPU-Accelerated White Hit Flash
+      if (this.hurtTimer > 0) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = 0.65;
+        ctx.drawImage(viperSprite, -renderW / 2, -renderH, renderW, renderH);
+        ctx.restore();
+      }
     } else {
       ctx.beginPath();
       ctx.ellipse(0, -renderH / 2, 80, 70, 0, 0, Math.PI * 2);

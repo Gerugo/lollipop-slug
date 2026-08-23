@@ -62,6 +62,8 @@ class ImageLoader {
       latigo: new URL('../../assets/latigo.png', import.meta.url).href,
       acido: new URL('../../assets/acido.png', import.meta.url).href,
       boss4: new URL('../../assets/boss4.png', import.meta.url).href,
+      boss4_attack: new URL('../../assets/boss4_attack.png', import.meta.url).href,
+      boss4_rage: new URL('../../assets/boss4_rage.png', import.meta.url).href,
       arma_pistol: new URL('../../assets/arma_pistol.png', import.meta.url).href,
       arma_hmg: new URL('../../assets/arma_hmg.png', import.meta.url).href,
       arma_shotgun: new URL('../../assets/arma_shotgun.png', import.meta.url).href,
