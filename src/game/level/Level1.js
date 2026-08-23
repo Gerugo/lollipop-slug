@@ -105,27 +105,13 @@ export class Level1 {
     ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, viewW, viewH);
 
-    // LAYER 1: Distant Sky Panorama (Parallax 0.05)
-    const skyImg = imageLoader.getImage('cielo');
-    if (skyImg && skyImg.complete && skyImg.naturalWidth > 0) {
-      const skyAspect = skyImg.naturalWidth / skyImg.naturalHeight;
-      const skyRenderW = viewH * skyAspect;
-      const skyOffsetX = (viewX * 0.05) % skyRenderW;
+    // LAYER 1: 4-Zone High-Res Nano Banana Panoramic Environments (Smooth Cross-fade Parallax 0.12)
+    this.drawZonePanoramas(ctx, viewX, viewW, viewH);
 
-      ctx.save();
-      ctx.globalAlpha = 0.55;
-      let startX = -skyOffsetX;
-      while (startX < viewW) {
-        ctx.drawImage(skyImg, startX, 0, skyRenderW + 1, viewH);
-        startX += skyRenderW;
-      }
-      ctx.restore();
-    }
-
-    // LAYER 2: Distant Horizon Landmarks by World Zone (Parallax 0.12)
+    // LAYER 2: Distant Horizon Landmarks by World Zone (Parallax 0.18)
     this.drawZoneLandmarks(ctx, viewX, viewW, viewH);
 
-    // LAYER 3: Mid Parallax (0.30): Rolling Clay Hills
+    // LAYER 3: Mid Parallax (0.30): Rolling Clay Hills & Sugar Crystals
     const hillsImg = imageLoader.getImage('colinas');
     if (hillsImg && hillsImg.complete && hillsImg.naturalWidth > 0) {
       const hillsAspect = hillsImg.naturalWidth / hillsImg.naturalHeight;
@@ -142,6 +128,49 @@ export class Level1 {
 
     // Microscopic Sparkling Diamond Sugar Crystals over green hills
     this.drawHillSugarSparkles(ctx, viewX, viewW, viewH);
+  }
+
+  // --- 4-ZONE PANORAMIC BACKGROUND CROSS-FADER (PARALLAX 0.12) ---
+  drawZonePanoramas(ctx, viewX, viewW, viewH) {
+    const panoramas = [
+      { key: 'fondo_bosque_l1', startX: 0,    endX: 2000, fadeWidth: 450 },
+      { key: 'fondo_sirope_l1', startX: 2000, endX: 3800, fadeWidth: 450 },
+      { key: 'fondo_fabrica_l1', startX: 3800, endX: 5300, fadeWidth: 450 },
+      { key: 'fondo_arena_l1',   startX: 5300, endX: 6400, fadeWidth: 450 }
+    ];
+
+    const currentX = viewX + viewW / 2;
+    for (const pano of panoramas) {
+      if (currentX < pano.startX - pano.fadeWidth || currentX > pano.endX + pano.fadeWidth) {
+        continue;
+      }
+      const img = imageLoader.getImage(pano.key) || imageLoader.getImage('cielo');
+      if (!img || !img.complete || img.naturalWidth <= 0) continue;
+
+      // Calculate smooth cross-fade alpha between zones
+      let alpha = 1.0;
+      if (currentX < pano.startX) {
+        alpha = Math.max(0, (currentX - (pano.startX - pano.fadeWidth)) / pano.fadeWidth);
+      } else if (currentX > pano.endX) {
+        alpha = Math.max(0, ((pano.endX + pano.fadeWidth) - currentX) / pano.fadeWidth);
+      }
+
+      if (alpha <= 0.01) continue;
+
+      ctx.save();
+      ctx.globalAlpha = alpha * 0.88;
+
+      const aspect = img.naturalWidth / img.naturalHeight;
+      const renderW = viewH * aspect;
+      const offsetX = (viewX * 0.12) % renderW;
+
+      let startX = -offsetX;
+      while (startX < viewW) {
+        ctx.drawImage(img, startX, 0, renderW + 1, viewH);
+        startX += renderW;
+      }
+      ctx.restore();
+    }
   }
 
   // --- ATMOSPHERIC LANDMARKS ANCHORED PER ZONE (PARALLAX 0.15) ---
