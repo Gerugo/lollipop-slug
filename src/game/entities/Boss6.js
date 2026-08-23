@@ -232,11 +232,11 @@ export class Boss6 {
     const cx = this.x + this.width / 2;
     const bottomY = this.y + this.height;
 
-    // Ground Shadow
+    // 1. Ground Frost Shadow
     ctx.save();
     ctx.beginPath();
-    ctx.ellipse(cx, bottomY + 2, 50, 12, 0, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.28)';
+    ctx.ellipse(cx, bottomY + 2, 60, 14, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.35)';
     ctx.fill();
     ctx.restore();
 
@@ -244,6 +244,10 @@ export class Boss6 {
 
     if (this.hurtTimer > 0) {
       ctx.filter = 'brightness(2.6) contrast(1.3)';
+    } else if (this.phase === 3 || this.state === 'BLIZZARD') {
+      ctx.filter = 'drop-shadow(0 0 20px rgba(186, 230, 253, 0.95)) drop-shadow(0 0 30px rgba(56, 189, 248, 0.7))';
+    } else if (this.phase === 2) {
+      ctx.filter = 'drop-shadow(0 0 14px rgba(56, 189, 248, 0.75))';
     }
 
     let rot = 0;
@@ -251,18 +255,35 @@ export class Boss6 {
       rot = this.animTime * this.facing * 8;
     }
 
-    ctx.rotate(rot);
-    ctx.scale(this.facing, 1);
+    let scaleY = 1 + Math.sin(this.animTime * 3) * 0.03;
+    let scaleX = 1 - Math.sin(this.animTime * 3) * 0.03;
 
-    const bossSprite = imageLoader.getImage('boss6');
+    ctx.rotate(rot);
+    ctx.scale(this.facing * scaleX, scaleY);
+
+    // 2. Dynamic Sprite Selection
+    let spriteKey = 'boss6';
+    if (this.phase === 3 || this.state === 'BLIZZARD') {
+      spriteKey = 'boss6_rage';
+    } else if (this.state === 'SLAM' || this.attackTimer < 0.75) {
+      spriteKey = 'boss6_attack';
+    }
+
+    const renderW = 175;
+    const renderH = 180;
+    const bossSprite = imageLoader.getImage(spriteKey) || imageLoader.getImage('boss6');
+
     if (bossSprite && bossSprite.complete && bossSprite.naturalWidth > 0) {
-      ctx.drawImage(bossSprite, -this.width / 2, -this.height, this.width, this.height);
+      ctx.drawImage(bossSprite, -renderW / 2, -renderH, renderW, renderH);
     } else {
       // Fallback
       ctx.beginPath();
       ctx.roundRect(-this.width / 2, -this.height, this.width, this.height, 16);
       ctx.fillStyle = '#0284C7';
       ctx.fill();
+      ctx.strokeStyle = '#BAE6FD';
+      ctx.lineWidth = 3;
+      ctx.stroke();
     }
 
     ctx.restore();

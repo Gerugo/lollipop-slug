@@ -80,6 +80,8 @@ class ImageLoader {
       pinguino: new URL('../../assets/pinguino.png', import.meta.url).href,
       yeti: new URL('../../assets/yeti.png', import.meta.url).href,
       boss6: new URL('../../assets/boss6.png', import.meta.url).href,
+      boss6_attack: new URL('../../assets/boss6_attack.png', import.meta.url).href,
+      boss6_rage: new URL('../../assets/boss6_rage.png', import.meta.url).href,
       arma_hielo: new URL('../../assets/arma_hielo.png', import.meta.url).href,
       cielo7: new URL('../../assets/fondo-laberinto.jpg', import.meta.url).href,
       gelatina: new URL('../../assets/fondo-gelatina.png', import.meta.url).href,
