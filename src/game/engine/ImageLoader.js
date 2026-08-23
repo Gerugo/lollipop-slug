@@ -96,6 +96,8 @@ class ImageLoader {
       salamandra: new URL('../../assets/salamandra.png', import.meta.url).href,
       avispa: new URL('../../assets/avispa.png', import.meta.url).href,
       boss8: new URL('../../assets/boss8.png', import.meta.url).href,
+      boss8_attack: new URL('../../assets/boss8_attack.png', import.meta.url).href,
+      boss8_rage: new URL('../../assets/boss8_rage.png', import.meta.url).href,
       arma_flamethrower: new URL('../../assets/arma_flamethrower.png', import.meta.url).href,
       cielo9: new URL('../../assets/fondo-ciudadela.jpg', import.meta.url).href,
       murallas: new URL('../../assets/fondo-murallas.png', import.meta.url).href,

@@ -195,23 +195,69 @@ export class Boss8 {
 
     ctx.translate(cx, cy);
 
-    if (this.hurtTimer > 0) {
-      // ctx.filter removed for mobile performance
+    // 1. GPU-Accelerated Molten Caramel Fiery Glow Aura
+    if (this.phase === 3) {
+      ctx.save();
+      const aura = ctx.createRadialGradient(0, 0, 20, 0, 0, 105);
+      aura.addColorStop(0, 'rgba(234, 88, 12, 0.45)');
+      aura.addColorStop(0.55, 'rgba(239, 68, 68, 0.25)');
+      aura.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = aura;
+      ctx.beginPath();
+      ctx.arc(0, 0, 105, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    } else if (this.phase === 2) {
+      ctx.save();
+      const aura = ctx.createRadialGradient(0, 0, 20, 0, 0, 90);
+      aura.addColorStop(0, 'rgba(245, 158, 11, 0.35)');
+      aura.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = aura;
+      ctx.beginPath();
+      ctx.arc(0, 0, 90, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
 
-    // Wing flap oscillation
-    const wingWave = Math.sin(this.animTime * 8) * 0.08;
-    ctx.rotate(wingWave);
-    ctx.scale(this.facing, 1);
+    // 2. Dynamic Wing Flap & Flight Aerodynamics
+    const wingWave = Math.sin(this.animTime * (this.phase === 3 ? 12 : 8)) * 0.08;
+    let scaleY = 1 + Math.sin(this.animTime * 8) * 0.04;
+    let scaleX = 1 - Math.sin(this.animTime * 8) * 0.04;
 
-    const bossSprite = imageLoader.getImage('boss8');
+    ctx.rotate(wingWave);
+    ctx.scale(this.facing * scaleX, scaleY);
+
+    // 3. Dynamic Sprite Selection
+    let spriteKey = 'boss8';
+    if (this.phase === 3 || this.state === 'INFERNO') {
+      spriteKey = 'boss8_rage';
+    } else if (this.attackTimer < 0.75 || this.state === 'SWOOP') {
+      spriteKey = 'boss8_attack';
+    }
+
+    const renderW = 185;
+    const renderH = 175;
+    const bossSprite = imageLoader.getImage(spriteKey) || imageLoader.getImage('boss8');
+
     if (bossSprite && bossSprite.complete && bossSprite.naturalWidth > 0) {
-      ctx.drawImage(bossSprite, -this.width / 2, -this.height / 2, this.width, this.height);
+      ctx.drawImage(bossSprite, -renderW / 2, -renderH / 2, renderW, renderH);
+
+      // 4. GPU-Accelerated White Hit Flash
+      if (this.hurtTimer > 0) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = 0.65;
+        ctx.drawImage(bossSprite, -renderW / 2, -renderH / 2, renderW, renderH);
+        ctx.restore();
+      }
     } else {
       ctx.beginPath();
       ctx.ellipse(0, 0, 65, 50, 0, 0, Math.PI * 2);
       ctx.fillStyle = '#EA580C';
       ctx.fill();
+      ctx.strokeStyle = '#FDE047';
+      ctx.lineWidth = 3;
+      ctx.stroke();
     }
 
     ctx.restore();
