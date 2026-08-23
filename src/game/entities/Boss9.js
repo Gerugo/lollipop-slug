@@ -224,30 +224,76 @@ export class Boss9 {
     const cx = this.x + this.width / 2;
     const bottomY = this.y + this.height;
 
-    // Ground Shadow
+    // 1. Ground Contact Shadow
     ctx.save();
     ctx.beginPath();
-    ctx.ellipse(cx, bottomY + 2, 55, 14, 0, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.35)';
+    ctx.ellipse(cx, bottomY + 2, 60, 14, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.38)';
     ctx.fill();
     ctx.restore();
 
     ctx.translate(cx, bottomY + 1);
 
-    if (this.hurtTimer > 0) {
-      // ctx.filter removed for mobile performance
+    // 2. GPU-Accelerated Dark Licorice & Crimson Energy Aura
+    if (this.phase === 3 || this.state === 'DARK_FURY') {
+      ctx.save();
+      const aura = ctx.createRadialGradient(0, -90, 20, 0, -90, 100);
+      aura.addColorStop(0, 'rgba(225, 29, 72, 0.45)');
+      aura.addColorStop(0.6, 'rgba(147, 51, 234, 0.25)');
+      aura.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = aura;
+      ctx.beginPath();
+      ctx.arc(0, -90, 100, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    } else if (this.phase === 2 || this.state === 'CHARGE') {
+      ctx.save();
+      const aura = ctx.createRadialGradient(0, -90, 20, 0, -90, 85);
+      aura.addColorStop(0, 'rgba(147, 51, 234, 0.35)');
+      aura.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = aura;
+      ctx.beginPath();
+      ctx.arc(0, -90, 85, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
 
-    ctx.scale(this.facing, 1);
+    let scaleY = 1 + Math.sin(this.animTime * 3) * 0.03;
+    let scaleX = 1 - Math.sin(this.animTime * 3) * 0.03;
 
-    const bossSprite = imageLoader.getImage('boss9');
+    ctx.scale(this.facing * scaleX, scaleY);
+
+    // 3. Dynamic Sprite Selection
+    let spriteKey = 'boss9';
+    if (this.phase === 3 || this.state === 'DARK_FURY') {
+      spriteKey = 'boss9_rage';
+    } else if (this.attackTimer < 0.75 || this.state === 'CHARGE') {
+      spriteKey = 'boss9_attack';
+    }
+
+    const renderW = 175;
+    const renderH = 185;
+    const bossSprite = imageLoader.getImage(spriteKey) || imageLoader.getImage('boss9');
+
     if (bossSprite && bossSprite.complete && bossSprite.naturalWidth > 0) {
-      ctx.drawImage(bossSprite, -this.width / 2, -this.height, this.width, this.height);
+      ctx.drawImage(bossSprite, -renderW / 2, -renderH, renderW, renderH);
+
+      // 4. GPU-Accelerated White Hit Flash
+      if (this.hurtTimer > 0) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = 0.65;
+        ctx.drawImage(bossSprite, -renderW / 2, -renderH, renderW, renderH);
+        ctx.restore();
+      }
     } else {
       ctx.beginPath();
       ctx.roundRect(-this.width / 2, -this.height, this.width, this.height, 16);
       ctx.fillStyle = '#18181B';
       ctx.fill();
+      ctx.strokeStyle = '#E11D48';
+      ctx.lineWidth = 3;
+      ctx.stroke();
     }
 
     ctx.restore();

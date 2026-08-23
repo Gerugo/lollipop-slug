@@ -104,6 +104,8 @@ class ImageLoader {
       gargola: new URL('../../assets/gargola.png', import.meta.url).href,
       guardia_real: new URL('../../assets/guardia_real.png', import.meta.url).href,
       boss9: new URL('../../assets/boss9.png', import.meta.url).href,
+      boss9_attack: new URL('../../assets/boss9_attack.png', import.meta.url).href,
+      boss9_rage: new URL('../../assets/boss9_rage.png', import.meta.url).href,
       arma_plasma: new URL('../../assets/arma_plasma.png', import.meta.url).href,
       cielo10: new URL('../../assets/fondo-trono.jpg', import.meta.url).href,
       sanctum: new URL('../../assets/fondo-sanctum.png', import.meta.url).href,
