@@ -392,17 +392,63 @@ export class Boss3 {
       ctx.restore();
     }
 
-    // Boss Sprite Drawing
+    // 1. Boss Sprite Drawing & Dynamic Levitation
     ctx.translate(cx, cy);
-    if (this.hurtTimer > 0) // ctx.filter removed for mobile performance
-    ctx.scale(this.facing, 1);
 
-    const bossSprite = imageLoader.getImage('boss3');
-    const renderW = 200;
-    const renderH = 230;
+    // 2. GPU-Accelerated Sugar Magic Aura
+    if (this.phase === 3 || this.rageMode) {
+      ctx.save();
+      const aura = ctx.createRadialGradient(0, 0, 20, 0, 0, 115);
+      aura.addColorStop(0, 'rgba(244, 63, 94, 0.45)');
+      aura.addColorStop(0.6, 'rgba(232, 121, 249, 0.25)');
+      aura.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = aura;
+      ctx.beginPath();
+      ctx.arc(0, 0, 115, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    } else if (this.phase === 2) {
+      ctx.save();
+      const aura = ctx.createRadialGradient(0, 0, 20, 0, 0, 95);
+      aura.addColorStop(0, 'rgba(232, 121, 249, 0.35)');
+      aura.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = aura;
+      ctx.beginPath();
+      ctx.arc(0, 0, 95, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    let scaleY = 1 + Math.sin(this.animTime * 4) * 0.035;
+    let scaleX = 1 - Math.sin(this.animTime * 4) * 0.035;
+    const rot = Math.sin(this.animTime * 3) * 0.04;
+
+    ctx.rotate(rot);
+    ctx.scale(this.facing * scaleX, scaleY);
+
+    // 3. Dynamic Sprite Selection
+    let spriteKey = 'boss3';
+    if (this.phase === 3 || this.rageMode) {
+      spriteKey = 'boss3_rage';
+    } else if (this.isTelegraphing || this.laserActive || this.attackTimer < 0.75) {
+      spriteKey = 'boss3_attack';
+    }
+
+    const bossSprite = imageLoader.getImage(spriteKey) || imageLoader.getImage('boss3');
+    const renderW = 205;
+    const renderH = 235;
 
     if (bossSprite && bossSprite.complete && bossSprite.naturalWidth > 0) {
       ctx.drawImage(bossSprite, -renderW / 2, -renderH / 2, renderW, renderH);
+
+      // 4. GPU-Accelerated White Hit Flash
+      if (this.hurtTimer > 0) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = 0.65;
+        ctx.drawImage(bossSprite, -renderW / 2, -renderH / 2, renderW, renderH);
+        ctx.restore();
+      }
     } else {
       ctx.beginPath();
       ctx.roundRect(-50, -60, 100, 120, 20);

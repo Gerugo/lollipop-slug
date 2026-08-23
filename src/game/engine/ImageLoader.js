@@ -55,6 +55,8 @@ class ImageLoader {
       moth: new URL('../../assets/moth.png', import.meta.url).href,
       knight: new URL('../../assets/knight.png', import.meta.url).href,
       boss3: new URL('../../assets/boss3.png', import.meta.url).href,
+      boss3_attack: new URL('../../assets/boss3_attack.png', import.meta.url).href,
+      boss3_rage: new URL('../../assets/boss3_rage.png', import.meta.url).href,
       cielo4: new URL('../../assets/fondo-regaliz.jpg', import.meta.url).href,
       regaliz: new URL('../../assets/fondo-raices.png', import.meta.url).href,
       latigo: new URL('../../assets/latigo.png', import.meta.url).href,
