@@ -750,12 +750,8 @@ export class Player {
     }
 
     if (sprite && sprite.complete && sprite.naturalWidth > 0) {
-      // Draw Mascot Pose Sprite with soft rim-light
-      ctx.save();
-      ctx.shadowColor = 'rgba(255, 255, 255, 0.45)';
-      ctx.shadowBlur = 5;
+      // Draw Mascot Pose Sprite directly (GPU accelerated)
       ctx.drawImage(sprite, -renderW / 2, -renderH, renderW, renderH);
-      ctx.restore();
     } else {
       ctx.beginPath();
       ctx.arc(0, -renderH / 2, 18, 0, Math.PI * 2);

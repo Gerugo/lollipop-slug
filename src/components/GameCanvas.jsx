@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 
-export const GameCanvas = ({ onEngineReady }) => {
+export const GameCanvas = React.memo(({ onEngineReady }) => {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -23,9 +23,7 @@ export const GameCanvas = ({ onEngineReady }) => {
         ref={canvasRef}
         className="w-full h-full object-contain max-w-[100dvw] max-h-[100dvh] shadow-2xl"
       />
-      {/* Subtle Retro Arcade Scanlines */}
-      <div className="absolute inset-0 scanlines pointer-events-none opacity-30" />
     </div>
   );
-};
+});
 export default GameCanvas;

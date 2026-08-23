@@ -16,6 +16,8 @@ export class Level3 {
 
     // Load platforms from data configuration
     this.platforms = JSON.parse(JSON.stringify(this.config.platforms));
+    this.groundPlatforms = this.platforms.filter((p) => p.type === 'ground');
+    this.floatingPlatforms = this.platforms.filter((p) => p.type !== 'ground');
 
     this.animTime = 0;
   }
@@ -132,7 +134,7 @@ export class Level3 {
   }
 
   drawContinuousGround(ctx, camera) {
-    const groundPlatforms = this.platforms.filter((p) => p.type === 'ground');
+    const groundPlatforms = this.groundPlatforms;
 
     for (const plat of groundPlatforms) {
       const startX = plat.x;
@@ -227,7 +229,7 @@ export class Level3 {
     const barquilloImg = imageLoader.getImage('barquillo') || imageLoader.getImage('plataforma-barquillo');
     const bastonImg = imageLoader.getImage('baston') || imageLoader.getImage('plataforma-baston');
 
-    const floating = this.platforms.filter((p) => p.type !== 'ground');
+    const floating = this.floatingPlatforms;
 
     for (const plat of floating) {
       if (!camera.isVisible(plat.x, plat.y, plat.width, plat.height, 80)) continue;

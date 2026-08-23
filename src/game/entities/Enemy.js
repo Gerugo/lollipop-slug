@@ -1454,11 +1454,6 @@ export class Enemy {
       const renderW = 62;
       const renderH = 62;
 
-      // 1. SSS Emerald Backlight Glow
-      ctx.save();
-      ctx.shadowColor = 'rgba(74, 222, 128, 0.70)';
-      ctx.shadowBlur = 10;
-
       if (rollerSprite && rollerSprite.complete && rollerSprite.naturalWidth > 0) {
         ctx.drawImage(rollerSprite, -renderW / 2, -renderH / 2, renderW, renderH);
       } else {
@@ -2103,20 +2098,14 @@ export class Enemy {
     const gummySprite = imageLoader.getImage(spriteKey) || imageLoader.getImage('gummybear');
     const ox = aimOffset;
 
-    // 1. Gummy Sprite Rendering with Translucent Backlight Glow
+    // 1. Gummy Sprite Rendering (GPU Direct)
     if (gummySprite && gummySprite.complete && gummySprite.naturalWidth > 0) {
-      ctx.save();
-      ctx.shadowColor = 'rgba(255, 45, 110, 0.65)';
-      ctx.shadowBlur = 8;
       ctx.drawImage(gummySprite, -currentRenderW / 2 + ox, -renderH, currentRenderW, renderH);
-      ctx.restore();
       return;
     }
 
     // Procedural Volumetric Translucent Gummy Body Fallback (When sprite is not loaded)
     ctx.save();
-    ctx.shadowColor = 'rgba(255, 45, 110, 0.75)';
-    ctx.shadowBlur = 12;
 
     // 2. INTERNAL SUBSURFACE SCATTERING GLOW CORE (Volumetric Light Diffusion)
     ctx.save();

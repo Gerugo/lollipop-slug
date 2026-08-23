@@ -383,7 +383,7 @@ export class GameEngine {
       this.render();
 
       this.hudTimer = (this.hudTimer || 0) + rawDt;
-      if (this.hudTimer >= 0.06 && this.callbacks.onHUDUpdate && this.player) {
+      if (this.hudTimer >= 0.10 && this.callbacks.onHUDUpdate && this.player) {
         this.hudTimer = 0;
         this.callbacks.onHUDUpdate({
           hp: this.player.hp,
@@ -1022,13 +1022,10 @@ export class GameEngine {
       ctx.font = '900 20px "Bungee", cursive, sans-serif';
       ctx.textAlign = 'center';
       ctx.fillStyle = '#FFFFFF';
-      ctx.shadowColor = '#F59E0B';
-      ctx.shadowBlur = 10;
       ctx.fillText(this.levelIntroTitle, this.viewportWidth / 2, bannerY + 34);
 
       ctx.font = 'bold 11px "Press Start 2P", monospace';
       ctx.fillStyle = '#FDE68A';
-      ctx.shadowBlur = 0;
       ctx.fillText(this.levelIntroSubtitle, this.viewportWidth / 2, bannerY + 58);
       ctx.restore();
     }

@@ -16,6 +16,8 @@ export class Level1 {
 
     // Load platforms from data configuration
     this.platforms = JSON.parse(JSON.stringify(this.config.platforms));
+    this.groundPlatforms = this.platforms.filter((p) => p.type === 'ground');
+    this.floatingPlatforms = this.platforms.filter((p) => p.type !== 'ground');
 
     this.animTime = 0;
   }
@@ -511,7 +513,7 @@ export class Level1 {
   }
 
   drawContinuousGround(ctx, camera) {
-    const groundPlatforms = this.platforms.filter((p) => p.type === 'ground');
+    const groundPlatforms = this.groundPlatforms;
 
     for (const plat of groundPlatforms) {
       const startX = plat.x;
@@ -585,8 +587,8 @@ export class Level1 {
         ctx.fill();
       }
 
-      // Porous Gingerbread & Biscuit Dough Micro-Texture
-      this.drawGingerbreadPorosity(ctx, startX, endX, topY, bottomY);
+      // Porous Gingerbread & Biscuit Dough Micro-Texture (Viewport Culled)
+      this.drawGingerbreadPorosity(ctx, startX, endX, topY, bottomY, camera);
 
       // Cliff Edge Drop-off Shading (Left and Right Vertical Edge Ambient Occlusion)
       const leftCliffGrad = ctx.createLinearGradient(startX, topY, startX + 32, topY);
@@ -742,7 +744,7 @@ export class Level1 {
     const barquilloImg = imageLoader.getImage('barquillo') || imageLoader.getImage('plataforma-barquillo');
     const bastonImg = imageLoader.getImage('baston') || imageLoader.getImage('plataforma-baston');
 
-    const floating = this.platforms.filter((p) => p.type !== 'ground');
+    const floating = this.floatingPlatforms;
 
     for (const plat of floating) {
       if (!camera.isVisible(plat.x, plat.y, plat.width, plat.height, 80)) continue;
@@ -892,99 +894,61 @@ export class Level1 {
     }
   }
 
-  // --- 1. MICROSCOPIC SPARKLING DIAMOND SUGAR CRYSTALS OVER GREEN HILLS ---
+  // --- 1. MICROSCOPIC SPARKLING DIAMOND SUGAR CRYSTALS OVER GREEN HILLS (OPTIMIZED) ---
   drawHillSugarSparkles(ctx, viewX, viewW, viewH) {
-    ctx.save();
     const hillBaseY = viewH * 0.45;
-    const crystalCount = 38;
+    const crystalCount = 28;
     for (let i = 0; i < crystalCount; i++) {
       const seed = i * 197.3;
-      const worldX = (i * 180 + Math.sin(seed) * 90);
+      const worldX = (i * 220 + Math.sin(seed) * 90);
       const screenX = (worldX - viewX * 0.30) % (viewW + 200);
       if (screenX < -20 || screenX > viewW + 20) continue;
 
       const screenY = hillBaseY + (Math.sin(worldX * 0.005) * 60) + ((seed * 13) % 110);
       const twinkle = Math.sin(this.animTime * 5 + seed) * 0.5 + 0.5;
-      if (twinkle < 0.2) continue;
+      if (twinkle < 0.25) continue;
 
-      const size = (1.5 + (seed % 2.5)) * twinkle;
-      const isDiamond = (i % 3 === 0);
-
-      ctx.save();
-      ctx.translate(screenX, screenY);
-      ctx.globalAlpha = 0.55 + twinkle * 0.45;
+      const size = (1.5 + (seed % 2.2)) * twinkle;
 
       // Soft Radial Aura
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
       ctx.beginPath();
-      ctx.arc(0, 0, size * 2, 0, Math.PI * 2);
+      ctx.arc(screenX, screenY, size * 2, 0, Math.PI * 2);
       ctx.fill();
 
       // Sharp Diamond Star Glint
       ctx.fillStyle = '#FFFFFF';
-      if (isDiamond) {
-        // 4-pointed diamond glint
-        ctx.beginPath();
-        ctx.moveTo(0, -size * 2.2);
-        ctx.lineTo(size * 0.6, 0);
-        ctx.lineTo(0, size * 2.2);
-        ctx.lineTo(-size * 0.6, 0);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.moveTo(-size * 2.2, 0);
-        ctx.lineTo(0, size * 0.6);
-        ctx.lineTo(size * 2.2, 0);
-        ctx.lineTo(0, -size * 0.6);
-        ctx.closePath();
-        ctx.fill();
-      } else {
-        // Hexagonal sugar crystal grain
-        ctx.beginPath();
-        ctx.arc(0, 0, size, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      ctx.restore();
+      ctx.beginPath();
+      ctx.moveTo(screenX, screenY - size * 2.2);
+      ctx.lineTo(screenX + size * 0.6, screenY);
+      ctx.lineTo(screenX, screenY + size * 2.2);
+      ctx.lineTo(screenX - size * 0.6, screenY);
+      ctx.closePath();
+      ctx.fill();
     }
-    ctx.restore();
   }
 
-  // --- 2. POROUS GINGERBREAD & BISCUIT DOUGH MICRO-TEXTURE ---
-  drawGingerbreadPorosity(ctx, startX, endX, topY, bottomY) {
-    ctx.save();
-    const step = 28;
-    for (let px = startX + 12; px < endX - 12; px += step) {
-      for (let py = topY + 16; py < bottomY - 14; py += 22) {
+  // --- 2. POROUS GINGERBREAD & BISCUIT DOUGH MICRO-TEXTURE (VIEWPORT CULLED) ---
+  drawGingerbreadPorosity(ctx, startX, endX, topY, bottomY, camera) {
+    const minX = Math.max(startX + 12, camera ? camera.x - 20 : startX);
+    const maxX = Math.min(endX - 12, camera ? camera.x + camera.viewportWidth + 20 : endX);
+    if (minX >= maxX) return;
+
+    const step = 32;
+    for (let px = minX; px < maxX; px += step) {
+      for (let py = topY + 16; py < bottomY - 14; py += 24) {
         const hash = (px * 73.1 + py * 19.7);
-        const poreRadius = 1.5 + (Math.sin(hash) * 0.5 + 0.5) * 2.2;
+        const poreRadius = 1.5 + (Math.sin(hash) * 0.5 + 0.5) * 2.0;
         const poreX = px + Math.sin(hash * 2.3) * 6;
         const poreY = py + Math.cos(hash * 1.7) * 4;
 
         // Dark sunken air pocket in spongy biscuit dough
-        ctx.fillStyle = 'rgba(45, 15, 5, 0.38)';
+        ctx.fillStyle = 'rgba(45, 15, 5, 0.35)';
         ctx.beginPath();
         ctx.arc(poreX, poreY, poreRadius, 0, Math.PI * 2);
         ctx.fill();
-
-        // Upper pore rim light (baked crust highlight)
-        ctx.strokeStyle = 'rgba(254, 243, 199, 0.28)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(poreX - 0.6, poreY - 0.8, poreRadius * 0.7, -Math.PI * 0.8, -Math.PI * 0.2);
-        ctx.stroke();
-
-        // Embedded cinnamon spice speck / caramelized brown sugar grain
-        if ((Math.floor(hash) % 3) === 0) {
-          ctx.fillStyle = '#3E1504';
-          ctx.fillRect(poreX + 4, poreY + 2, 1.8, 1.8);
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-          ctx.fillRect(poreX + 4, poreY + 2, 1, 1);
-        }
       }
     }
-    ctx.restore();
   }
 
   // --- 3. 5-LAYER BEVELED WAFER & OBLEA WITH MICRO-RELIEF & CRUMBS ---

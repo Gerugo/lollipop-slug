@@ -16,6 +16,8 @@ export class Level4 {
 
     // Load platforms from data configuration
     this.platforms = JSON.parse(JSON.stringify(this.config.platforms));
+    this.groundPlatforms = this.platforms.filter((p) => p.type === 'ground');
+    this.floatingPlatforms = this.platforms.filter((p) => p.type !== 'ground');
 
     this.animTime = 0;
   }
@@ -248,7 +250,7 @@ export class Level4 {
     const endX = Math.ceil(viewRight / step) * step;
 
     // Check which ground segments exist in view
-    const groundPlats = this.platforms.filter((p) => p.type === 'ground');
+    const groundPlats = this.groundPlatforms;
 
     for (const gp of groundPlats) {
       if (gp.x + gp.width < viewLeft || gp.x > viewRight) continue;

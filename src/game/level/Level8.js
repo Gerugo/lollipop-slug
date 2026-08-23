@@ -14,6 +14,8 @@ export class Level8 {
     this.bossTriggerX = LEVEL_8_CONFIG.bossTriggerX;
     this.bossArenaLockX = LEVEL_8_CONFIG.bossArenaLockX;
     this.platforms = JSON.parse(JSON.stringify(LEVEL_8_CONFIG.platforms));
+    this.groundPlatforms = this.platforms.filter((p) => p.y >= 440);
+    this.floatingPlatforms = this.platforms.filter((p) => p.y < 440);
     this.biomes = LEVEL_8_CONFIG.biomes;
     this.animTime = 0;
   }
@@ -142,7 +144,7 @@ export class Level8 {
   }
 
   drawContinuousGround(ctx, camera) {
-    const groundPlatforms = this.platforms.filter((p) => p.y >= 440);
+    const groundPlatforms = this.groundPlatforms;
 
     for (const plat of groundPlatforms) {
       const startX = plat.x;
@@ -238,7 +240,7 @@ export class Level8 {
   drawFloatingPlatforms(ctx, camera) {
     const barquilloImg = imageLoader.getImage('barquillo');
     const bastonImg = imageLoader.getImage('baston');
-    const floating = this.platforms.filter((p) => p.y < 440);
+    const floating = this.floatingPlatforms;
 
     for (const plat of floating) {
       if (!camera.isVisible(plat.x, plat.y - 20, plat.width, plat.height + 40)) continue;

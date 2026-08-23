@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Zap, ArrowBigUp, Bomb } from 'lucide-react';
 
-export const TouchGamepad = ({ onTouchInput }) => {
+export const TouchGamepad = React.memo(({ onTouchInput }) => {
   // Directional stick state
   const dpadRef = useRef(null);
+  const knobRef = useRef(null);
   const onTouchInputRef = useRef(onTouchInput);
   onTouchInputRef.current = onTouchInput;
 
-  const [knobPos, setKnobPos] = useState({ x: 0, y: 0 });
   const [activeDirections, setActiveDirections] = useState({
     up: false,
     down: false,
@@ -54,7 +54,9 @@ export const TouchGamepad = ({ onTouchInput }) => {
     updateDirection('down', false);
     updateDirection('left', false);
     updateDirection('right', false);
-    setKnobPos({ x: 0, y: 0 });
+    if (knobRef.current) {
+      knobRef.current.style.transform = 'translate3d(0px, 0px, 0)';
+    }
     setActiveDirections({ up: false, down: false, left: false, right: false });
   }, [updateDirection]);
 
@@ -82,7 +84,9 @@ export const TouchGamepad = ({ onTouchInput }) => {
     const angle = Math.atan2(dy, dx);
     const knobX = Math.cos(angle) * clampedDist;
     const knobY = Math.sin(angle) * clampedDist;
-    setKnobPos({ x: knobX, y: knobY });
+    if (knobRef.current) {
+      knobRef.current.style.transform = `translate3d(${knobX}px, ${knobY}px, 0)`;
+    }
 
     // 8-way directional thresholding with forgiving angular tolerance
     const isRight = dx > 8 && Math.abs(dx) > Math.abs(dy) * 0.35;
@@ -249,9 +253,10 @@ export const TouchGamepad = ({ onTouchInput }) => {
 
         {/* Floating Glowing Thumbstick Knob */}
         <div
-          className="absolute w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-tr from-pink-500/70 to-rose-400/90 border-2 border-white shadow-lg pointer-events-none flex items-center justify-center transition-transform duration-75 ease-out"
+          ref={knobRef}
+          className="absolute w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-tr from-pink-500/70 to-rose-400/90 border-2 border-white shadow-lg pointer-events-none flex items-center justify-center will-change-transform"
           style={{
-            transform: `translate(${knobPos.x}px, ${knobPos.y}px)`
+            transform: 'translate3d(0px, 0px, 0)'
           }}
         >
           <span className="text-sm select-none opacity-90 drop-shadow">🍭</span>
@@ -341,6 +346,6 @@ export const TouchGamepad = ({ onTouchInput }) => {
       </div>
     </div>
   );
-};
+});
 
 export default TouchGamepad;
