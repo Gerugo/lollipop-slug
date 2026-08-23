@@ -111,6 +111,9 @@ class ImageLoader {
       sanctum: new URL('../../assets/fondo-sanctum.png', import.meta.url).href,
       hechicero: new URL('../../assets/hechicero.png', import.meta.url).href,
       boss10: new URL('../../assets/boss10.png', import.meta.url).href,
+      boss10_attack: new URL('../../assets/boss10_attack.png', import.meta.url).href,
+      boss10_rage: new URL('../../assets/boss10_rage.png', import.meta.url).href,
+      boss10_cosmic: new URL('../../assets/boss10_cosmic.png', import.meta.url).href,
       arma_cosmic: new URL('../../assets/arma_cosmic.png', import.meta.url).href
     };
 

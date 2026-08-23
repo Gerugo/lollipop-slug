@@ -250,42 +250,100 @@ export class Boss10 {
 
     ctx.save();
     const cx = this.x + this.width / 2;
+    const cy = this.y + this.height / 2;
     const bottomY = this.y + this.height;
 
-    // Ground Shadow
-    ctx.save();
-    ctx.beginPath();
-    ctx.ellipse(cx, bottomY + 2, 60, 16, 0, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.4)';
-    ctx.fill();
-    ctx.restore();
+    // 1. Ground Contact Shadow (Phases 1 and 2)
+    if (this.phase < 3) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(cx, bottomY + 2, 65, 16, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.4)';
+      ctx.fill();
+      ctx.restore();
+    }
 
     ctx.translate(cx, this.phase === 3 ? cy : bottomY + 1);
 
-    if (this.hurtTimer > 0) {
-      // ctx.filter removed for mobile performance
+    // 2. GPU-Accelerated Radiant Cosmic Auras
+    if (this.phase === 3) {
+      ctx.save();
+      const aura = ctx.createRadialGradient(0, 0, 20, 0, 0, 110);
+      aura.addColorStop(0, 'rgba(253, 224, 71, 0.45)');
+      aura.addColorStop(0.5, 'rgba(236, 72, 153, 0.25)');
+      aura.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = aura;
+      ctx.beginPath();
+      ctx.arc(0, 0, 110, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    } else if (this.phase === 2) {
+      ctx.save();
+      const aura = ctx.createRadialGradient(0, -95, 20, 0, -95, 95);
+      aura.addColorStop(0, 'rgba(239, 68, 68, 0.45)');
+      aura.addColorStop(0.6, 'rgba(245, 158, 11, 0.25)');
+      aura.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = aura;
+      ctx.beginPath();
+      ctx.arc(0, -95, 95, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
 
     let rot = 0;
+    let scaleY = 1 + Math.sin(this.animTime * 3) * 0.03;
+    let scaleX = 1 - Math.sin(this.animTime * 3) * 0.03;
+
     if (this.phase === 3) {
       rot = Math.sin(this.animTime * 4) * 0.08;
+      scaleY = 1 + Math.sin(this.animTime * 5) * 0.05;
+      scaleX = 1 - Math.sin(this.animTime * 5) * 0.05;
     }
 
     ctx.rotate(rot);
-    ctx.scale(this.facing, 1);
+    ctx.scale(this.facing * scaleX, scaleY);
 
-    const bossSprite = imageLoader.getImage('boss10');
+    // 3. Dynamic Sprite Selection
+    let spriteKey = 'boss10';
+    if (this.phase === 3 || this.state === 'COSMIC_ASCENSION') {
+      spriteKey = 'boss10_cosmic';
+    } else if (this.phase === 2 || this.state === 'MECHA_CHARGE') {
+      spriteKey = 'boss10_rage';
+    } else if (this.state === 'THRONE_SLAM' || this.attackTimer < 0.75) {
+      spriteKey = 'boss10_attack';
+    }
+
+    const renderW = 195;
+    const renderH = 205;
+    const bossSprite = imageLoader.getImage(spriteKey) || imageLoader.getImage('boss10');
+
     if (bossSprite && bossSprite.complete && bossSprite.naturalWidth > 0) {
       if (this.phase === 3) {
-        ctx.drawImage(bossSprite, -this.width / 2, -this.height / 2, this.width, this.height);
+        ctx.drawImage(bossSprite, -renderW / 2, -renderH / 2, renderW, renderH);
       } else {
-        ctx.drawImage(bossSprite, -this.width / 2, -this.height, this.width, this.height);
+        ctx.drawImage(bossSprite, -renderW / 2, -renderH, renderW, renderH);
+      }
+
+      // 4. GPU-Accelerated White Hit Flash
+      if (this.hurtTimer > 0) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = 0.65;
+        if (this.phase === 3) {
+          ctx.drawImage(bossSprite, -renderW / 2, -renderH / 2, renderW, renderH);
+        } else {
+          ctx.drawImage(bossSprite, -renderW / 2, -renderH, renderW, renderH);
+        }
+        ctx.restore();
       }
     } else {
       ctx.beginPath();
-      ctx.roundRect(-this.width / 2, -this.height, this.width, this.height, 16);
+      ctx.roundRect(-this.width / 2, this.phase === 3 ? -this.height / 2 : -this.height, this.width, this.height, 16);
       ctx.fillStyle = '#F59E0B';
       ctx.fill();
+      ctx.strokeStyle = '#FDE047';
+      ctx.lineWidth = 3;
+      ctx.stroke();
     }
 
     ctx.restore();
