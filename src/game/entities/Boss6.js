@@ -243,11 +243,11 @@ export class Boss6 {
     ctx.translate(cx, bottomY + 1);
 
     if (this.hurtTimer > 0) {
-      ctx.filter = 'brightness(2.6) contrast(1.3)';
+      // ctx.filter removed for mobile performance
     } else if (this.phase === 3 || this.state === 'BLIZZARD') {
-      ctx.filter = 'drop-shadow(0 0 20px rgba(186, 230, 253, 0.95)) drop-shadow(0 0 30px rgba(56, 189, 248, 0.7))';
+      // ctx.filter removed for mobile performance
     } else if (this.phase === 2) {
-      ctx.filter = 'drop-shadow(0 0 14px rgba(56, 189, 248, 0.75))';
+      // ctx.filter removed for mobile performance
     }
 
     let rot = 0;

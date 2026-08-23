@@ -573,7 +573,7 @@ export class Boss {
           ctx.translate(ghost.x, ghost.y);
           ctx.rotate(ghost.rotation);
           ctx.scale(ghost.facing, 1);
-          ctx.filter = 'drop-shadow(0 0 10px rgba(236, 72, 153, 0.8)) hue-rotate(40deg)';
+          // ctx.filter removed for mobile performance
           ctx.drawImage(bossSprite, -renderW / 2, -renderH, renderW, renderH);
           ctx.restore();
         }
@@ -585,11 +585,11 @@ export class Boss {
       ctx.rotate(this.rotation);
 
       if (this.hurtTimer > 0) {
-        ctx.filter = 'brightness(2.2)';
+        // ctx.filter removed for mobile performance
       } else if (this.rageMode) {
-        ctx.filter = 'drop-shadow(0 0 22px rgba(236, 72, 153, 0.95)) drop-shadow(0 0 35px rgba(244, 63, 94, 0.6))';
+        // ctx.filter removed for mobile performance
       } else if (this.phase === 2) {
-        ctx.filter = 'drop-shadow(0 0 14px rgba(245, 158, 11, 0.7))';
+        // ctx.filter removed for mobile performance
       }
 
       let scaleY = 1 + Math.sin(this.idleTimer * 3) * 0.035;

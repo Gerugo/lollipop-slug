@@ -234,7 +234,7 @@ export class SlugVehicle {
     ctx.translate(cx + this.recoilX, bottomY);
 
     if (this.hurtTimer > 0) {
-      ctx.filter = 'brightness(2.2)';
+      // ctx.filter removed
     }
 
     const renderW = 100;

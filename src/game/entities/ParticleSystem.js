@@ -6,7 +6,7 @@ export class ParticleSystem {
     this.bgAmbientParticles = [];
     this.midAmbientParticles = [];
     this.fgAmbientParticles = [];
-    this.maxParticles = 600;
+    this.maxParticles = 220;
     this.ambientTimer = 0;
   }
 
@@ -15,7 +15,7 @@ export class ParticleSystem {
     this.ambientTimer += dt;
 
     // 1. Background Powdered Sugar Dust (Far depth, slow drift, soft motas)
-    while (this.bgAmbientParticles.length < 32) {
+    while (this.bgAmbientParticles.length < 12) {
       const bx = camera.x * 0.35 + Math.random() * (camera.viewportWidth + 200) - 100;
       const by = Math.random() * (camera.viewportHeight + 40);
       this.bgAmbientParticles.push({
@@ -42,7 +42,7 @@ export class ParticleSystem {
     }
 
     // 2. Midground Powdered Sugar Motes & Twinkles (World space depth)
-    while (this.midAmbientParticles.length < 36) {
+    while (this.midAmbientParticles.length < 14) {
       const mx = camera.x + Math.random() * (camera.viewportWidth + 140) - 70;
       const my = Math.random() * (camera.viewportHeight + 20);
       this.midAmbientParticles.push({
@@ -70,7 +70,7 @@ export class ParticleSystem {
     }
 
     // 3. Foreground Camera Lens Sugar Bokeh (Close to lens, fast parallax, out-of-focus aura)
-    while (this.fgAmbientParticles.length < 16) {
+    while (this.fgAmbientParticles.length < 6) {
       const fx = Math.random() * (camera.viewportWidth + 80) - 40;
       const fy = -20 + Math.random() * (camera.viewportHeight + 40);
       this.fgAmbientParticles.push({

@@ -196,7 +196,7 @@ export class Boss8 {
     ctx.translate(cx, cy);
 
     if (this.hurtTimer > 0) {
-      ctx.filter = 'brightness(2.6) contrast(1.3)';
+      // ctx.filter removed for mobile performance
     }
 
     // Wing flap oscillation

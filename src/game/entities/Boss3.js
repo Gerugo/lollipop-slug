@@ -394,7 +394,7 @@ export class Boss3 {
 
     // Boss Sprite Drawing
     ctx.translate(cx, cy);
-    if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5) contrast(1.3)';
+    if (this.hurtTimer > 0) // ctx.filter removed for mobile performance
     ctx.scale(this.facing, 1);
 
     const bossSprite = imageLoader.getImage('boss3');

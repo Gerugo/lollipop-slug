@@ -195,7 +195,7 @@ export class Boss7 {
     ctx.translate(cx, cy);
 
     if (this.hurtTimer > 0) {
-      ctx.filter = 'brightness(2.6) contrast(1.3)';
+      // ctx.filter removed for mobile performance
     }
 
     // Undulating body motion

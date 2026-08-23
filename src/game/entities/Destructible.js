@@ -142,7 +142,7 @@ export class Destructible {
     ctx.translate(cx + wobbleX, bottomY + 1);
 
     if (this.hurtTimer > 0) {
-      ctx.filter = 'brightness(2.2)';
+      // ctx.filter removed
     }
 
     const obsSprite = imageLoader.getImage('bidon') || imageLoader.getImage('barricada');

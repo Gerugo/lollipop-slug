@@ -263,7 +263,7 @@ export class Boss10 {
     ctx.translate(cx, this.phase === 3 ? cy : bottomY + 1);
 
     if (this.hurtTimer > 0) {
-      ctx.filter = 'brightness(2.6) drop-shadow(0 0 12px rgba(255, 255, 255, 0.95)) contrast(1.2)';
+      // ctx.filter removed for mobile performance
     }
 
     let rot = 0;

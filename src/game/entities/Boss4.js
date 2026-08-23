@@ -365,7 +365,7 @@ export class Boss4 {
 
     // 2. Boss Sprite Anchor
     ctx.translate(cx, bottomY + 1);
-    if (this.hurtTimer > 0) ctx.filter = 'brightness(2.5) contrast(1.3)';
+    if (this.hurtTimer > 0) // ctx.filter removed for mobile performance
     ctx.scale(this.facing, 1);
 
     const viperSprite = imageLoader.getImage('boss4');
