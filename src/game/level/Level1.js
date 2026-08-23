@@ -58,37 +58,52 @@ export class Level1 {
     }
   }
 
-  // --- 3-LAYER CINEMATIC PARALLAX & BIOME SYSTEM ---
+  // --- CONTINUOUS PROGRESSIVE HORIZONTAL ATMOSPHERIC PARALLAX SYSTEM ---
+  getAtmosphere(worldX) {
+    const zones = [
+      { x: 0,    top: [147, 197, 253], mid: [186, 230, 253], bot: [254, 240, 138] }, // Bosque Amanecer
+      { x: 1800, top: [147, 197, 253], mid: [186, 230, 253], bot: [254, 240, 138] },
+      { x: 2500, top: [244, 114, 182], mid: [251, 113, 133], bot: [253, 224, 71] },  // Río Sirope
+      { x: 3600, top: [244, 114, 182], mid: [251, 113, 133], bot: [253, 224, 71] },
+      { x: 4200, top: [99, 102, 241],  mid: [168, 85, 247],  bot: [244, 114, 182] }, // Fábrica
+      { x: 5100, top: [99, 102, 241],  mid: [168, 85, 247],  bot: [244, 114, 182] },
+      { x: 5600, top: [2, 132, 199],   mid: [99, 102, 241],  bot: [236, 72, 153] },  // Arena Titán
+      { x: 6400, top: [2, 132, 199],   mid: [99, 102, 241],  bot: [236, 72, 153] }
+    ];
+
+    const clampedX = Math.max(0, Math.min(6400, worldX));
+    for (let i = 0; i < zones.length - 1; i++) {
+      const z1 = zones[i];
+      const z2 = zones[i + 1];
+      if (clampedX >= z1.x && clampedX <= z2.x) {
+        const factor = (clampedX - z1.x) / (z2.x - z1.x || 1);
+        const lerpColor = (c1, c2) => `rgb(${Math.round(c1[0] + (c2[0] - c1[0]) * factor)}, ${Math.round(c1[1] + (c2[1] - c1[1]) * factor)}, ${Math.round(c1[2] + (c2[2] - c1[2]) * factor)})`;
+        return {
+          top: lerpColor(z1.top, z2.top),
+          mid: lerpColor(z1.mid, z2.mid),
+          bot: lerpColor(z1.bot, z2.bot)
+        };
+      }
+    }
+    return { top: '#93C5FD', mid: '#BAE6FD', bot: '#FEF08A' };
+  }
+
   drawBackground(ctx, camera) {
     const viewX = camera.x;
     const viewW = camera.viewportWidth;
     const viewH = camera.viewportHeight;
+    const centerWorldX = viewX + viewW / 2;
 
-    const currentBiome = this.getCurrentBiome(viewX + viewW / 2);
-
-    // 1. DYNAMIC ATMOSPHERIC SKY LAYER (Interpolated per Biome)
+    // 1. DYNAMIC CONTINUOUS ATMOSPHERIC SKY (Continuous Smooth Interpolation)
+    const atmo = this.getAtmosphere(centerWorldX);
     const skyGrad = ctx.createLinearGradient(0, 0, 0, viewH);
-    if (currentBiome.id === 'BIOME_B') {
-      skyGrad.addColorStop(0, '#F472B6');
-      skyGrad.addColorStop(0.5, '#FB7185');
-      skyGrad.addColorStop(1, '#FDE047');
-    } else if (currentBiome.id === 'BIOME_C') {
-      skyGrad.addColorStop(0, '#6366F1');
-      skyGrad.addColorStop(0.5, '#A855F7');
-      skyGrad.addColorStop(1, '#F472B6');
-    } else if (currentBiome.id === 'BIOME_ARENA') {
-      skyGrad.addColorStop(0, '#0284C7');
-      skyGrad.addColorStop(0.5, '#6366F1');
-      skyGrad.addColorStop(1, '#EC4899');
-    } else {
-      skyGrad.addColorStop(0, '#93C5FD');
-      skyGrad.addColorStop(0.5, '#BAE6FD');
-      skyGrad.addColorStop(1, '#FEF08A');
-    }
+    skyGrad.addColorStop(0, atmo.top);
+    skyGrad.addColorStop(0.52, atmo.mid);
+    skyGrad.addColorStop(1, atmo.bot);
     ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, viewW, viewH);
 
-    // LAYER 1 (Distant Parallax 0.05): Sky with 3D Sun
+    // LAYER 1: Distant Sky Panorama (Parallax 0.05)
     const skyImg = imageLoader.getImage('cielo');
     if (skyImg && skyImg.complete && skyImg.naturalWidth > 0) {
       const skyAspect = skyImg.naturalWidth / skyImg.naturalHeight;
@@ -96,7 +111,7 @@ export class Level1 {
       const skyOffsetX = (viewX * 0.05) % skyRenderW;
 
       ctx.save();
-      ctx.globalAlpha = 0.85;
+      ctx.globalAlpha = 0.55;
       let startX = -skyOffsetX;
       while (startX < viewW) {
         ctx.drawImage(skyImg, startX, 0, skyRenderW + 1, viewH);
@@ -105,7 +120,10 @@ export class Level1 {
       ctx.restore();
     }
 
-    // LAYER 2 (Mid Parallax 0.30): Rolling Clay Hills & Chocolate Gears
+    // LAYER 2: Distant Horizon Landmarks by World Zone (Parallax 0.12)
+    this.drawZoneLandmarks(ctx, viewX, viewW, viewH);
+
+    // LAYER 3: Mid Parallax (0.30): Rolling Clay Hills
     const hillsImg = imageLoader.getImage('colinas');
     if (hillsImg && hillsImg.complete && hillsImg.naturalWidth > 0) {
       const hillsAspect = hillsImg.naturalWidth / hillsImg.naturalHeight;
@@ -122,36 +140,293 @@ export class Level1 {
 
     // Microscopic Sparkling Diamond Sugar Crystals over green hills
     this.drawHillSugarSparkles(ctx, viewX, viewW, viewH);
+  }
 
-    // Biome C Factory chocolate gears in mid-distance
-    if (viewX + viewW > 3600 && viewX < 5400) {
-      ctx.save();
-      const gearX = (4200 - viewX * 0.30);
-      const gearY = 180;
-      this.drawChocolateGear(ctx, gearX, gearY, 70, this.animTime * 0.6);
-      this.drawChocolateGear(ctx, gearX + 110, gearY + 30, 48, -this.animTime * 0.9);
-      ctx.restore();
-    }
+  // --- ATMOSPHERIC LANDMARKS ANCHORED PER ZONE (PARALLAX 0.15) ---
+  drawZoneLandmarks(ctx, viewX, viewW, viewH) {
+    // --- ZONE 1: EL BOSQUE DE PIRULETAS (x: 0 - 2200) ---
+    if (viewX < 2400) {
+      // 1. Radiant Morning Sun (Anchor: World X = 350)
+      const sunScreenX = (350 - viewX * 0.04);
+      const sunScreenY = 75;
+      if (sunScreenX > -150 && sunScreenX < viewW + 150) {
+        ctx.save();
+        // Pulsating Sun Corona
+        const sunCorona = ctx.createRadialGradient(sunScreenX, sunScreenY, 15, sunScreenX, sunScreenY, 70);
+        sunCorona.addColorStop(0, 'rgba(254, 240, 138, 0.7)');
+        sunCorona.addColorStop(0.5, 'rgba(251, 191, 36, 0.35)');
+        sunCorona.addColorStop(1, 'rgba(251, 191, 36, 0)');
+        ctx.fillStyle = sunCorona;
+        ctx.beginPath();
+        ctx.arc(sunScreenX, sunScreenY, 70, 0, Math.PI * 2);
+        ctx.fill();
 
-    // Biome B Syrup Waterfalls in mid-distance
-    if (viewX + viewW > 1900 && viewX < 3900) {
-      ctx.save();
-      const fallX = (2800 - viewX * 0.40);
-      const fallGrad = ctx.createLinearGradient(fallX, 160, fallX + 60, 460);
-      fallGrad.addColorStop(0, 'rgba(244, 63, 94, 0.4)');
-      fallGrad.addColorStop(0.5, 'rgba(225, 29, 72, 0.6)');
-      fallGrad.addColorStop(1, 'rgba(159, 18, 57, 0.7)');
-      ctx.fillStyle = fallGrad;
-      ctx.fillRect(fallX, 160, 65, 300);
+        // Sun Core
+        ctx.fillStyle = '#FFFBEB';
+        ctx.beginPath();
+        ctx.arc(sunScreenX, sunScreenY, 22, 0, Math.PI * 2);
+        ctx.fill();
 
-      // Bubbling shimmer
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-      for (let i = 0; i < 5; i++) {
-        const by = 180 + ((this.animTime * 120 + i * 50) % 260);
-        ctx.fillRect(fallX + 10 + i * 9, by, 6, 14);
+        // 12 Rotating Sun Rays
+        ctx.strokeStyle = 'rgba(253, 224, 71, 0.4)';
+        ctx.lineWidth = 2.5;
+        const rayAngle = this.animTime * 0.25;
+        for (let r = 0; r < 12; r++) {
+          const a = rayAngle + (r * Math.PI * 2) / 12;
+          ctx.beginPath();
+          ctx.moveTo(sunScreenX + Math.cos(a) * 26, sunScreenY + Math.sin(a) * 26);
+          ctx.lineTo(sunScreenX + Math.cos(a) * 58, sunScreenY + Math.sin(a) * 58);
+          ctx.stroke();
+        }
+        ctx.restore();
       }
-      ctx.restore();
+
+      // 2. Distant Wafer Windmill (Anchor: World X = 950)
+      const millScreenX = (950 - viewX * 0.15);
+      const millScreenY = 175;
+      if (millScreenX > -80 && millScreenX < viewW + 80) {
+        this.drawWaferWindmill(ctx, millScreenX, millScreenY, 40);
+      }
+
+      // 3. Giant Horizon Lollipop Trees (Anchor: World X = 1450, 1850)
+      [1450, 1850].forEach((lx, idx) => {
+        const lScreenX = (lx - viewX * 0.15);
+        if (lScreenX > -60 && lScreenX < viewW + 60) {
+          this.drawHorizonLollipop(ctx, lScreenX, 190 + idx * 10, 32 + idx * 6, idx % 2 === 0 ? '#EC4899' : '#3B82F6');
+        }
+      });
     }
+
+    // --- ZONE 2: EL RÍO DE SIROPE (x: 2000 - 4000) ---
+    if (viewX + viewW > 1800 && viewX < 4200) {
+      // 1. Distant Red Sugar Rock Mountain Silhouettes
+      [2200, 2700, 3300].forEach((mx, idx) => {
+        const mScreenX = (mx - viewX * 0.12);
+        if (mScreenX > -150 && mScreenX < viewW + 150) {
+          this.drawSugarMountain(ctx, mScreenX, 160, 160 + idx * 30, 140, '#9F1239');
+        }
+      });
+
+      // 2. Molten Strawberry Syrup Waterfalls in mid-distance
+      const fallScreenX = (2900 - viewX * 0.20);
+      if (fallScreenX > -100 && fallScreenX < viewW + 100) {
+        ctx.save();
+        const fallGrad = ctx.createLinearGradient(fallScreenX, 160, fallScreenX + 50, 420);
+        fallGrad.addColorStop(0, 'rgba(244, 63, 94, 0.45)');
+        fallGrad.addColorStop(0.5, 'rgba(225, 29, 72, 0.65)');
+        fallGrad.addColorStop(1, 'rgba(159, 18, 57, 0.75)');
+        ctx.fillStyle = fallGrad;
+        ctx.fillRect(fallScreenX, 160, 50, 260);
+
+        // Bubbling waterfall foam & shimmer
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+        for (let i = 0; i < 4; i++) {
+          const by = 170 + ((this.animTime * 140 + i * 65) % 230);
+          ctx.fillRect(fallScreenX + 6 + i * 11, by, 7, 16);
+        }
+        ctx.restore();
+      }
+    }
+
+    // --- ZONE 3: LAS CUMBRES DE LA FÁBRICA (x: 3700 - 5400) ---
+    if (viewX + viewW > 3600 && viewX < 5500) {
+      // 1. Factory Chimneys with Cotton Candy Smoke
+      [3900, 4400, 4850].forEach((cx, idx) => {
+        const cScreenX = (cx - viewX * 0.15);
+        if (cScreenX > -80 && cScreenX < viewW + 80) {
+          this.drawFactoryChimney(ctx, cScreenX, 140 + idx * 15, 34, 150);
+        }
+      });
+
+      // 2. Interlocking Chocolate Clockwork Gears
+      const gearX = (4500 - viewX * 0.25);
+      const gearY = 170;
+      if (gearX > -150 && gearX < viewW + 150) {
+        this.drawChocolateGear(ctx, gearX, gearY, 65, this.animTime * 0.6);
+        this.drawChocolateGear(ctx, gearX + 95, gearY + 28, 42, -this.animTime * 0.9);
+      }
+    }
+
+    // --- ZONE 4: LA ARENA DEL GUMBALL TITAN (x: 5200 - 6400) ---
+    if (viewX + viewW > 5000) {
+      // 1. Massive Gumball Fortress Arena Towers in background
+      const fortX = (5800 - viewX * 0.15);
+      if (fortX > -250 && fortX < viewW + 250) {
+        this.drawGumballFortress(ctx, fortX, 130, viewH);
+      }
+
+      // 2. Sweeping Arena Searchlight Beams across sky
+      this.drawArenaSearchlights(ctx, viewX, viewW, viewH);
+    }
+  }
+
+  drawWaferWindmill(ctx, x, y, size) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Windmill Tower (Crisp Wafer Pattern)
+    ctx.fillStyle = '#B45309';
+    ctx.beginPath();
+    ctx.moveTo(-size * 0.35, size * 1.5);
+    ctx.lineTo(-size * 0.18, 0);
+    ctx.lineTo(size * 0.18, 0);
+    ctx.lineTo(size * 0.35, size * 1.5);
+    ctx.closePath();
+    ctx.fill();
+
+    // Tower Roof (Sugar Cone)
+    ctx.fillStyle = '#E11D48';
+    ctx.beginPath();
+    ctx.moveTo(-size * 0.25, 0);
+    ctx.lineTo(0, -size * 0.45);
+    ctx.lineTo(size * 0.25, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    // 4 Rotating Wafer Blades
+    ctx.translate(0, -size * 0.05);
+    ctx.rotate(this.animTime * 0.8);
+    for (let b = 0; b < 4; b++) {
+      ctx.rotate(Math.PI / 2);
+      ctx.fillStyle = '#FDE68A';
+      ctx.fillRect(-3, 0, 6, size * 1.1);
+      ctx.strokeStyle = '#D97706';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(-3, 0, 6, size * 1.1);
+    }
+    ctx.restore();
+  }
+
+  drawHorizonLollipop(ctx, x, y, radius, color) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Stick
+    ctx.fillStyle = '#FDF2F8';
+    ctx.fillRect(-2.5, 0, 5, 80);
+
+    // Candy Swirl Head
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Inner White Spiral
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, radius * 0.55, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  drawSugarMountain(ctx, x, y, width, height, color) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.45;
+    ctx.beginPath();
+    ctx.moveTo(-width / 2, height);
+    ctx.lineTo(-width * 0.15, 0);
+    ctx.lineTo(0, 15);
+    ctx.lineTo(width * 0.2, -10);
+    ctx.lineTo(width / 2, height);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  drawFactoryChimney(ctx, x, y, width, height) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    // Brick Chimney
+    ctx.fillStyle = '#312E81';
+    ctx.fillRect(-width / 2, 0, width, height);
+
+    // Rim
+    ctx.fillStyle = '#4F46E5';
+    ctx.fillRect(-width / 2 - 4, -8, width + 8, 8);
+
+    // Billowing Cotton Candy Smoke
+    for (let s = 0; s < 4; s++) {
+      const puffTime = (this.animTime * 0.8 + s * 0.4) % 1.6;
+      const puffScale = 8 + puffTime * 18;
+      const puffX = Math.sin(this.animTime + s) * 16 + puffTime * 20;
+      const puffY = -12 - puffTime * 55;
+      ctx.fillStyle = `rgba(244, 114, 182, ${0.45 * (1 - puffTime / 1.6)})`;
+      ctx.beginPath();
+      ctx.arc(puffX, puffY, puffScale, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  drawGumballFortress(ctx, x, y, viewH) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.globalAlpha = 0.55;
+
+    // Fortress Base Tower
+    ctx.fillStyle = '#1E1B4B';
+    ctx.fillRect(-70, 0, 140, viewH - y);
+
+    // Gumball Glass Dome on Top
+    const domeGrad = ctx.createRadialGradient(-10, -35, 5, 0, -35, 55);
+    domeGrad.addColorStop(0, 'rgba(56, 189, 248, 0.75)');
+    domeGrad.addColorStop(0.6, 'rgba(14, 165, 233, 0.45)');
+    domeGrad.addColorStop(1, 'rgba(3, 105, 161, 0.8)');
+    ctx.fillStyle = domeGrad;
+    ctx.beginPath();
+    ctx.arc(0, -35, 50, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Multicolored Gumballs inside dome
+    const gColors = ['#EF4444', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6'];
+    for (let g = 0; g < 9; g++) {
+      const gx = Math.cos(g * 1.2) * 28;
+      const gy = -35 + Math.sin(g * 1.5) * 28;
+      ctx.fillStyle = gColors[g % gColors.length];
+      ctx.beginPath();
+      ctx.arc(gx, gy, 8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  drawArenaSearchlights(ctx, viewX, viewW, viewH) {
+    ctx.save();
+    // 2 Sweeping Searchlight Beams across sky
+    const lights = [
+      { anchorX: 5600, speed: 0.7, color: 'rgba(56, 189, 248, 0.22)' },
+      { anchorX: 6200, speed: -0.55, color: 'rgba(236, 72, 153, 0.22)' }
+    ];
+
+    lights.forEach((lt) => {
+      const lightScreenX = (lt.anchorX - viewX * 0.15);
+      if (lightScreenX > -200 && lightScreenX < viewW + 200) {
+        const sweepAngle = Math.sin(this.animTime * lt.speed) * 0.45 - Math.PI / 2;
+        ctx.save();
+        ctx.translate(lightScreenX, 260);
+        ctx.rotate(sweepAngle);
+
+        const beamGrad = ctx.createLinearGradient(0, 0, 0, -360);
+        beamGrad.addColorStop(0, lt.color);
+        beamGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = beamGrad;
+
+        ctx.beginPath();
+        ctx.moveTo(-6, 0);
+        ctx.lineTo(-65, -360);
+        ctx.lineTo(65, -360);
+        ctx.lineTo(6, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+    });
+    ctx.restore();
   }
 
   drawChocolateGear(ctx, x, y, radius, angle) {
